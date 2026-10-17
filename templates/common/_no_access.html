@@ -1,0 +1,37 @@
+{% comment %}
+Why this screen is empty, and who to ask.
+
+Every surface used to hand the same "Connect a channel" button to everyone,
+including people whose role cannot connect one — so the empty state was a link
+to a 403. Worse, analytics said "no accounts are connected to this workspace",
+which was false: they are connected, just not to you.
+
+Expects:
+    title       what is missing, in one line
+    body        why, in the reader's terms
+    ask         optional — who can fix it (a User, or a name)
+    icon        optional — Font Awesome name, defaults to a lock
+
+Deliberately has no call to action. The reader cannot fix this themselves; a
+button that only leads to a refusal is what this partial exists to replace.
+{% endcomment %}
+<div class="flex flex-col items-center justify-center text-center px-6 py-12">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+         style="background: var(--surface-2);">
+        {% icon icon|default:"lock" css_class="w-7 h-7 text-app-ghost" %}
+    </div>
+
+    <h2 class="text-base font-semibold text-app mb-1.5">{{ title }}</h2>
+
+    <p class="text-sm text-app-tertiary max-w-sm leading-relaxed">{{ body }}</p>
+
+    {% if ask %}
+    {% comment %}
+    Naming the person beats "contact an administrator": in a small team the
+    reader knows them, and it turns a dead end into one message.
+    {% endcomment %}
+    <p class="text-sm text-app-secondary mt-3">
+        Ask <strong>{{ ask }}</strong> to give you access.
+    </p>
+    {% endif %}
+</div>

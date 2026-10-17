@@ -1,0 +1,229 @@
+<div class="px-6 py-4 group" id="member-{{ member.membership.id }}"
+     style="border-bottom: 1px solid var(--border);"
+     x-data="{ showActions: false, showWorkspaces: false, showChannels: false, menuStyle: {} }">
+    <!-- Row 1: Member info -->
+    <div class="flex items-center gap-4">
+        <!-- Avatar / Initials -->
+        <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold"
+             style="background: var(--neutral-200); color: var(--text-secondary);">
+            {{ member.user.display_name|first|upper }}
+        </div>
+
+        <!-- Name & Email -->
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-medium truncate" style="color: var(--text-primary);">
+                    {{ member.user.display_name }}
+                </span>
+                {% if member.user.id == current_user.id %}
+                <span class="text-xs px-1.5 py-0.5 rounded" style="background: var(--neutral-100); color: var(--text-tertiary);">you</span>
+                {% endif %}
+            </div>
+            <div class="text-xs truncate" style="color: var(--text-tertiary);">{{ member.user.email }}</div>
+        </div>
+
+        {% comment %}
+        One badge, showing what this person can actually do.
+
+        It used to show the org role — Owner / Admin / Member — which said who
+        administers the account and nothing about the work. Next to the
+        workspace roles it read as one ladder when they were two different
+        questions, so the org axis is gone from this page entirely and the badge
+        now carries the only role anyone needs to reason about.
+        {% endcomment %}
+        <div class="flex-shrink-0">
+            {% if member.membership.org_role == "owner" %}
+            <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: #FEF3C7; color: #92400E;">Owner</span>
+            {% elif member.role %}
+            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-app-2 text-app-secondary">{{ member.role|capfirst }}</span>
+            {% else %}
+            {% comment %} In the org, but not on any brand yet. {% endcomment %}
+            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-app-2 text-app-ghost"
+                  title="They are not on any brand yet. Add them under Brands to give them a role.">No access</span>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        {% if member.can_manage %}
+        <div class="flex-shrink-0 relative">
+            <button @click="showActions = !showActions; if (showActions) { const r = $el.getBoundingClientRect(); menuStyle = { position: 'fixed', top: (r.bottom + 4) + 'px', left: (r.right - 208) + 'px', zIndex: 9999 } }"
+                    class="btn-neutral-100 p-1.5 rounded-lg transition-colors cursor-pointer"
+                    style="color: var(--text-tertiary);">
+                {% icon "ellipsis-vertical" css_class="w-[16px] h-[16px]" %}
+            </button>
+
+            <!-- Dropdown (teleported to body so it escapes the card's overflow:hidden) -->
+            <template x-teleport="body">
+            <div x-show="showActions" @click.outside="showActions = false"
+                 @keydown.escape.window="showActions = false"
+                 @scroll.window="showActions = false"
+                 x-transition
+                 x-init="window.htmx && htmx.process($el)"
+                 :style="menuStyle"
+                 class="w-52 py-1 rounded-lg shadow-lg"
+                 style="background: var(--surface-0); border: 1px solid var(--border);">
+
+                {% comment %}
+                One role, applied everywhere they work. There used to be a second
+                picker per brand inside the Brands dialog, which meant answering
+                the same question once per brand and made a role that differed
+                between brands by accident invisible until it bit someone.
+                {% endcomment %}
+                <form hx-post="{% url 'members:update_role' membership_id=member.membership.id %}"
+                      hx-target="#member-{{ member.membership.id }}"
+                      hx-swap="outerHTML"
+                      class="px-3 py-2" style="border-bottom: 1px solid var(--border);">
+                    {% csrf_token %}
+                    <label class="text-xs font-medium block mb-1" style="color: var(--text-secondary);">Role</label>
+                    <div class="flex gap-2">
+                        <select name="workspace_role" class="text-xs flex-1 px-2 py-1 rounded outline-none"
+                                style="border-color: var(--border); background: var(--surface-0); color: var(--text-primary);">
+                            {% for value, label in workspace_role_choices %}
+                            <option value="{{ value }}" {% if value == member.role %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit"
+                                class="text-xs px-2 py-1 rounded font-medium cursor-pointer"
+                                style="background: var(--neutral-100); color: var(--text-primary);">
+                            Save
+                        </button>
+                    </div>
+                    <p class="text-[11px] mt-1.5 leading-snug" style="color: var(--text-tertiary);">
+                        {{ role_help|default:"Applies to every brand they work on." }}
+                    </p>
+                </form>
+
+                <!-- Which brands they work on -->
+                <button @click="showWorkspaces = true; showActions = false"
+                        hx-get="{% url 'members:manage_workspaces' membership_id=member.membership.id %}"
+                        hx-target="#ws-modal-content-{{ member.membership.id }}"
+                        hx-swap="innerHTML"
+                        class="btn-neutral-surface w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors"
+                        style="color: var(--text-primary);">
+                    Brands they work on
+                </button>
+
+                {% comment %}
+                Separate from `can_manage`, and deliberately narrower. A manager
+                may change what someone does on their brands; taking them out of
+                the account entirely is not that, so it stays with whoever
+                administers the account. To get someone off their brand a manager
+                unticks it under "Brands they work on", which leaves the person
+                and their work elsewhere alone.
+                {% endcomment %}
+                {% if member.can_remove %}
+                <form hx-post="{% url 'members:remove' membership_id=member.membership.id %}"
+                      hx-target="#member-{{ member.membership.id }}"
+                      hx-swap="delete"
+                      hx-confirm="Remove {{ member.user.display_name }} from the organization? This will also remove them from all workspaces.">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn-danger-soft-bg w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors"
+                            style="color: #DC2626;">
+                        Remove from Organization
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            </template>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Row 2: Workspace Badges -->
+    {% if member.workspace_memberships %}
+    <div class="flex items-center justify-start flex-wrap gap-2 mt-2">
+        {% comment %}
+        The badge becomes the way into channel access for that workspace — the
+        two belong together, since "which brand" and "which of its channels" are
+        one question asked twice.
+
+        It is only a button where the viewer can actually assign there:
+        `can_manage_channels` is computed per workspace in member_list, because
+        this page is org-scoped and otherwise the link would 403 for anyone
+        below manager. A link that always fails is worse than no link.
+        {% endcomment %}
+        {% for wm in member.workspace_memberships %}
+        {% if wm.can_manage_channels %}
+        <button type="button"
+                hx-get="{% url 'members:manage_channels' workspace_id=wm.workspace_id membership_id=wm.id %}"
+                hx-target="#channel-modal-body-{{ member.membership.id }}"
+                @click="showChannels = true"
+                class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-app-2 text-app-secondary hover:bg-app-3 transition-colors cursor-pointer"
+                title="Manage channel access in {{ wm.workspace.name }}">
+            {% if wm.workspace.icon %}
+            <img src="{{ wm.workspace.icon.url }}" alt="" class="w-4 h-4 rounded-full object-cover">
+            {% else %}
+            <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-semibold bg-app-3 text-app-tertiary">{{ wm.workspace.name|first|upper }}</span>
+            {% endif %}
+            {{ wm.workspace.name }}
+            {% icon "sliders" css_class="w-3 h-3 text-app-ghost" %}
+        </button>
+        {% else %}
+        <span class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-app-2 text-app-secondary"
+              title="{{ wm.workspace.name }} ({{ wm.workspace_role }})">
+            {% if wm.workspace.icon %}
+            <img src="{{ wm.workspace.icon.url }}" alt="" class="w-4 h-4 rounded-full object-cover">
+            {% else %}
+            <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-semibold bg-app-3 text-app-tertiary">{{ wm.workspace.name|first|upper }}</span>
+            {% endif %}
+            {{ wm.workspace.name }}
+        </span>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+
+    {% comment %}
+    Channel access modal. Deliberately a separate dialog from the workspace-role
+    one above: choosing which brands someone belongs to and choosing which of a
+    brand's channels they touch are different decisions, made at different times.
+    {% endcomment %}
+    <template x-teleport="body">
+        <div x-show="showChannels" x-transition.opacity x-cloak
+             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style="background: rgba(23,20,18,0.45);">
+            <div @click.outside="showChannels = false"
+                 @keydown.escape.window="showChannels = false"
+                 class="relief-float w-full max-w-lg p-5"
+                 role="dialog" aria-modal="true" aria-label="Channel access">
+                <div class="flex items-start justify-between mb-4">
+                    <h3 class="text-base font-semibold text-app">Channel access</h3>
+                    <button type="button" @click="showChannels = false"
+                            class="bbs-btn bbs-btn-ghost p-1.5" aria-label="Close">
+                        {% icon "xmark" css_class="w-4 h-4" %}
+                    </button>
+                </div>
+                <div id="channel-modal-body-{{ member.membership.id }}">
+                    <p class="text-sm text-app-tertiary">Loading…</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Workspace Assignment Modal (per member) -->
+    {% if member.can_manage %}
+    <template x-teleport="body">
+        <div x-show="showWorkspaces" x-transition.opacity
+             class="fixed inset-0 z-50 flex items-center justify-center"
+             style="background: rgba(0,0,0,0.4);">
+            <div @click.outside="showWorkspaces = false"
+                 class="w-full max-w-md rounded-xl shadow-xl p-6"
+                 style="background: var(--surface-0);">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-semibold" style="color: var(--text-primary);">
+                        Workspaces - {{ member.user.display_name }}
+                    </h3>
+                    <button @click="showWorkspaces = false" class="cursor-pointer" style="color: var(--text-tertiary);">
+                        {% icon "xmark" css_class="w-[20px] h-[20px]" %}
+                    </button>
+                </div>
+                <div id="ws-modal-content-{{ member.membership.id }}">
+                    <p class="text-sm" style="color: var(--text-tertiary);">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </template>
+    {% endif %}
+</div>

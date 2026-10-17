@@ -1,0 +1,106 @@
+{% load humanize %}
+{# HTMX partial - loaded into the notification drawer panel #}
+
+<div class="flex items-center justify-between px-5 pt-5 pb-3">
+    <h2 class="text-[15px] font-semibold text-app tracking-tight">Notifications</h2>
+    {% if notifications %}
+    <button
+        hx-post="{% url 'notifications:mark_all_read' %}"
+        hx-target="#notification-drawer-content"
+        hx-swap="innerHTML"
+        class="text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors duration-150 cursor-pointer"
+    >
+        Mark all read
+    </button>
+    {% endif %}
+</div>
+
+<div class="flex-1 overflow-y-auto overscroll-contain" style="max-height: calc(100vh - 180px);">
+    {% if notifications %}
+    <ul class="divide-y divide-app-subtle">
+        {% for n in notifications %}
+        <li
+            id="notif-{{ n.id }}"
+            class="group relative {% if not n.is_read %}bg-orange-50/50{% endif %} hover:bg-app-1 transition-colors duration-150"
+        >
+            <a
+                href="{% if n.data.action_url %}{{ n.data.action_url }}{% else %}{% url 'notifications:list' %}{% endif %}"
+                {% if not n.is_read %}
+                hx-post="{% url 'notifications:mark_as_read' n.id %}"
+                hx-target="#notif-{{ n.id }}"
+                hx-swap="outerHTML"
+                hx-trigger="click"
+                {% endif %}
+                class="flex gap-3 px-5 py-3.5 cursor-pointer"
+            >
+                {# Event type icon #}
+                <div class="flex-shrink-0 mt-0.5">
+                    {% if n.event_type == "post_approved" %}
+                    <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                        {% icon "check" css_class="w-4 h-4 text-green-600" %}
+                    </div>
+                    {% elif n.event_type == "post_rejected" or n.event_type == "post_failed" %}
+                    <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+                        {% icon "xmark" css_class="w-4 h-4 text-red-600" %}
+                    </div>
+                    {% elif n.event_type == "post_published" %}
+                    <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                        {% icon "cloud-arrow-up" css_class="w-4 h-4 text-orange-600" %}
+                    </div>
+                    {% elif n.event_type == "new_inbox_message" %}
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                        {% icon "comments" css_class="w-4 h-4 text-blue-600" %}
+                    </div>
+                    {% elif n.event_type == "social_account_disconnected" %}
+                    <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                        {% icon "triangle-exclamation" css_class="w-4 h-4 text-amber-600" %}
+                    </div>
+                    {% elif n.event_type == "post_submitted" or n.event_type == "post_changes_requested" %}
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                        {% icon "clipboard" css_class="w-4 h-4 text-indigo-600" %}
+                    </div>
+                    {% else %}
+                    <div class="w-8 h-8 rounded-lg bg-app-2 flex items-center justify-center">
+                        {% icon "bell" css_class="w-4 h-4 text-app-tertiary" %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <p class="text-[13px] font-semibold text-app leading-snug truncate">{{ n.title }}</p>
+                    {% if n.body %}
+                    <p class="text-[12px] text-app-tertiary leading-relaxed mt-0.5 line-clamp-2">{{ n.body }}</p>
+                    {% endif %}
+                    <p class="text-[11px] text-app-ghost mt-1 font-medium tabular-nums">{{ n.created_at|timesince }} ago</p>
+                </div>
+
+                {% if not n.is_read %}
+                <div class="flex-shrink-0 mt-2">
+                    <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                </div>
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-16 px-6">
+        <div class="w-12 h-12 rounded-xl bg-app-2 flex items-center justify-center mb-4">
+            {% icon "bell" css_class="w-6 h-6 text-app-ghost" %}
+        </div>
+        <p class="text-sm font-medium text-app-tertiary">All caught up</p>
+        <p class="text-xs text-app-ghost mt-1">No notifications yet</p>
+    </div>
+    {% endif %}
+</div>
+
+{% if notifications %}
+<div class="px-5 py-3 border-t border-app-subtle bg-app">
+    <a
+        href="{% url 'notifications:list' %}"
+        class="block text-center text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors duration-150"
+    >
+        View all notifications
+    </a>
+</div>
+{% endif %}

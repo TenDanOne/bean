@@ -1,0 +1,87 @@
+{% load humanize %}
+<div id="msg-{{ message.id }}"
+     class="inbox-row {% if message.status == 'unread' %}is-unread{% endif %}"
+     @click="selectMessage('{{ message.id }}', '{% url 'inbox:message_detail' workspace_id=workspace.id message_id=message.id %}')"
+     @keydown.enter.prevent="selectMessage('{{ message.id }}', '{% url 'inbox:message_detail' workspace_id=workspace.id message_id=message.id %}')"
+     @keydown.space.prevent="selectMessage('{{ message.id }}', '{% url 'inbox:message_detail' workspace_id=workspace.id message_id=message.id %}')"
+     role="button"
+     tabindex="0">
+
+    <!-- Checkbox -->
+    <div class="flex-shrink-0 pt-0.5" @click.stop>
+        <input type="checkbox"
+               :checked="isSelected('{{ message.id }}')"
+               @change="toggleSelect('{{ message.id }}')"
+               @keydown.stop
+               class="w-3.5 h-3.5 rounded border-app-hover text-orange-500 focus:ring-orange-200 cursor-pointer">
+    </div>
+
+    {% comment %}
+    Avatar with the network's mark centred beneath it, as one column.
+
+    They used to be two separate items in the row — checkbox, then a loose logo,
+    then the face — which read as three unrelated things competing before the
+    text even started. Who said it and where they said it are one fact, so they
+    belong in one column: the face identifies the person, the mark underneath
+    says which network they reached us on.
+    {% endcomment %}
+    <div class="flex-shrink-0 flex flex-col items-center gap-2 w-8">
+        {% if message.sender_avatar_url %}
+        <img src="{{ message.sender_avatar_url }}" alt="" class="w-8 h-8 rounded-full object-cover">
+        {% else %}
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-app-tertiary" style="background: var(--surface-2);">
+            {{ message.sender_name|make_list|first|upper }}
+        </div>
+        {% endif %}
+        {% comment %}
+        Sized to read at a glance and dropped to sit level with the status chips
+        below, rather than tucked under the chin of the avatar where it was too
+        small to identify without looking twice.
+        {% endcomment %}
+        <span class="leading-none text-app-secondary mt-1">
+            {% platform_icon message.social_account.platform size="[18px]" %}
+        </span>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-0.5">
+            <span class="inbox-row-sender text-[13px] font-semibold text-app-body truncate">{{ message.sender_name }}</span>
+            {% if message.sender_handle %}
+            <span class="text-[11px] text-app-ghost truncate">@{{ message.sender_handle }}</span>
+            {% endif %}
+            <span class="text-[11px] text-app-ghost ml-auto flex-shrink-0" title="{{ message.received_at|date:'N j, Y g:i A' }}">{{ message.received_at|timesince }} ago</span>
+        </div>
+        <p class="inbox-row-preview text-[12px] text-app-tertiary truncate leading-snug">{{ message.body|truncatewords:20 }}</p>
+        <div class="flex items-center gap-1.5 mt-1.5">
+            <!-- Type badge -->
+            <span class="badge-pill badge-type">{{ message.get_message_type_display }}</span>
+            <!-- Status badge -->
+            <span class="badge-pill badge-status-{{ message.status }}">{{ message.get_status_display }}</span>
+            <!-- Moderation state: the row always survives, so the badge says
+                 whether it was actually dealt with, not that it's gone missing. -->
+            {% if message.deleted_on_platform %}
+            <span class="badge-pill" style="background: var(--surface-2); color: var(--text-tertiary);"
+                  title="Deleted on {{ message.deleted_on_platform|date:'N j, Y, H:i' }}{% if message.moderated_by %} by {{ message.moderated_by.display_name }}{% endif %}">Deleted</span>
+            {% elif message.is_hidden %}
+            <span class="badge-pill" style="background: var(--warning-50); color: var(--warning-700);"
+                  title="Hidden{% if message.moderated_by %} by {{ message.moderated_by.display_name }}{% endif %}. The public cannot see it.">Hidden</span>
+            {% endif %}
+            <!-- Sentiment badge -->
+            {% include "inbox/partials/_sentiment_badge.html" %}
+            <!-- Assignment -->
+            {% if message.assigned_to %}
+            <span class="badge-pill" style="background: var(--accent-indigo-soft); color: var(--accent-indigo);">
+                {% icon "user" css_class="w-2.5 h-2.5" %}
+                {{ message.assigned_to.get_short_name|default:message.assigned_to.email|truncatechars:10 }}
+            </span>
+            {% endif %}
+            <!-- SLA -->
+            {% if sla_config and sla_config.is_active and message.status != 'resolved' and message.status != 'archived' %}
+            <span class="sla-countdown ml-auto"
+                  :class="getSlaClass('{{ message.received_at|date:'c' }}')"
+                  x-text="formatSla('{{ message.received_at|date:'c' }}')"></span>
+            {% endif %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,1435 @@
+{% load static common_extras %}
+<!DOCTYPE html>
+<html lang="en" style="{% block html_style %}{% endblock %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Brightbean{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon/favicon.svg' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'favicon/favicon-96x96.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
+    <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <script nonce="{{ request.csp_nonce }}">
+        // Set sidebar state class on <html> before first paint to prevent flash
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-is-collapsed');
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        /* Initial sidebar width - applied before Alpine loads */
+        .sidebar-initial { width: 240px; }
+        html.sidebar-is-collapsed .sidebar-initial { width: 60px; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-nav-item { justify-content: center; padding: 8px; gap: 0; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-nav-label,
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-section-label,
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-section-label-wrap,
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-badge { display: none; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-new-label,
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-connect-channels { display: none; }
+        /* Collapsed child overrides before Alpine */
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-ws-btn { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-new-wrap { padding-left: 0.5rem; padding-right: 0.5rem; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-nav { padding-left: 0.5rem; padding-right: 0.5rem; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-org-footer { padding: 0.5rem; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-org-expanded { display: none; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-org-collapsed { display: flex !important; }
+
+        /* Mobile: hide sidebar off-screen before Alpine loads */
+        @media (max-width: 1023px) {
+            .sidebar-initial {
+                position: fixed;
+                top: 0; bottom: 0; left: 0;
+                transform: translateX(-100%);
+                z-index: 40;
+                width: 240px !important;
+            }
+            /* On mobile, never show collapsed state pre-Alpine */
+            html.sidebar-is-collapsed .sidebar-initial { width: 240px !important; }
+        }
+
+        /* Idea modal styles (shared with create_landing) */
+        .idea-modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 200;
+        }
+        .idea-modal {
+            background: white; border-radius: 16px; width: 100%; max-width: 640px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            display: flex; flex-direction: column; max-height: calc(100vh - 80px); position: relative;
+            margin: 0 1rem;
+        }
+        @media (max-width: 640px) {
+            .idea-modal {
+                margin: 0; border-radius: 0; max-height: 100vh; height: 100vh;
+            }
+            .idea-modal-overlay {
+                align-items: stretch;
+            }
+        }
+        .idea-modal-close {
+            position: absolute; top: 16px; right: 16px; width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border: none; background: none; border-radius: 6px;
+            color: var(--text-tertiary); cursor: pointer; transition: color 150ms, background 150ms; z-index: 1;
+        }
+        .idea-modal-close:hover { color: var(--text-primary); background: var(--neutral-100); }
+        .idea-modal-header {
+            display: flex; align-items: center; justify-content: space-between; padding: 20px 50px 16px 24px;
+        }
+        .idea-modal-body { flex: 1; overflow-y: auto; padding: 0 24px 16px; }
+        .idea-modal-footer {
+            padding: 16px 24px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+        }
+        .idea-modal-body input.idea-title-input {
+            width: 100%; font-size: 1.25rem; font-weight: 700; color: var(--text-primary);
+            border: none; outline: none; padding: 0; margin-bottom: 12px; background: transparent;
+        }
+        .idea-modal-body input.idea-title-input::placeholder { color: var(--neutral-300); }
+        .idea-modal-body textarea.idea-desc-input {
+            width: 100%; min-height: 160px; font-size: 0.875rem; color: var(--text-primary);
+            border: none; outline: none; padding: 0; resize: none; background: transparent; line-height: 1.7;
+        }
+        .idea-modal-body textarea.idea-desc-input::placeholder { color: var(--neutral-300); }
+        .idea-pill-btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+            border: 1px solid var(--border); border-radius: 9999px; font-size: 0.8125rem;
+            font-weight: 500; color: var(--text-primary); background: var(--surface-0);
+            cursor: pointer; transition: background 150ms; white-space: nowrap;
+        }
+        .idea-pill-btn:hover { background: var(--neutral-50); }
+        .idea-pill-dropdown {
+            position: absolute; top: calc(100% + 6px); right: 0; background: white;
+            border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); border: 1px solid var(--border);
+            min-width: 180px; max-height: 240px; overflow-y: auto; z-index: 210; padding: 4px;
+        }
+        .idea-pill-dropdown label, .idea-pill-dropdown button {
+            display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 10px;
+            font-size: 0.8125rem; border-radius: 6px; cursor: pointer; transition: background 100ms;
+            border: none; background: none; color: var(--text-primary); text-align: left;
+        }
+        .idea-pill-dropdown label:hover, .idea-pill-dropdown button:hover { background: var(--neutral-50); }
+        .idea-media-zone {
+            border: 2px dashed var(--border); border-radius: 12px; padding: 24px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            color: var(--text-tertiary); font-size: 0.8125rem; max-width: 150px; margin-top: 16px;
+            cursor: pointer;
+            transition: border-color 150ms, background 150ms;
+        }
+        .idea-media-zone.drag-over { border-color: var(--primary); background: rgba(var(--primary-rgb, 249, 115, 22), 0.05); }
+        .idea-media-strip-layout {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .idea-media-zone.idea-media-zone-tile {
+            margin-top: 0;
+            width: 130px;
+            max-width: 130px;
+            min-height: 130px;
+            height: 130px;
+            padding: 14px 10px;
+        }
+        .idea-media-existing-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            width: 130px;
+            height: 130px;
+            background: var(--neutral-100);
+        }
+        .idea-media-existing-card img,
+        .idea-media-existing-card video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .idea-media-existing-card .remove-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 38px;
+            height: 38px;
+            border: 2px solid var(--surface-0);
+            border-radius: 9999px;
+            background: rgba(38, 38, 38, 0.78);
+            color: var(--surface-0);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 150ms;
+        }
+        .idea-media-existing-card .remove-btn:hover { background: rgba(23, 23, 23, 0.9); }
+        @media (max-width: 640px) {
+            .idea-media-strip-layout {
+                gap: 10px;
+            }
+        }
+        .idea-selected-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+        .idea-selected-tags .idea-tag-chip {
+            display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 9999px;
+            font-size: 0.6875rem; font-weight: 600;
+            background: var(--primary-soft); color: var(--primary); border: 1px solid var(--primary-muted);
+        }
+        .idea-selected-tags .idea-tag-chip button {
+            display: flex; align-items: center; justify-content: center;
+            width: 12px; height: 12px; border: none; background: none; cursor: pointer; color: inherit; padding: 0;
+        }
+        .emoji-picker-popup {
+            position: absolute; bottom: calc(100% + 8px); left: 0; background: white;
+            border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid var(--border);
+            width: 280px; z-index: 220; overflow: hidden;
+        }
+        .emoji-picker-search { padding: 8px 8px 4px; }
+        .emoji-picker-grid {
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+            padding: 4px 8px 8px; max-height: 200px; overflow-y: auto;
+        }
+        .emoji-picker-item {
+            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; border: none; background: none; border-radius: 6px; cursor: pointer; transition: background 100ms;
+        }
+        .emoji-picker-item:hover { background: var(--neutral-100); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="text-app min-h-screen" style="background: var(--surface-page);">
+    {% csrf_token %}
+    <script nonce="{{ request.csp_nonce }}">
+        document.body.addEventListener('htmx:configRequest', function(event) {
+            event.detail.headers['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        });
+    </script>
+
+    {% comment %}
+      Global htmx error surface. htmx does not swap non-2xx responses, so a
+      server's error text would otherwise be silently dropped (only a console
+      error remains). This listener reads that text (XSS-safe via DOMParser)
+      and either routes it to a form's inline container (via
+      data-inline-error="#selector") or shows the dismissible toast below.
+      A context can opt out entirely with data-no-error-toast.
+    {% endcomment %}
+    <div x-data="{ show: false, message: '', timer: null }"
+         x-show="show"
+         x-cloak
+         x-transition.opacity
+         @htmx-error.window="message = $event.detail.message; show = true; clearTimeout(timer); timer = setTimeout(() => show = false, 6000)"
+         class="fixed top-4 right-4 z-[100] max-w-sm"
+         role="alert" aria-live="assertive">
+        <div class="flex items-start gap-3 rounded-lg px-4 py-3 shadow-lg"
+             style="background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B;">
+            {% icon "circle-exclamation" css_class="w-5 h-5 flex-shrink-0 mt-0.5" %}
+            <p class="text-sm flex-1" x-text="message"></p>
+            <button type="button" @click="show = false" class="flex-shrink-0 cursor-pointer" style="color: #DC2626;" aria-label="Dismiss">
+                {% icon "xmark" css_class="w-4 h-4" %}
+            </button>
+        </div>
+    </div>
+    <script nonce="{{ request.csp_nonce }}">
+        document.body.addEventListener('htmx:responseError', function(event) {
+            var elt = event.detail.elt;
+            // Contexts that manage their own error UI opt out entirely.
+            if (elt && elt.closest('[data-no-error-toast]')) return;
+            // Extract plain text from the response without executing or loading it.
+            var responseText = (event.detail.xhr && event.detail.xhr.responseText) || '';
+            var body = new DOMParser().parseFromString(responseText, 'text/html').body;
+            var message = (body.textContent || '').trim() || 'Something went wrong. Please try again.';
+            // Inline opt-in: write into the form's declared container instead of the toast.
+            var inline = elt && elt.closest('[data-inline-error]');
+            if (inline) {
+                var target = document.querySelector(inline.getAttribute('data-inline-error'));
+                if (target) { target.textContent = message; return; }
+            }
+            window.dispatchEvent(new CustomEvent('htmx-error', { detail: { message: message } }));
+        });
+    </script>
+    {% if user.is_authenticated %}
+    <div class="flex h-screen overflow-hidden"
+         style="background: var(--surface-page);"
+         x-data="{ sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true', mobileMenuOpen: false }"
+         x-effect="localStorage.setItem('sidebarCollapsed', sidebarCollapsed)"
+         @keydown.escape.window="mobileMenuOpen = false">
+
+        <!-- Mobile backdrop overlay -->
+        <div x-show="mobileMenuOpen" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="mobileMenuOpen = false"
+             class="fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside class="flex flex-col flex-shrink-0 sidebar-initial
+                      fixed inset-y-0 left-0 z-40 w-60 bg-app
+                      transition-transform duration-200
+                      lg:relative lg:z-auto lg:translate-x-0 lg:bg-transparent"
+               :class="[
+                   sidebarCollapsed ? 'lg:w-[60px] sidebar-collapsed' : 'lg:w-60',
+                   mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+               ]"
+               x-init="$el.classList.remove('sidebar-initial'); document.documentElement.classList.remove('sidebar-is-collapsed'); $nextTick(() => $el.classList.add('transition-all', 'duration-200'))"
+               @click="if (window.innerWidth < 1024 && $event.target.closest('a')) { mobileMenuOpen = false }">
+
+            <!-- Workspace switcher (top of sidebar) -->
+            <div class="relative border-b border-app-subtle" x-data="{ wsOpen: false }">
+                <button @click="wsOpen = !wsOpen"
+                        class="sidebar-ws-btn w-full flex items-center gap-2.5 px-4 py-3.5 text-left hover:bg-black/[0.04] transition-colors cursor-pointer rounded-br-lg"
+                        :class="sidebarCollapsed ? 'justify-center px-0' : 'gap-2.5 px-4'">
+                    {% with current_ws=request.workspace %}
+                    {% if current_ws %}
+                    {% if current_ws.icon %}
+                    <img src="{{ current_ws.icon.url }}" alt="" class="sidebar-logo-mark flex-shrink-0 object-cover">
+                    {% else %}
+                    <div class="sidebar-logo-mark flex-shrink-0">{{ current_ws.name|make_list|first|upper }}</div>
+                    {% endif %}
+                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" x-show="!sidebarCollapsed" x-cloak>{{ current_ws.name }}</span>
+                    {% elif sidebar_workspaces %}
+                    {% if sidebar_workspaces.0.icon %}
+                    <img src="{{ sidebar_workspaces.0.icon.url }}" alt="" class="sidebar-logo-mark flex-shrink-0 object-cover">
+                    {% else %}
+                    <div class="sidebar-logo-mark flex-shrink-0">{{ sidebar_workspaces.0.name|make_list|first|upper }}</div>
+                    {% endif %}
+                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" x-show="!sidebarCollapsed" x-cloak>{{ sidebar_workspaces.0.name }}</span>
+                    {% else %}
+                    <div class="sidebar-logo-mark flex-shrink-0">P</div>
+                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" x-show="!sidebarCollapsed" x-cloak>Brightbean</span>
+                    {% endif %}
+                    {% endwith %}
+                    <svg class="w-4 h-4 text-app-ghost flex-shrink-0 transition-transform" :class="wsOpen && 'rotate-180'" x-show="!sidebarCollapsed" x-cloak fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+
+                <!-- Workspace dropdown -->
+                <div x-show="wsOpen" @click.away="wsOpen = false" x-cloak
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="absolute left-2 right-2 top-full mt-1 bg-app rounded-xl shadow-lg ring-1 ring-app py-1 z-50">
+                    {% for ws in sidebar_workspaces %}
+                    <a href="{% url 'calendar:calendar' workspace_id=ws.id %}"
+                       class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-md hover:bg-black/[0.04] transition-colors {% if request.workspace and ws.id == request.workspace.id %}bg-app-1 font-semibold text-app{% else %}text-app-body{% endif %}">
+                        {% if ws.icon %}
+                        <img src="{{ ws.icon.url }}" alt="" class="w-7 h-7 rounded-md object-cover flex-shrink-0">
+                        {% else %}
+                        <div class="w-7 h-7 rounded-md flex items-center justify-center text-app-inverse text-[11px] font-bold flex-shrink-0"
+                             style="background: var(--primary);">
+                            {{ ws.name|make_list|first|upper }}
+                        </div>
+                        {% endif %}
+                        <span class="truncate">{{ ws.name }}</span>
+                        {% if request.workspace and ws.id == request.workspace.id %}
+                        {% icon "check" css_class="w-4 h-4 text-app-ghost ml-auto flex-shrink-0" %}
+                        {% endif %}
+                    </a>
+                    {% empty %}
+                    <p class="px-3 py-2 text-sm text-app-ghost">No workspaces</p>
+                    {% endfor %}
+                    {% if can_create_workspace %}
+                    <div class="border-t border-app-subtle mt-1 pt-1">
+                        <button @click="wsOpen = false; $dispatch('open-create-ws')"
+                                class="flex items-center gap-2.5 px-3 py-2 text-sm text-app-secondary rounded-md hover:bg-black/[0.04] transition-colors w-full cursor-pointer">
+                            <div class="w-7 h-7 rounded-md flex items-center justify-center border border-dashed border-app-hover flex-shrink-0">
+                                {% icon "plus" css_class="w-3.5 h-3.5 text-app-ghost" %}
+                            </div>
+                            <span>Create workspace</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                    {% if request.workspace %}
+                    <div class="border-t border-app-subtle mt-1 pt-1">
+                        <a href="{% url 'workspaces:settings' workspace_id=request.workspace.id %}"
+                           class="flex items-center gap-2.5 px-3 py-2 text-sm text-app-secondary rounded-md hover:bg-black/[0.04] transition-colors w-full cursor-pointer">
+                            <div class="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0">
+                                {% icon "gear" css_class="w-4 h-4 text-app-ghost" %}
+                            </div>
+                            <span>Workspace settings</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- + New CTA -->
+            {% if request.workspace %}
+            <div class="sidebar-new-wrap px-3 pt-2 pb-1" :class="sidebarCollapsed && 'px-2'"
+                 x-data="sidebarNewMenu()">
+                <div class="relative">
+                    <button @click="newMenuOpen = !newMenuOpen"
+                            class="btn-brand w-full flex items-center justify-center gap-1.5 text-sm py-2 cursor-pointer"
+                            :style="sidebarCollapsed ? 'padding-left:1.15rem;padding-right:1.15rem' : ''">
+                        {% icon "plus" css_class="w-4 h-4 flex-shrink-0" %}
+                        <span class="sidebar-new-label" x-show="!sidebarCollapsed">New</span>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div x-show="newMenuOpen" x-cloak @click.away="newMenuOpen = false"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute left-0 right-0 top-full mt-2 bg-app rounded-xl shadow-lg ring-1 ring-app z-50 overflow-hidden py-1.5 px-1.5">
+                        <a href="{% url 'composer:compose' workspace_id=request.workspace.id %}"
+                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-app-1 transition-colors">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                {% icon "file-lines" css_class="w-5 h-5 text-blue-500" %}
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-app-strong">Post</div>
+                                <div class="text-xs text-app-tertiary">Publish content to a channel</div>
+                            </div>
+                        </a>
+                        <button type="button" @click="openCreateModal()"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-app-1 transition-colors cursor-pointer">
+                            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                                {% icon "lightbulb" css_class="w-5 h-5 text-green-500" %}
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-semibold text-app-strong">Idea</div>
+                                <div class="text-xs text-app-tertiary">Capture a content idea</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Create Idea Modal -->
+                <template x-teleport="body">
+                    <div x-show="showCreateModal" x-cloak
+                         class="idea-modal-overlay"
+                         @click.self="closeCreateModal()"
+                         @keydown.escape.window="closeCreateModal()">
+                        <div class="idea-modal" @click.stop>
+                            <button type="button" class="idea-modal-close" @click="closeCreateModal()" title="Close">
+                                {% icon "xmark" css_class="w-[16px] h-[16px]" %}
+                            </button>
+                            <form action="{% url 'composer:idea_create' workspace_id=request.workspace.id %}"
+                                  method="post"
+                                  enctype="multipart/form-data"
+                                  @submit.prevent="submitCreateIdea($event)">
+                                {% csrf_token %}
+                                <input type="hidden" name="group" :value="createSelectedGroup">
+                                <input type="hidden" name="tags" :value="createSelectedTags.join(',')">
+                                <input type="hidden" name="media_asset_ids" :value="createMediaAssetIdsCsv()">
+                                <input type="hidden" name="media_asset_id" :value="createPrimaryMediaAssetId()">
+
+                                <!-- Header -->
+                                <div class="idea-modal-header">
+                                    <h2 class="text-lg font-semibold" style="color: var(--text-primary);">Create Idea</h2>
+                                    <div class="flex items-center gap-2">
+                                        <!-- Column selector dropdown -->
+                                        <div class="relative" @click.away="createGroupDropdownOpen = false">
+                                            <button type="button" class="idea-pill-btn" @click="createGroupDropdownOpen = !createGroupDropdownOpen; createTagDropdownOpen = false">
+                                                {% icon "table-cells" css_class="w-[14px] h-[14px]" %}
+                                                <span x-text="createGroupLabel()"></span>
+                                                {% icon "chevron-down" css_class="w-[12px] h-[12px]" %}
+                                            </button>
+                                            <div x-show="createGroupDropdownOpen" x-cloak x-transition class="idea-pill-dropdown">
+                                                {% for col in sidebar_idea_columns %}
+                                                <button type="button"
+                                                        @click="createSelectedGroup = '{{ col.id }}'; createGroupDropdownOpen = false"
+                                                        :class="createSelectedGroup === '{{ col.id }}' && 'font-semibold'">
+                                                    <span>{{ col.label }}</span>
+                                                    <svg x-show="createSelectedGroup === '{{ col.id }}'" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" class="ml-auto" style="color: var(--primary);"><polyline points="20 6 9 17 4 12"/></svg>
+                                                </button>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+
+                                        <!-- Tags dropdown -->
+                                        <div class="relative" @click.away="createTagDropdownOpen = false">
+                                            <button type="button" class="idea-pill-btn" @click="createTagDropdownOpen = !createTagDropdownOpen; createGroupDropdownOpen = false; if(createTagDropdownOpen) $nextTick(() => $refs.sidebarCreateTagSearchInput.focus())">
+                                                {% icon "tag" css_class="w-[14px] h-[14px]" %}
+                                                <span>Tags</span>
+                                                <span x-show="createSelectedTags.length" class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold text-app-on-primary" style="background: var(--primary);" x-text="createSelectedTags.length"></span>
+                                                {% icon "chevron-down" css_class="w-[12px] h-[12px]" %}
+                                            </button>
+                                            <div x-show="createTagDropdownOpen" x-cloak x-transition class="idea-pill-dropdown">
+                                                <div style="padding: 4px 6px; border-bottom: 1px solid var(--border);">
+                                                    <input type="text" x-ref="sidebarCreateTagSearchInput" x-model="createTagSearch"
+                                                           @keydown.enter.prevent="if (createTagSearch.trim() && !filteredCreateTags.includes(createTagSearch.trim())) { persistAndToggleCreateTag(createTagSearch.trim()); } else if (filteredCreateTags.length === 1) { toggleCreateTag(filteredCreateTags[0]); createTagSearch = ''; }"
+                                                           class="w-full text-xs px-2 py-1.5 rounded outline-none"
+                                                           style="border-color: var(--border);"
+                                                           placeholder="Search or create tag...">
+                                                </div>
+                                                <template x-for="tag in filteredCreateTags" :key="tag">
+                                                    <label>
+                                                        <input type="checkbox" class="rounded accent-orange-500"
+                                                               :checked="createSelectedTags.includes(tag)"
+                                                               @change="toggleCreateTag(tag)">
+                                                        <span x-text="tag"></span>
+                                                    </label>
+                                                </template>
+                                                <template x-if="!createTagSearch.trim() && !allTags.length">
+                                                    <div class="px-3 py-2 text-xs" style="color: var(--text-tertiary);">No tags yet. Type to create one.</div>
+                                                </template>
+                                                <template x-if="createTagSearch.trim() && !filteredCreateTags.includes(createTagSearch.trim())">
+                                                    <div class="border-t" style="border-color: var(--border); margin-top: 2px; padding-top: 2px;">
+                                                        <button type="button" @click="persistAndToggleCreateTag(createTagSearch.trim())"
+                                                                style="color: var(--primary);">
+                                                            {% icon "plus" css_class="w-[12px] h-[12px]" %}
+                                                            Create "<span x-text="createTagSearch.trim()"></span>"
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                                <div class="border-t border-app-subtle px-1 py-1">
+                                                    <button type="button" @click="createTagDropdownOpen = false; showCreateTagModal = true; newTagName = createTagSearch; createTagSearch = ''; $nextTick(() => $refs.sidebarNewTagNameInput.focus())"
+                                                            class="flex items-center gap-2 w-full px-2.5 py-1.5 text-sm text-app-secondary hover:bg-app-1 rounded-md cursor-pointer transition-colors">
+                                                        {% icon "plus" css_class="w-3.5 h-3.5 text-orange-500" %}
+                                                        Create new tag
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Selected tags chips -->
+                                <template x-if="createSelectedTags.length > 0">
+                                    <div class="idea-selected-tags" style="padding: 0 24px 8px;">
+                                        <template x-for="tag in createSelectedTags" :key="tag">
+                                            <span class="idea-tag-chip">
+                                                <span x-text="tag"></span>
+                                                <button type="button" @click="toggleCreateTag(tag)">
+                                                    {% icon "xmark" css_class="w-[8px] h-[8px]" %}
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Body -->
+                                <div class="idea-modal-body" @click="createGroupDropdownOpen = false; createTagDropdownOpen = false">
+                                    <input type="text" name="title" required class="idea-title-input" placeholder="Give your idea a title">
+                                    <textarea name="description" class="idea-desc-input" placeholder="Let it flow... or"></textarea>
+                                    <input type="file" name="media" x-ref="sidebarIdeaFileInput" accept="image/*,video/*,.gif" style="display:none" multiple
+                                           @change="_handleFileSelect($event)">
+
+                                    <div class="idea-media-strip-layout">
+                                        <template x-for="(media, index) in createMediaAssets" :key="media.asset_id + '-' + index">
+                                            <div class="idea-media-existing-card">
+                                                <template x-if="media.media_type === 'video'">
+                                                    <video :src="media.url" muted playsinline preload="metadata"></video>
+                                                </template>
+                                                <template x-if="media.media_type !== 'video'">
+                                                    <img :src="media.url" alt="Preview">
+                                                </template>
+                                                <button type="button" class="remove-btn" @click="_removeCreateMedia(index)" title="Remove">
+                                                    {% icon "xmark" css_class="w-[18px] h-[18px]" %}
+                                                </button>
+                                            </div>
+                                        </template>
+                                        <div class="idea-media-zone"
+                                             :class="{ 'idea-media-zone-tile': true, 'drag-over': _mediaDragOver }"
+                                             @click="$refs.sidebarIdeaFileInput.click()"
+                                             @dragover.prevent="_mediaDragOver = true"
+                                             @dragleave.prevent="_mediaDragOver = false"
+                                             @drop.prevent="_mediaDragOver = false; _handleMediaDrop($event)">
+                                            {% icon "image" css_class="w-[24px] h-[24px]" %}
+                                            <span x-show="!createMediaAssets.length">Drag &amp; drop</span>
+                                            <span x-show="createMediaAssets.length">Add another file</span>
+                                            <span>or <strong style="color: var(--primary); cursor: pointer;">select a file</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="idea-modal-footer" @click="createGroupDropdownOpen = false; createTagDropdownOpen = false">
+                                    <span style="margin-right: auto; display: flex; align-items: center; gap: 8px; color: var(--text-tertiary);">
+                                        <span style="width: 1px; height: 20px; background: var(--border);"></span>
+                                        <div class="relative">
+                                            <button type="button" @click.stop="emojiPickerOpen = !emojiPickerOpen" class="p-1 rounded hover:bg-app-2 transition-colors cursor-pointer" title="Emoji" style="color: var(--text-tertiary);">
+                                                {% icon "face-smile" css_class="w-[18px] h-[18px]" %}
+                                            </button>
+                                            <div x-show="emojiPickerOpen" x-cloak @click.away="emojiPickerOpen = false"
+                                                 x-transition:enter="transition ease-out duration-100"
+                                                 x-transition:enter-start="opacity-0 scale-95"
+                                                 x-transition:enter-end="opacity-100 scale-100"
+                                                 class="emoji-picker-popup">
+                                                <div class="emoji-picker-search">
+                                                    <input type="text" placeholder="Search emoji..." x-model="_emojiSearch"
+                                                           class="w-full px-2 py-1.5 text-xs rounded outline-none"
+                                                           style="border-color: var(--border);"
+                                                           @click.stop>
+                                                </div>
+                                                <div class="emoji-picker-grid">
+                                                    <template x-for="emoji in _filteredEmojis()" :key="emoji.e">
+                                                        <button type="button"
+                                                                class="emoji-picker-item"
+                                                                @click.stop="_insertEmoji(emoji.e); emojiPickerOpen = false"
+                                                                x-text="emoji.e"
+                                                                :title="emoji.n">
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span style="width: 1px; height: 20px; background: var(--border);"></span>
+                                    </span>
+                                    <button type="button" @click="closeCreateModal()"
+                                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer"
+                                            style="background: var(--neutral-100); color: var(--text-primary);">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                            :disabled="createMediaUploadCount > 0 || isCreateSaving"
+                                            :class="(createMediaUploadCount > 0 || isCreateSaving) && 'opacity-50 cursor-not-allowed'"
+                                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer"
+                                            style="background: var(--neutral-100); color: var(--text-primary);">
+                                        Save Idea
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div x-show="showCreateTagModal" x-cloak class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeCreateTagModal()">
+                        <div class="fixed inset-0 bg-black/30" @click="closeCreateTagModal()"></div>
+                        <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
+                            <h3 class="text-base font-semibold text-app-strong mb-4">Create new tag</h3>
+                            <input type="text" x-ref="sidebarNewTagNameInput" x-model="newTagName"
+                                   @keydown.enter.prevent="createTagFromModal()"
+                                   class="w-full text-sm px-3 py-2.5 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                                   placeholder="Tag name...">
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button type="button" @click="closeCreateTagModal()"
+                                        class="px-4 py-2 text-sm font-medium text-app-secondary hover:bg-app-2 rounded-lg cursor-pointer transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="button"
+                                        @click="createTagFromModal()"
+                                        class="px-4 py-2 text-sm font-semibold text-app-inverse rounded-lg transition-colors"
+                                        style="background: var(--primary);"
+                                        :class="newTagName.trim() ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'">
+                                    Create
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            {% endif %}
+
+            <!-- Navigation -->
+            <nav class="sidebar-nav flex-1 overflow-y-auto py-2 px-3" :class="sidebarCollapsed ? 'px-2' : 'px-3'">
+                {% block sidebar_nav %}
+                {% if request.workspace %}
+                <a href="{% url 'calendar:calendar' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}">
+                    {% icon "calendar-days" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+                    <span class="sidebar-nav-label">Publish</span>
+                </a>
+                <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'create_landing' or request.resolver_match.url_name == 'compose' %}active{% endif %}">
+                    {% icon "lightbulb" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+                    <span class="sidebar-nav-label">Create Idea</span>
+                </a>                
+                <a href="{% url 'inbox:feed' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'inbox' %}active{% endif %}">
+                    {% icon "comments" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+                    <span class="sidebar-nav-label">Social Inbox</span>
+                    {% if sidebar_unread_inbox_count %}<span class="sidebar-badge">{{ sidebar_unread_inbox_count }}</span>{% endif %}
+                </a>
+                {% endif %}
+
+                <a href="{% url 'notifications:list' %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'notifications' %}active{% endif %}">
+                    {% icon "bell" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+                    <span class="sidebar-nav-label">Notifications</span>
+                </a>
+
+                {% if request.workspace %}
+                {% if analytics_enabled_platforms %}
+                <a href="{% url 'analytics:index' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'analytics' %}active{% endif %}">
+                    {% icon "chart-line" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+                    <span class="sidebar-nav-label">Analytics</span>
+                </a>
+                {% endif %}
+                {% endif %}
+
+                {% if request.workspace %}
+                {% if sidebar_channels or sidebar_unhealthy_channels %}
+                <!-- Channels -->
+                <div class="group flex items-center justify-between mt-3.5 sidebar-section-label-wrap">
+                    <div class="sidebar-section-label" style="padding-top:0">Channels</div>
+                    {% comment %}
+                    Only for whoever may connect one. This "+" pointed everybody
+                    at a page that requires `manage_social_accounts`, so for an
+                    editor it was a shortcut to a bare 403.
+                    {% endcomment %}
+                    {% if request|can:"manage_social_accounts" %}
+                    <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}"
+                       class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-app-ghost hover:text-app-secondary transition-all mr-2 sidebar-nav-label"
+                       title="Connect a channel">
+                        {% icon "plus" css_class="w-3.5 h-3.5" label="Connect a channel" %}
+                    </a>
+                    {% endif %}
+                </div>
+                {% comment %}
+                The row links to the channels page, which requires
+                `manage_social_accounts` — so for an editor every one of their
+                own channels was a link to a 403. Without the permission it is
+                still listed, because knowing which channels you work on is
+                useful, but it is not a link to somewhere they cannot go.
+                {% endcomment %}
+                {% for channel in sidebar_channels %}
+                {% if request|can:"manage_social_accounts" %}
+                <a href="{% url 'social_accounts:list' workspace_id=request.workspace.id %}" class="sidebar-nav-item" title="{{ channel.queued_post_count|default:0 }} upcoming post{{ channel.queued_post_count|default:0|pluralize }} in the queue for {{ channel.account_name|default:channel.account_handle }}">
+                    {% include "partials/_sidebar_channel_body.html" with channel=channel %}
+                </a>
+                {% else %}
+                <div class="sidebar-nav-item" title="{{ channel.queued_post_count|default:0 }} upcoming post{{ channel.queued_post_count|default:0|pluralize }} in the queue for {{ channel.account_name|default:channel.account_handle }}">
+                    {% include "partials/_sidebar_channel_body.html" with channel=channel %}
+                </div>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+
+                {% for channel in sidebar_unhealthy_channels %}
+                <div class="sidebar-nav-item flex items-center gap-2">
+                    <div class="relative flex-shrink-0 opacity-60">
+                        {% if channel.avatar_url %}
+                        <img src="{{ channel.avatar_url }}" alt="" class="w-7 h-7 rounded-full object-cover grayscale" x-data @error="$el.style.display='none';$el.nextElementSibling.style.display='flex'">
+                        <div class="w-7 h-7 rounded-full bg-app-3 items-center justify-center text-[11px] font-semibold text-app-tertiary" style="display:none">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
+                        {% else %}
+                        <div class="w-7 h-7 rounded-full bg-app-3 flex items-center justify-center text-[11px] font-semibold text-app-tertiary">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
+                        {% endif %}
+                        <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-app rounded-full flex items-center justify-center">
+                            {% include "partials/_platform_icon.html" with platform=channel.platform size="sm" %}
+                        </div>
+                    </div>
+                    <span class="sidebar-nav-label truncate flex-1 text-app-ghost opacity-60">{{ channel.account_name|default:channel.account_handle }}</span>
+                    <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=request.workspace.id account_id=channel.id %}" class="sidebar-nav-label">
+                        {% csrf_token %}
+                        <button type="submit" class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold text-orange-700 bg-orange-50 rounded-full hover:bg-orange-100 transition-colors cursor-pointer" title="Reconnect {{ channel.account_name|default:channel.account_handle }}">
+                            Reconnect
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+
+                <!-- Connect channels (hidden when collapsed) -->
+                {% if sidebar_connectable_platforms %}
+                <div class="sidebar-connect-channels" x-show="!sidebarCollapsed">
+                <div class="sidebar-section-label">Connect channels</div>
+                {% for platform_key, platform_label in sidebar_connectable_platforms|slice:":3" %}
+                <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}" class="sidebar-nav-item">
+                    <div class="relative flex-shrink-0">
+                        <div class="w-4 h-4 flex items-center justify-center rounded-lg bg-app-2">
+                            {% include "partials/_platform_icon.html" with platform=platform_key size="sm" %}
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full bg-orange-500 flex items-center justify-center ring-1 ring-white">
+                            {% icon "plus" css_class="w-[6px] h-[6px]" %}
+                        </div>
+                    </div>
+                    <span class="sidebar-nav-label">{{ platform_label }}</span>
+                </a>
+                {% endfor %}
+                <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}" class="sidebar-nav-item">
+                    <div class="w-4 h-4 flex items-center justify-center flex-shrink-0 rounded-lg bg-app-2">
+                        {% icon "plus" css_class="w-[14px] h-[14px]" %}
+                    </div>
+                    <span class="sidebar-nav-label">More channels</span>
+                </a>
+                </div>
+                {% endif %}
+                {% endif %}
+                {% endblock %}
+            </nav>
+
+            <!-- Organization footer -->
+            <div class="sidebar-org-footer border-t border-app-subtle relative px-3 py-3" x-data="{ orgMenuOpen: false }"
+                 :class="sidebarCollapsed ? 'px-2 py-2' : 'px-3 py-3'">
+                <!-- Expanded: single row with org button + collapse toggle -->
+                <div class="sidebar-org-expanded flex items-center gap-1" x-show="!sidebarCollapsed">
+                    <button @click="orgMenuOpen = !orgMenuOpen"
+                            class="flex-1 flex items-center gap-2 px-1 py-1 rounded-lg hover:bg-black/[0.04] transition-colors cursor-pointer min-w-0">
+                        {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                        {% else %}
+                        <div class="w-8 h-8 rounded-full bg-app-3 flex items-center justify-center flex-shrink-0">
+                            {% icon "user" css_class="w-4 h-4 text-app-tertiary" %}
+                        </div>
+                        {% endif %}
+                        <div class="flex-1 min-w-0 text-left">
+                            <p class="text-sm font-semibold text-app-strong truncate">{{ request.org.name|default:"My Organization" }}</p>
+                            <p class="text-[11px] text-app-ghost truncate">{% if user.name %}{{ user.name }}{% else %}{{ user.email }}{% endif %}</p>
+                        </div>
+                    </button>
+                    <button @click="sidebarCollapsed = true"
+                            class="hidden lg:flex w-7 h-7 items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer flex-shrink-0"
+                            title="Collapse sidebar">
+                        {% icon "table-columns" css_class="w-[16px] h-[16px]" %}
+                    </button>
+                </div>
+                <!-- Collapsed: stacked vertically -->
+                <div class="sidebar-org-collapsed flex flex-col items-center gap-2" x-show="sidebarCollapsed" x-cloak style="display:none">
+                    <button @click="sidebarCollapsed = false"
+                            class="w-7 h-7 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer"
+                            title="Expand sidebar">
+                        {% icon "table-columns" css_class="w-[16px] h-[16px] scale-x-[-1]" %}
+                    </button>
+                    <button @click="orgMenuOpen = !orgMenuOpen"
+                            class="w-8 h-8 rounded-full {% if not user.avatar %}bg-app-3{% endif %} flex items-center justify-center cursor-pointer hover:bg-stone-300 transition-colors">
+                        {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}" alt="" class="w-8 h-8 rounded-full object-cover">
+                        {% else %}
+                        {% icon "user" css_class="w-4 h-4 text-app-tertiary" %}
+                        {% endif %}
+                    </button>
+                </div>
+
+                <!-- Org menu popover -->
+                <div x-show="orgMenuOpen" @click.away="orgMenuOpen = false" x-cloak
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute bottom-full left-3 right-3 mb-2 bg-app rounded-xl shadow-lg ring-1 ring-app z-50 overflow-hidden">
+
+                    <!-- User info -->
+                    <div class="px-4 pt-4 pb-3">
+                        <p class="text-sm text-app-tertiary truncate">{{ user.email }}</p>
+                        <p class="text-sm font-semibold text-app mt-1">{{ request.org.name|default:"My Organization" }}</p>
+                    </div>
+
+                    <!-- Manage Team button -->
+                    <div class="px-4 pb-3">
+                        <a href="{% url 'members:list' %}"
+                           class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-app-body bg-app border border-app rounded-lg hover:bg-black/[0.04] transition-colors">
+                            {% icon "user-group" css_class="w-4 h-4 text-app-tertiary" %}
+                            Manage Team
+                        </a>
+                    </div>
+
+                    <div class="border-t border-app-subtle">
+                        <!-- Settings -->
+                        <a href="{% url 'accounts:settings' %}"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-app-body hover:bg-black/[0.04] transition-colors">
+                            {% icon "gear" css_class="w-4 h-4 text-app-ghost" %}
+                            Settings
+                        </a>
+                    </div>
+
+                    <div class="border-t border-app-subtle">
+                        <!-- Log out -->
+                        <a href="{% url 'accounts:logout' %}"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-app-body hover:bg-black/[0.04] transition-colors">
+                            {% icon "right-from-bracket" css_class="w-4 h-4 text-app-ghost" %}
+                            Log out
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Mobile top bar -->
+            <div class="flex lg:hidden items-center justify-between px-4 py-3 border-b border-app bg-app flex-shrink-0">
+                <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-app-secondary hover:bg-app-2 transition-colors cursor-pointer -ml-1"
+                        title="Toggle menu">
+                    {% icon "bars" css_class="w-[20px] h-[20px]" %}
+                </button>
+                <div class="flex items-center gap-2">
+                    {% with current_ws=request.workspace %}
+                    {% if current_ws %}
+                    {% if current_ws.icon %}
+                    <img src="{{ current_ws.icon.url }}" alt="" class="w-7 h-7 rounded-md object-cover">
+                    {% else %}
+                    <div class="w-7 h-7 rounded-md flex items-center justify-center text-app-on-primary text-[11px] font-bold" style="background: var(--primary);">{{ current_ws.name|make_list|first|upper }}</div>
+                    {% endif %}
+                    <span class="text-sm font-semibold text-app-strong truncate max-w-[160px]">{{ current_ws.name }}</span>
+                    {% else %}
+                    <div class="w-7 h-7 rounded-md flex items-center justify-center text-app-on-primary text-[11px] font-bold" style="background: var(--primary);">P</div>
+                    <span class="text-sm font-semibold text-app-strong">Brightbean</span>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+                <div class="w-9"></div>
+            </div>
+            <!-- Main content -->
+            {% comment %}
+            The working surface sits a shade below pure white on purpose: raised
+            cards need something to be raised *from*. With a white panel under
+            white cards the soft shadows are mathematically present and visually
+            invisible, which is exactly how this looked before.
+            {% endcomment %}
+            <main class="lg:m-2.5 lg:rounded-xl flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto flex flex-col"
+                  style="background: var(--surface-1); border: 1px solid var(--border);">
+                {% block page_header %}{% endblock %}
+                {% if messages %}
+                <div class="mb-4 space-y-2">
+                    {% for message in messages %}
+                    <div class="rounded-md p-4 {% if message.tags == 'error' %}bg-red-50 text-red-800{% elif message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="flex-1 min-h-0 flex flex-col overflow-y-auto overflow-x-hidden">
+                {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Onboarding checklist popup (fixed bottom-right) -->
+    {% include "onboarding/partials/_checklist.html" %}
+
+    {% else %}
+    <main class="auth-bg min-h-screen flex items-center justify-center py-12 px-4" style="font-family: var(--font-body);">
+        {% block auth_content %}{% endblock %}
+    </main>
+    {% endif %}
+
+    <!-- Vendored JS -->
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}">
+        /* Loading bar.
+         *
+         * Replaces an earlier skeleton system that was removed: fake content
+         * shaped like the real thing looked worse than nothing here. This says
+         * "something is happening" and claims nothing about what is coming.
+         *
+         * A global listener rather than hx-indicator because these surfaces
+         * trigger both ways — declaratively with hx-target and programmatically
+         * with htmx.ajax({target}) — and hx-indicator only covers the first.
+         *
+         * The 180ms delay before it appears lives in the CSS transition, not in
+         * a timer here: a response that lands sooner removes the class before
+         * the transition starts, so a fast load shows nothing at all. Nothing to
+         * clear, no race to lose.
+         */
+        (function () {
+            /* Only surfaces that swap something big enough to notice. A bar over
+             * a button or a counter is noise. */
+            var WATCHED = [
+                '#tab-content', '#inbox-message-list', '#inbox-detail-panel',
+                '#analytics-post-table', '#notification-history-list', '#asset-grid',
+            ].join(',');
+
+            function container(event) {
+                var target = event.detail && event.detail.target;
+                if (!target || !target.closest) return null;
+                return target.closest(WATCHED);
+            }
+
+            document.body.addEventListener('htmx:beforeRequest', function (event) {
+                var el = container(event);
+                if (!el) return;
+                el.classList.add('is-loading');
+                el.setAttribute('aria-busy', 'true');
+            });
+
+            ['htmx:afterSwap', 'htmx:afterRequest', 'htmx:responseError',
+             'htmx:sendError', 'htmx:timeout', 'htmx:abort'].forEach(function (name) {
+                document.body.addEventListener(name, function (event) {
+                    var el = container(event);
+                    if (!el) return;
+                    el.classList.remove('is-loading');
+                    el.removeAttribute('aria-busy');
+                });
+            });
+        })();
+
+        /* Notification bell - Alpine.js component */
+        function notificationBell() {
+            return {
+                open: false,
+                unreadCount: 0,
+                _interval: null,
+                toggle() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        /* Refresh drawer content when opening */
+                        htmx.trigger('#notification-drawer-content', 'load');
+                    }
+                },
+                startPolling() {
+                    this.fetchCount();
+                    this._interval = setInterval(() => this.fetchCount(), 30000);
+                },
+                async fetchCount() {
+                    try {
+                        const resp = await fetch('{% url "notifications:unread_count" %}');
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            this.unreadCount = data.count;
+                        }
+                    } catch (e) { /* silent */ }
+                },
+                destroy() {
+                    if (this._interval) clearInterval(this._interval);
+                }
+            };
+        }
+
+        /* Refresh unread count after any HTMX notification action */
+        document.body.addEventListener('htmx:afterSettle', function(evt) {
+            var target = evt.detail.target;
+            if (target && (target.id === 'notification-drawer-content' || target.id === 'notification-history-list' || target.closest && target.closest('#notification-drawer-content'))) {
+                /* Trigger a count refresh on the bell component */
+                var bellEl = document.querySelector('[x-data="notificationBell()"]');
+                if (bellEl && bellEl.__x) {
+                    bellEl.__x.$data.fetchCount();
+                }
+            }
+        });
+    </script>
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+    <script nonce="{{ request.csp_nonce }}">
+        /* Analytics hero chart: read data attrs off the canvas, (re)create Chart.js.
+           Lives in base.html so its CSP nonce matches the parent page — the chart
+           partial re-renders on HTMX swaps via the htmx:afterSwap hook below. */
+        function bbInitHeroChart(retries) {
+            if (typeof Chart === 'undefined') {
+                /* Chart.js is loaded synchronously above this script, so the
+                   poll should never fire in practice. Cap retries anyway —
+                   if the CDN ever fails (adblock, offline), recursing every
+                   30ms forever burns CPU on every page load. */
+                if ((retries || 0) > 30) return;
+                setTimeout(function () { bbInitHeroChart((retries || 0) + 1); }, 30);
+                return;
+            }
+            var canvas = document.getElementById('analytics-area-chart');
+            if (!canvas) return;
+            var data, labels;
+            try {
+                data = JSON.parse(canvas.dataset.series || '[]');
+                labels = JSON.parse(canvas.dataset.labels || '[]');
+            } catch (e) { return; }
+            var color = '#F97316';
+            if (window._bbHeroChart) { window._bbHeroChart.destroy(); }
+            var ctx = canvas.getContext('2d');
+            var gradient = ctx.createLinearGradient(0, 0, 0, 260);
+            function hexToRgba(c, a) {
+                var v = c.replace('#', '');
+                var r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
+                return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+            }
+            gradient.addColorStop(0, hexToRgba(color, 0.28));
+            gradient.addColorStop(1, hexToRgba(color, 0.0));
+            window._bbHeroChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.32,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        pointHoverBackgroundColor: color,
+                        borderWidth: 2,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { mode: 'index', intersect: false },
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: '#78716C' } },
+                        y: { beginAtZero: true, grid: { color: '#F5F5F4' }, ticks: { color: '#78716C' } },
+                    },
+                },
+            });
+        }
+        // Wrap in a no-arg callback so the DOMContentLoaded event object
+        // doesn't get passed as ``retries`` — that would make
+        // ``(retries || 0) + 1`` string-concatenate the event each tick and
+        // the ``> 30`` cap below would never trip when Chart.js is offline.
+        document.addEventListener('DOMContentLoaded', function () { bbInitHeroChart(); });
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            var target = evt.detail && evt.detail.target;
+            if (target && target.id === 'analytics-hero-chart') {
+                bbInitHeroChart();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.form-datetime[type="date"]').forEach(function(el) {
+                var fp = flatpickr(el, {
+                    dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'M j, Y',
+                    minDate: 'today',
+                    disableMobile: true,
+                });
+                fp.altInput.placeholder = el.getAttribute('data-placeholder') || 'Select date…';
+            });
+            document.querySelectorAll('.form-datetime[type="time"]').forEach(function(el) {
+                var fp = flatpickr(el, {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: 'H:i',
+                    altInput: true,
+                    altFormat: 'h:i K',
+                    time_24hr: false,
+                    disableMobile: true,
+                });
+                fp.altInput.placeholder = el.getAttribute('data-placeholder') || 'Select time…';
+            });
+        });
+    </script>
+    {% if request.workspace %}
+    <script nonce="{{ request.csp_nonce }}">
+        window.ideaModalHelpers = window.ideaModalHelpers || {
+            mediaAssetIdsCsv(items) {
+                return (items || []).map(function(item) { return item.asset_id; }).join(',');
+            },
+            appendUploadedMedia(items, data, file) {
+                if (!items || !data || !data.asset_id) return;
+                var exists = items.some(function(item) { return item.asset_id === data.asset_id; });
+                if (exists) return;
+                items.push({
+                    asset_id: data.asset_id,
+                    url: data.url || '',
+                    filename: data.filename || (file && file.name) || '',
+                    media_type: data.media_type || ((file && file.type && file.type.startsWith('video/')) ? 'video' : 'image'),
+                });
+            },
+            getCsrfToken() {
+                var tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (tokenInput && tokenInput.value) return tokenInput.value;
+                var cookieMatch = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+                return cookieMatch ? decodeURIComponent(cookieMatch[1]) : '';
+            },
+            triggerIdeaChanged() {
+                if (window.htmx && typeof window.htmx.trigger === 'function') {
+                    window.htmx.trigger(document.body, 'ideaChanged');
+                    return;
+                }
+                document.body.dispatchEvent(new CustomEvent('ideaChanged', { bubbles: true }));
+            },
+            submitIdeaForm(formEl, onSuccess) {
+                if (!formEl) return Promise.resolve(false);
+                var url = formEl.getAttribute('action') || formEl.getAttribute('hx-post');
+                if (!url) return Promise.resolve(false);
+                var csrfToken = this.getCsrfToken();
+                if (!csrfToken) {
+                    window.alert('Security token missing. Please reload the page.');
+                    return Promise.resolve(false);
+                }
+                var formData = new FormData(formEl);
+                return fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: formData,
+                })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('save_failed');
+                    })
+                    .then(() => {
+                        this.triggerIdeaChanged();
+                        if (typeof onSuccess === 'function') onSuccess();
+                        return true;
+                    })
+                    .catch(() => {
+                        window.alert('Could not save the idea. Please try again.');
+                        return false;
+                    });
+            },
+            uploadIdeaMediaAsset(uploadUrl, file, onUploaded) {
+                var csrfToken = this.getCsrfToken();
+                if (!csrfToken) return Promise.reject(new Error('csrf_missing'));
+                var formData = new FormData();
+                formData.append('file', file);
+                return fetch(uploadUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrfToken },
+                    body: formData,
+                })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('upload_failed');
+                        return response.json();
+                    })
+                    .then((data) => {
+                        if (!data.asset_id) throw new Error('upload_failed');
+                        if (typeof onUploaded === 'function') onUploaded(data, file);
+                        return true;
+                    });
+            },
+        };
+
+        function sidebarNewMenu() {
+            const ideaHelpers = window.ideaModalHelpers;
+            return {
+                newMenuOpen: false,
+                showCreateModal: false,
+                createSelectedGroup: '{% if sidebar_idea_columns %}{{ sidebar_idea_columns.0.id }}{% endif %}',
+                createSelectedTags: [],
+                createGroupDropdownOpen: false,
+                createTagDropdownOpen: false,
+                createTagSearch: '',
+                showCreateTagModal: false,
+                newTagName: '',
+                createMediaAssets: [],
+                createMediaUploadCount: 0,
+                isCreateSaving: false,
+                emojiPickerOpen: false,
+                _mediaDragOver: false,
+                allTags: [{% for tag in sidebar_idea_tags %}'{{ tag|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+
+                _columnMap: { {% for col in sidebar_idea_columns %}'{{ col.id }}': '{{ col.label }}'{% if not forloop.last %}, {% endif %}{% endfor %} },
+                _defaultGroupId: '{% if sidebar_idea_columns %}{{ sidebar_idea_columns.0.id }}{% endif %}',
+
+                openCreateModal() {
+                    this.newMenuOpen = false;
+                    this.showCreateModal = true;
+                    this.createSelectedGroup = this._defaultGroupId;
+                    this.createSelectedTags = [];
+                    this.createTagSearch = '';
+                    this.showCreateTagModal = false;
+                    this.newTagName = '';
+                    this.createMediaAssets = [];
+                    this.createMediaUploadCount = 0;
+                    this.isCreateSaving = false;
+                    if (this.$refs.sidebarIdeaFileInput) this.$refs.sidebarIdeaFileInput.value = '';
+                },
+
+                closeCreateModal() {
+                    this.showCreateModal = false;
+                    this.createSelectedGroup = this._defaultGroupId;
+                    this.createSelectedTags = [];
+                    this.createGroupDropdownOpen = false;
+                    this.createTagDropdownOpen = false;
+                    this.createTagSearch = '';
+                    this.emojiPickerOpen = false;
+                    this._emojiSearch = '';
+                    this.closeCreateTagModal();
+                    this.createMediaAssets = [];
+                    this.createMediaUploadCount = 0;
+                    this.isCreateSaving = false;
+                    if (this.$refs.sidebarIdeaFileInput) this.$refs.sidebarIdeaFileInput.value = '';
+                },
+
+                createMediaAssetIdsCsv() {
+                    return ideaHelpers.mediaAssetIdsCsv(this.createMediaAssets);
+                },
+
+                createPrimaryMediaAssetId() {
+                    return this.createMediaAssets.length ? this.createMediaAssets[0].asset_id : '';
+                },
+
+                createGroupLabel() {
+                    return this._columnMap[this.createSelectedGroup] || 'Unassigned';
+                },
+
+                toggleCreateTag(tag) {
+                    var idx = this.createSelectedTags.indexOf(tag);
+                    if (idx === -1) { this.createSelectedTags.push(tag); }
+                    else { this.createSelectedTags.splice(idx, 1); }
+                },
+
+                get filteredCreateTags() {
+                    var q = this.createTagSearch.toLowerCase();
+                    return this.allTags.filter(function(t) { return !q || t.toLowerCase().includes(q); });
+                },
+
+                persistAndToggleCreateTag(name) {
+                    name = name.trim();
+                    if (!name) return;
+                    if (!this.allTags.includes(name)) { this.allTags.push(name); this.allTags.sort(); }
+                    if (!this.createSelectedTags.includes(name)) { this.createSelectedTags.push(name); }
+                    this.createTagSearch = '';
+                    this._persistTag(name);
+                },
+
+                closeCreateTagModal() {
+                    this.showCreateTagModal = false;
+                    this.newTagName = '';
+                },
+
+                createTagFromModal() {
+                    var name = this.newTagName.trim();
+                    if (!name) return;
+                    this.persistAndToggleCreateTag(name);
+                    this.closeCreateTagModal();
+                },
+
+                _persistTag(name) {
+                    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                    if (!csrfToken) return;
+                    fetch('{% url "composer:tag_create" workspace_id=request.workspace.id %}', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken.value, 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'name=' + encodeURIComponent(name),
+                    });
+                },
+
+                // Emoji picker
+                _emojiSearch: '',
+                _emojiList: [
+                    {e:'😀',n:'grinning'},{e:'😃',n:'smiley'},{e:'😄',n:'smile'},{e:'😁',n:'grin'},{e:'😆',n:'laughing'},
+                    {e:'😅',n:'sweat smile'},{e:'🤣',n:'rofl'},{e:'😂',n:'joy'},{e:'🙂',n:'slight smile'},{e:'😊',n:'blush'},
+                    {e:'😇',n:'innocent'},{e:'🥰',n:'love'},{e:'😍',n:'heart eyes'},{e:'🤩',n:'star struck'},{e:'😘',n:'kiss'},
+                    {e:'😜',n:'wink tongue'},{e:'🤔',n:'thinking'},{e:'🤗',n:'hugging'},{e:'🤫',n:'shushing'},{e:'😎',n:'cool'},
+                    {e:'🥳',n:'party'},{e:'😤',n:'triumph'},{e:'😱',n:'scream'},{e:'🥺',n:'pleading'},{e:'😢',n:'cry'},
+                    {e:'👍',n:'thumbs up'},{e:'👎',n:'thumbs down'},{e:'👏',n:'clap'},{e:'🙌',n:'raised hands'},{e:'🤝',n:'handshake'},
+                    {e:'💪',n:'strong'},{e:'✌️',n:'peace'},{e:'🤞',n:'crossed fingers'},{e:'👋',n:'wave'},{e:'🫡',n:'salute'},
+                    {e:'❤️',n:'red heart'},{e:'🧡',n:'orange heart'},{e:'💛',n:'yellow heart'},{e:'💚',n:'green heart'},{e:'💙',n:'blue heart'},
+                    {e:'💜',n:'purple heart'},{e:'🖤',n:'black heart'},{e:'🤍',n:'white heart'},{e:'💯',n:'hundred'},{e:'💥',n:'boom'},
+                    {e:'⭐',n:'star'},{e:'🌟',n:'glowing star'},{e:'✨',n:'sparkles'},{e:'⚡',n:'lightning'},{e:'🔥',n:'fire'},
+                    {e:'🎉',n:'party popper'},{e:'🎊',n:'confetti'},{e:'🏆',n:'trophy'},{e:'🎯',n:'bullseye'},{e:'🚀',n:'rocket'},
+                    {e:'💡',n:'light bulb'},{e:'📌',n:'pin'},{e:'📎',n:'paperclip'},{e:'📝',n:'memo'},{e:'✏️',n:'pencil'},
+                    {e:'✅',n:'check mark'},{e:'❌',n:'cross mark'},{e:'⚠️',n:'warning'},{e:'❓',n:'question'},{e:'❗',n:'exclamation'},
+                    {e:'💬',n:'speech'},{e:'👀',n:'eyes'},{e:'🎨',n:'art'},{e:'📸',n:'camera'},{e:'🎬',n:'clapper'},
+                    {e:'📱',n:'phone'},{e:'💻',n:'laptop'},{e:'📊',n:'chart'},{e:'📈',n:'trending up'},{e:'📅',n:'calendar'},
+                    {e:'⏰',n:'alarm clock'},{e:'🔗',n:'link'},{e:'🔒',n:'lock'},{e:'🏷️',n:'label'},{e:'📣',n:'megaphone'},
+                    {e:'🌍',n:'globe'},{e:'☀️',n:'sun'},{e:'🌙',n:'moon'},{e:'🌈',n:'rainbow'},{e:'🍕',n:'pizza'},
+                    {e:'☕',n:'coffee'},{e:'🍺',n:'beer'},{e:'🎵',n:'music'},{e:'🐶',n:'dog'},{e:'🐱',n:'cat'},
+                    {e:'✍️',n:'writing'},{e:'🧠',n:'brain'},{e:'💎',n:'gem'},{e:'🪄',n:'magic wand'},{e:'🎁',n:'gift'},
+                ],
+
+                _filteredEmojis() {
+                    var q = (this._emojiSearch || '').toLowerCase().trim();
+                    if (!q) return this._emojiList;
+                    return this._emojiList.filter(function(em) { return em.n.includes(q); });
+                },
+
+                _insertEmoji(emoji) {
+                    var desc = document.querySelector('.idea-modal textarea.idea-desc-input');
+                    if (desc) {
+                        var start = desc.selectionStart;
+                        var end = desc.selectionEnd;
+                        desc.value = desc.value.substring(0, start) + emoji + desc.value.substring(end);
+                        desc.selectionStart = desc.selectionEnd = start + emoji.length;
+                        desc.focus();
+                        desc.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    this._emojiSearch = '';
+                },
+
+                // Media file handling
+                _handleFileSelect(event) {
+                    this._enqueueMediaFiles(event.target.files);
+                    event.target.value = '';
+                },
+
+                _handleMediaDrop(event) {
+                    this._enqueueMediaFiles(event.dataTransfer.files);
+                },
+
+                _enqueueMediaFiles(fileList) {
+                    var files = Array.from(fileList || []);
+                    for (var i = 0; i < files.length; i += 1) {
+                        this._uploadIdeaMediaAsset(files[i]);
+                    }
+                },
+
+                _appendUploadedMedia(data, file) {
+                    ideaHelpers.appendUploadedMedia(this.createMediaAssets, data, file);
+                },
+
+                _removeCreateMedia(index) {
+                    if (index < 0 || index >= this.createMediaAssets.length) return;
+                    this.createMediaAssets.splice(index, 1);
+                },
+
+                _getCsrfToken() {
+                    return ideaHelpers.getCsrfToken();
+                },
+
+                _triggerIdeaChanged() {
+                    ideaHelpers.triggerIdeaChanged();
+                },
+
+                _submitIdeaForm(formEl) {
+                    return ideaHelpers.submitIdeaForm.call(ideaHelpers, formEl, () => {
+                        this.closeCreateModal();
+                        formEl.reset();
+                    });
+                },
+
+                submitCreateIdea(event) {
+                    if (this.createMediaUploadCount > 0 || this.isCreateSaving) return;
+                    this.isCreateSaving = true;
+                    this._submitIdeaForm(event.target).finally(() => {
+                        this.isCreateSaving = false;
+                    });
+                },
+
+                _uploadIdeaMediaAsset(file) {
+                    if (!file) return;
+                    this.createMediaUploadCount += 1;
+                    ideaHelpers
+                        .uploadIdeaMediaAsset(
+                            '{% url "composer:idea_upload_media" workspace_id=request.workspace.id %}',
+                            file,
+                            (data, uploadedFile) => {
+                                this._appendUploadedMedia(data, uploadedFile);
+                            }
+                        )
+                        .catch(() => {
+                            window.alert('One of the files failed to upload. Please try again.');
+                        })
+                        .finally(() => {
+                            this.createMediaUploadCount = Math.max(0, this.createMediaUploadCount - 1);
+                        });
+                },
+            };
+        }
+    </script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+    {% if can_create_workspace %}
+    <!-- Create workspace modal -->
+    <div x-data="{ createWsOpen: false }"
+         @open-create-ws.window="createWsOpen = true; $nextTick(() => $refs.newWsName.focus())">
+        <div x-show="createWsOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center">
+            <div class="absolute inset-0 bg-black/40" @click="createWsOpen = false"></div>
+            <div class="relative bg-app rounded-xl shadow-xl ring-1 ring-app w-full max-w-md mx-4 p-6"
+                 x-show="createWsOpen"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 @keydown.escape.window="createWsOpen = false">
+                <h3 class="text-base font-semibold text-app mb-4">Create workspace</h3>
+                <form method="post" action="{% url 'workspaces:create' %}">
+                    {% csrf_token %}
+                    <input type="text" name="name" x-ref="newWsName" required placeholder="Workspace name"
+                           class="form-input-styled w-full mb-4">
+                    <div class="flex justify-end gap-2">
+                        <button type="button" @click="createWsOpen = false"
+                                class="px-4 py-2 text-sm font-medium text-app-secondary bg-app border border-app rounded-lg hover:bg-app-1 transition-colors cursor-pointer">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="btn-brand px-4 py-2 text-sm cursor-pointer">
+                            Create
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>

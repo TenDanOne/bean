@@ -1,0 +1,11 @@
+{# Compact stand-in for a full error page inside an HTMX swap. #}
+<div class="flex items-start gap-2 px-3 py-2.5 rounded-lg text-[12px]"
+     style="background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C;">
+    {% icon "circle-exclamation" css_class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" %}
+    <div>
+        <div>{{ message }}</div>
+        {% if detail %}
+        <div class="mt-0.5" style="opacity: 0.8;">{{ detail }}</div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,45 @@
+{% comment %}
+Permanent deletion. The counts come first and the name has to be typed back:
+this is the only action in the product that destroys work irreversibly, and the
+numbers are usually larger than people expect.
+{% endcomment %}
+<div class="rounded-xl p-4" style="background: #FEF2F2; border: 1px solid #FECACA;">
+    <div class="flex items-start gap-2.5 mb-3">
+        {% icon "triangle-exclamation" css_class="w-5 h-5 flex-shrink-0 mt-0.5" %}
+        <div>
+            <h4 class="text-sm font-semibold" style="color: #991B1B;">Delete {{ account_name }} permanently</h4>
+            <p class="text-[13px] mt-1" style="color: #B91C1C;">
+                This also destroys
+                <strong>{{ impact.posts }} post{{ impact.posts|pluralize }}</strong> and
+                <strong>{{ impact.messages }} inbox message{{ impact.messages|pluralize }}</strong>.
+                It cannot be undone.
+            </p>
+            <p class="text-[12px] mt-1.5" style="color: #B91C1C; opacity: 0.85;">
+                To keep the history and just stop the channel, archive it instead.
+            </p>
+        </div>
+    </div>
+
+    {% if error %}
+    <p class="text-[12px] mb-2 font-medium" role="alert" style="color: #991B1B;">{{ error }}</p>
+    {% endif %}
+
+    <form hx-post="{% url 'social_accounts:delete_account' workspace_id=workspace_id account_id=account.id %}"
+          hx-target="#account-{{ account.id }}"
+          hx-swap="outerHTML">
+        {% csrf_token %}
+        <label for="confirm-{{ account.id }}" class="block text-[12px] font-medium mb-1" style="color: #991B1B;">
+            Type <strong>{{ account_name }}</strong> to confirm
+        </label>
+        <div class="flex items-center gap-2">
+            <input type="text" id="confirm-{{ account.id }}" name="confirm_name" autocomplete="off" required
+                   class="flex-1 px-3 py-1.5 text-sm outline-none"
+                   style="border: 1px solid #FCA5A5; background: var(--surface-0); color: var(--text-primary);">
+            <button type="submit"
+                    class="px-4 py-1.5 text-sm font-semibold text-app-inverse rounded-full cursor-pointer transition-colors"
+                    style="background: #DC2626;">
+                Delete
+            </button>
+        </div>
+    </form>
+</div>

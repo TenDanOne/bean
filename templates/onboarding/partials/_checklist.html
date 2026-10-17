@@ -1,0 +1,104 @@
+{% if not checklist_dismissed and checklist_items %}
+<div id="onboarding-checklist" x-data="{ open: true }"
+     {% if request.workspace %}
+     hx-get="{% url 'onboarding:checklist_partial' workspace_id=request.workspace.id %}"
+     hx-trigger="ideaChanged from:body"
+     hx-swap="outerHTML"
+     {% endif %}
+     class="fixed bottom-2 right-2 left-2 sm:left-auto sm:bottom-4 sm:right-4 z-[55] sm:w-[340px]">
+
+    <!-- Collapsed trigger button -->
+    <button x-show="!open" x-cloak
+            @click="open = true"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-90"
+            x-transition:enter-end="opacity-100 scale-100"
+            class="relief relief-interactive flex items-center gap-2.5 w-full px-4 py-3 shadow-lg hover:shadow-xl transition-all duration-150 cursor-pointer text-left">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: var(--primary-soft);">
+            {% icon "bolt" css_class="w-[15px] h-[15px]" %}
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-app-strong">Get started</div>
+            <div class="text-xs text-app-ghost">{{ checklist_completed_count }} of {{ checklist_total_count }} complete</div>
+        </div>
+        <!-- Progress ring -->
+        <div class="relative w-8 h-8 flex-shrink-0">
+            <svg class="w-8 h-8 -rotate-90" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="13" fill="none" stroke="#E7E5E4" stroke-width="3"/>
+                <circle cx="16" cy="16" r="13" fill="none" stroke="var(--primary)" stroke-width="3"
+                        stroke-dasharray="{% widthratio checklist_completed_count checklist_total_count 82 %} 82"
+                        stroke-linecap="round"/>
+            </svg>
+            <span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-app-secondary">{{ checklist_completed_count }}/{{ checklist_total_count }}</span>
+        </div>
+    </button>
+
+    <!-- Expanded popup -->
+    <div x-show="open" x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-2"
+         class="relief-float overflow-hidden">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-app-subtle">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: var(--primary-soft);">
+                    {% icon "bolt" css_class="w-[15px] h-[15px]" %}
+                </div>
+                <div>
+                    <div class="text-sm font-semibold text-app-strong">Get started</div>
+                    <div class="text-xs text-app-ghost">{{ checklist_completed_count }} of {{ checklist_total_count }} complete</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <!-- Progress bar -->
+                <div class="w-14 h-1 bg-app-2 rounded-full overflow-hidden mr-1">
+                    <div class="h-full rounded-full transition-all duration-300" style="width: {% widthratio checklist_completed_count checklist_total_count 100 %}%; background: var(--primary);"></div>
+                </div>
+                <!-- Collapse button -->
+                <button @click="open = false"
+                        class="w-6 h-6 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer"
+                        title="Minimize">
+                    {% icon "chevron-down" css_class="w-[14px] h-[14px]" %}
+                </button>
+                <!-- Dismiss button -->
+                <button hx-post="{% url 'onboarding:dismiss_checklist' workspace_id=request.workspace.id %}"
+                        hx-target="#onboarding-checklist"
+                        hx-swap="outerHTML"
+                        class="w-6 h-6 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer"
+                        title="Dismiss checklist">
+                    {% icon "xmark" css_class="w-[12px] h-[12px]" %}
+                </button>
+            </div>
+        </div>
+
+        <!-- Checklist items -->
+        {% for item in checklist_items %}
+        <a href="{{ item.url }}" class="flex items-center gap-3 px-4 py-2.5 {% if not forloop.last %}border-b border-stone-50{% endif %} hover:bg-app-1 transition-colors no-underline group">
+            {% if item.completed %}
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background: var(--success-50);">
+                {% icon "check" css_class="w-[14px] h-[14px]" %}
+            </div>
+            {% else %}
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background: {% if item.icon_color == 'sky' %}var(--accent-sky-soft){% elif item.icon_color == 'emerald' %}var(--accent-emerald-soft){% elif item.icon_color == 'indigo' %}var(--accent-indigo-soft){% elif item.icon_color == 'brand' %}var(--primary-soft){% elif item.icon_color == 'amber' %}var(--accent-amber-soft){% else %}var(--surface-2){% endif %};">
+                <svg width="14" height="14" fill="none" stroke="{% if item.icon_color == 'sky' %}var(--accent-sky){% elif item.icon_color == 'emerald' %}var(--accent-emerald){% elif item.icon_color == 'indigo' %}var(--accent-indigo){% elif item.icon_color == 'brand' %}var(--primary){% elif item.icon_color == 'amber' %}var(--accent-amber){% else %}var(--text-tertiary){% endif %}" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    {{ item.icon_svg|safe }}
+                </svg>
+            </div>
+            {% endif %}
+            <div class="flex-1 min-w-0">
+                <div class="text-[13px] font-medium {% if item.completed %}text-app-ghost line-through{% else %}text-app-body{% endif %}">{{ item.title }}</div>
+                <div class="text-[11px] text-app-ghost leading-tight">{{ item.description }}</div>
+            </div>
+            {% if not item.completed %}
+            {% icon "chevron-right" css_class="w-[14px] h-[14px] text-app-faint group-hover:text-app-tertiary transition-colors flex-shrink-0" %}
+            {% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

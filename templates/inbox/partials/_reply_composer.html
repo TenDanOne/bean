@@ -1,0 +1,139 @@
+{% load humanize common_extras %}
+{% can_on message.social_account "can_reply" as may_reply %}
+
+{% comment %}
+Two checks, and both have to pass: `reply_from_inbox` says the role may answer
+at all, `can_reply` says they may answer *as this channel*.
+
+When either is missing the composer is replaced by a line saying so rather than
+removed. A thread that simply ends with no way to type reads as a broken page;
+saying "you can read this, you cannot answer as this channel" is a different
+message and the true one. Internal notes stay available on the same permission
+they always had — noting something is not publishing it.
+{% endcomment %}
+{% if not may_reply or not request|can:"reply_from_inbox" %}
+<div class="border-t border-app px-5 py-3 flex-shrink-0 flex items-center gap-2"
+     style="background: var(--surface-1);">
+    {% icon "lock" css_class="w-3.5 h-3.5 flex-shrink-0 text-app-ghost" %}
+    <p class="text-[12px] text-app-tertiary leading-snug">
+        {% if not request|can:"reply_from_inbox" %}
+        Your role can read the inbox but not answer it.
+        {% else %}
+        You can see this channel but not reply as it.
+        {% endif %}
+        {% if workspace_owner %}Ask {{ workspace_owner.display_name }} for access.{% endif %}
+    </p>
+</div>
+{% else %}
+<!-- Reply composer -->
+<div class="border-t border-app px-5 py-3 flex-shrink-0" style="background: var(--surface-1);"
+     x-data="{ mode: 'reply', noteText: '', replyText: '', replyError: '' }">
+
+    <!-- Mode tabs -->
+    <div class="flex items-center gap-1 mb-2">
+        <button @click="mode = 'reply'"
+                class="text-[12px] font-semibold px-3 py-1 rounded-full transition-all"
+                :class="mode === 'reply' ? 'bg-app text-app shadow-sm border border-app' : 'text-app-tertiary hover:text-app-body'">
+            Reply
+        </button>
+        <button @click="mode = 'note'"
+                class="text-[12px] font-semibold px-3 py-1 rounded-full transition-all"
+                :class="mode === 'note' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'text-app-tertiary hover:text-app-body'">
+            Internal Note
+        </button>
+
+        <!-- Saved replies dropdown -->
+        {% if saved_replies %}
+        <div class="relative ml-auto" x-data="{ srOpen: false }">
+            <button @click="srOpen = !srOpen"
+                    class="text-[11px] font-medium text-app-tertiary hover:text-app-body flex items-center gap-1 transition-colors">
+                {% icon "bookmark" css_class="w-3.5 h-3.5" %}
+                Saved Replies
+            </button>
+            <div x-show="srOpen" @click.away="srOpen = false" x-cloak x-transition
+                 class="absolute right-0 bottom-full mb-1 bg-app rounded-lg shadow-lg ring-1 ring-app py-1 z-50 min-w-[200px] max-h-[200px] overflow-y-auto">
+                {% for sr in saved_replies %}
+                <button @click="replyText = '{{ sr.body|escapejs }}'; srOpen = false;"
+                        class="w-full text-left px-3 py-2 hover:bg-app-1 transition-colors">
+                    <span class="text-[12px] font-medium text-app-strong block">{{ sr.title }}</span>
+                    <span class="text-[11px] text-app-ghost block truncate">{{ sr.body|truncatewords:10 }}</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Reply form -->
+    <div x-show="mode === 'reply'" x-transition>
+        <!-- A failed send returns 422, which HTMX will not swap into the thread —
+             that is the point, a reply that never left must not render as sent.
+             Surface the body here instead, and keep the typed text so it isn't
+             lost along with the failed attempt. -->
+        <form hx-post="{% url 'inbox:send_reply' workspace_id=workspace.id message_id=message.id %}"
+              {# The whole panel, not appended to the thread: _thread_turns
+                 orders the timeline, and appending put a reply after a note
+                 that arrived later. #}
+              hx-target="#inbox-detail-panel"
+              hx-swap="innerHTML"
+              {# Nothing stopped a second submit while the first was in flight.
+                 Posting to YouTube takes a round trip; two clicks inside it
+                 create two real comments with two different platform ids, so
+                 our uniqueness constraint cannot catch it and the same words
+                 appear twice in the thread. #}
+              hx-disabled-elt="find button[type=submit]"
+              @htmx:response-error="replyError = $event.detail.xhr.responseText"
+              @htmx:after-request="if ($event.detail.successful) { replyText = ''; replyError = '' }">
+            {% csrf_token %}
+            <div x-show="replyError" x-html="replyError" x-cloak class="mb-2"></div>
+            <textarea name="body"
+                      x-model="replyText"
+                      placeholder="Write a reply..."
+                      rows="2"
+                      class="w-full px-3 py-2 text-[13px] resize-none focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                      required></textarea>
+            <div class="flex items-center justify-between mt-2">
+                <p class="text-[10px] text-app-ghost">Reply will be posted on {{ message.social_account.get_platform_display|default:message.social_account.platform|title }}</p>
+                <button type="submit"
+                        class="btn-primary-hover inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-app-inverse rounded-full transition-all duration-150 cursor-pointer"
+                        style="background: var(--primary); box-shadow: var(--shadow-primary);">
+                    {% icon "paper-plane" css_class="w-3.5 h-3.5" %}
+                    Send Reply
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Note form -->
+    <div x-show="mode === 'note'" x-transition>
+        <form hx-post="{% url 'inbox:add_note' workspace_id=workspace.id message_id=message.id %}"
+              {# The whole panel, not appended to the thread: _thread_turns
+                 orders the timeline, and appending put a reply after a note
+                 that arrived later. #}
+              hx-target="#inbox-detail-panel"
+              hx-swap="innerHTML"
+              {# Nothing stopped a second submit while the first was in flight.
+                 Posting to YouTube takes a round trip; two clicks inside it
+                 create two real comments with two different platform ids, so
+                 our uniqueness constraint cannot catch it and the same words
+                 appear twice in the thread. #}
+              hx-disabled-elt="find button[type=submit]"
+              @htmx:after-request="noteText = ''">
+            {% csrf_token %}
+            <textarea name="body"
+                      x-model="noteText"
+                      placeholder="Add an internal note (only visible to your team)..."
+                      rows="2"
+                      class="w-full px-3 py-2 text-[13px] bg-amber-50 border-amber-200 resize-none focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all"
+                      required></textarea>
+            <div class="flex items-center justify-end mt-2">
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-amber-800 bg-amber-100 border border-amber-200 rounded-full hover:bg-amber-200 transition-all duration-150 cursor-pointer">
+                    {% icon "file-lines" css_class="w-3.5 h-3.5" %}
+                    Add Note
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}

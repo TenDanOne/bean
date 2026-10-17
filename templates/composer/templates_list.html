@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Post Templates - {{ workspace.name }} - Brightbean{% endblock %}
+
+{% block page_header %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Post Templates</h1>
+        <p class="text-sm text-app-tertiary mt-1">Reusable templates to speed up content creation.</p>
+    </div>
+    <a href="{% url 'composer:compose' workspace_id=workspace.id %}" class="text-sm text-app-tertiary hover:text-app-body flex items-center gap-1">
+        {% icon "chevron-left" css_class="w-4 h-4" %}
+        Back to Composer
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl"
+     id="templates-container"
+     hx-get="{% url 'composer:template_list' workspace_id=workspace.id %}"
+     hx-trigger="templateChanged from:body"
+     hx-select="#templates-grid"
+     hx-target="#templates-grid"
+     hx-swap="outerHTML">
+
+    <div id="templates-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for tpl in templates %}
+        <div class="relief relief-interactive p-4 transition-colors group">
+            <div class="flex items-start justify-between mb-2">
+                <h3 class="text-sm font-semibold text-app-strong line-clamp-1">{{ tpl.name }}</h3>
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ml-2">
+                    <form x-data hx-post="{% url 'composer:template_delete' workspace_id=workspace.id template_id=tpl.id %}" hx-swap="none"
+                          @submit="if(!confirm('Delete this template?')) $event.preventDefault()">
+                        {% csrf_token %}
+                        <button type="submit" class="text-app-ghost hover:text-red-500 p-1">
+                            {% icon "trash" css_class="w-3.5 h-3.5" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% if tpl.description %}
+            <p class="text-xs text-app-tertiary mb-3 line-clamp-2">{{ tpl.description }}</p>
+            {% endif %}
+            {% if tpl.template_data.caption %}
+            <p class="text-xs text-app-secondary bg-app-1 rounded-lg p-2 mb-3 line-clamp-3 font-mono">{{ tpl.template_data.caption|truncatechars:120 }}</p>
+            {% endif %}
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] text-app-ghost">
+                    {% if tpl.created_by %}by {{ tpl.created_by.name|default:tpl.created_by.email }}{% endif %}
+                </span>
+                <a href="{% url 'composer:use_template' workspace_id=workspace.id template_id=tpl.id %}"
+                   class="text-xs font-semibold py-1.5 px-3 rounded-full border border-app hover:border-app-hover text-app-body hover:text-app transition-colors">
+                    Use Template
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-2 text-center py-16">
+            <div class="w-12 h-12 rounded-full bg-app-2 flex items-center justify-center mx-auto mb-3">
+                {% icon "file-lines" css_class="w-6 h-6 text-app-ghost" %}
+            </div>
+            <p class="text-sm font-medium text-app-body">No templates yet</p>
+            <p class="text-xs text-app-tertiary mt-1">Save a post as a template from the composer to get started.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

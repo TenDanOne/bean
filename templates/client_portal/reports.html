@@ -1,0 +1,19 @@
+{% extends "client_portal/portal_base.html" %}
+{% block title %}Reports - {{ workspace.name }}{% endblock %}
+
+{% block content %}
+<div>
+    <div class="mb-6">
+        <h1 class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Reports</h1>
+        <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Performance reports shared with you</p>
+    </div>
+
+    <div class="text-center py-16">
+        <div class="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4" style="background: var(--primary-soft);">
+            {% icon "chart-line" css_class="w-8 h-8" %}
+        </div>
+        <p class="font-semibold text-[0.9375rem]" style="color: var(--text-primary);">Reports coming soon</p>
+        <p class="text-sm mt-1 max-w-sm mx-auto" style="color: var(--text-tertiary);">Your team will be able to share performance reports with you here. Check back soon!</p>
+    </div>
+</div>
+{% endblock %}

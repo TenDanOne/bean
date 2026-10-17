@@ -1,0 +1,119 @@
+{% comment %}
+Channel access for one member. Loaded into a modal by HTMX.
+
+The capabilities are shown flat rather than as a ladder because they do not
+nest: someone who answers comments all day should not thereby be able to delete
+them. Nesting them in a "level" dropdown would be tidier and wrong.
+
+Only what their role can exercise is offered. Both layers have to pass, so a box
+their role refuses would save, do nothing, and look like it worked. Anything
+their role cannot reach is listed below the offered ones, greyed, saying why —
+otherwise a grant made before a demotion would look like it had been lost.
+
+Unticking the channel itself removes all access. There is no separate "view"
+checkbox — the assignment existing *is* the permission to see the channel, so a
+row with every box unticked would still show it, which is not what unticking
+looks like it does.
+{% endcomment %}
+<form hx-post="{% url 'members:manage_channels' workspace_id=workspace_id membership_id=target.id %}"
+      hx-target="this"
+      hx-swap="outerHTML"
+      x-data="{ open: {} }">
+    {% csrf_token %}
+
+    {% if saved %}
+    <p class="text-xs mb-3 px-3 py-2 rounded-lg" style="background: var(--success-50); color: var(--success-700);">
+        Saved. These are the channels they can reach now.
+    </p>
+    {% endif %}
+    <p class="text-sm mb-1 text-app">
+        Channel access for <strong>{{ target.user.name|default:target.user.email }}</strong>
+    </p>
+    <p class="text-xs mb-4 text-app-tertiary">
+        They see only the channels ticked here. Everything else in this workspace stays hidden.
+        {% if target_role %}The boxes match their role of <strong>{{ target_role }}</strong>.{% endif %}
+    </p>
+
+    <div class="space-y-2 max-h-80 scroll-y -mx-1 px-1">
+        {% for row in rows %}
+        <div class="relief p-3">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox"
+                       name="channel_{{ row.channel.id }}"
+                       value="1"
+                       {% if row.assigned %}checked{% endif %}
+                       @change="open['{{ row.channel.id }}'] = $event.target.checked">
+                <span class="flex-shrink-0">
+                    {% platform_icon row.channel.platform size="4" brand_color=True %}
+                </span>
+                <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-medium truncate text-app">
+                        {{ row.channel.account_name|default:row.channel.account_handle }}
+                    </span>
+                    <span class="block text-xs text-app-tertiary">
+                        {{ row.channel.get_platform_display }}
+                    </span>
+                </span>
+            </label>
+
+            {% comment %}
+            The capabilities only matter once the channel is ticked, so they stay
+            folded away until it is. Six checkboxes per channel, all visible at
+            once across a dozen channels, is a wall nobody reads.
+            {% endcomment %}
+            <div class="mt-3 pt-3 pl-8 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2"
+                 style="border-top: 1px solid var(--border-subtle);"
+                 x-show="open['{{ row.channel.id }}'] ?? {{ row.assigned|yesno:"true,false" }}"
+                 x-cloak>
+                {% for key, label, help, granted in row.capabilities %}
+                <label class="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox"
+                           name="{{ key }}_{{ row.channel.id }}"
+                           value="1"
+                           class="mt-0.5"
+                           {% if granted %}checked{% endif %}>
+                    <span class="min-w-0">
+                        <span class="block text-xs font-medium text-app-body">{{ label }}</span>
+                        <span class="block text-[11px] leading-snug text-app-tertiary">{{ help }}</span>
+                    </span>
+                </label>
+                {% endfor %}
+
+                {% comment %}
+                Shown, not hidden. Someone looking for "Delete comments" and not
+                finding it assumes the feature is missing; finding it greyed with
+                the reason tells them the fix is the role, not this dialog.
+
+                No name attribute, so nothing is submitted and a grant from a
+                previous higher role is left exactly as it was in the database.
+                {% endcomment %}
+                {% for key, label, help, granted in row.blocked %}
+                <div class="flex items-start gap-2 opacity-55"
+                     title="Their role of {{ target_role }} cannot do this. Change the role to offer it.">
+                    <input type="checkbox" class="mt-0.5" disabled {% if granted %}checked{% endif %}>
+                    <span class="min-w-0">
+                        <span class="block text-xs font-medium text-app-tertiary">{{ label }}</span>
+                        <span class="block text-[11px] leading-snug text-app-ghost">
+                            {% if granted %}Granted before, inert while they are {{ target_role }}.{% else %}Not available to a {{ target_role }}.{% endif %}
+                        </span>
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-app-tertiary">
+            You have no channels to assign. A manager can only pass on channels they hold
+            themselves — ask the workspace owner to assign you one first.
+        </p>
+        {% endfor %}
+    </div>
+
+    {% if rows %}
+    <div class="flex justify-end gap-2 mt-4">
+        <button type="submit" class="bbs-btn bbs-btn-primary text-sm px-4 py-2">
+            Save access
+        </button>
+    </div>
+    {% endif %}
+</form>

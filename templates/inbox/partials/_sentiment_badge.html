@@ -1,0 +1,6 @@
+<span class="badge-pill badge-sentiment-{{ message.sentiment }}">
+    {% if message.sentiment == 'positive' %}
+    {% elif message.sentiment == 'negative' %}
+    {% endif %}
+    {{ message.get_sentiment_display }}
+</span>

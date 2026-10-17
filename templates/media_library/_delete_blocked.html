@@ -1,0 +1,22 @@
+{% comment %}Shown when delete is blocked by post references. Expects: asset, referencing_posts, workspace{% endcomment %}
+
+<div class="p-4 rounded-xl border" style="background: var(--warning-50, #FEFCE8); border-color: rgba(234,179,8,0.2);">
+  <div class="flex items-start gap-3">
+    {% icon "triangle-exclamation" css_class="w-5 h-5 flex-shrink-0 mt-0.5" %}
+    <div>
+      <h4 class="text-sm font-semibold" style="color: var(--warning-700, #A16207);">Cannot delete this asset</h4>
+      <p class="text-xs mt-1" style="color: var(--warning-700, #A16207);">
+        This media is referenced by {{ referencing_posts|length }} scheduled post{{ referencing_posts|pluralize }}. Remove it from those posts first.
+      </p>
+      {% if referencing_posts %}
+      <ul class="mt-2 space-y-1">
+        {% for post in referencing_posts %}
+        <li class="text-xs" style="color: var(--warning-700);">
+          &bull; {{ post.caption|truncatechars:60 }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>

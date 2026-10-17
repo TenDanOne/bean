@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation Expired - Brightbean</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--surface-1);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: var(--surface-0);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .logo { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 24px; letter-spacing: -0.02em; }
+        .icon { margin-bottom: 16px; color: var(--text-ghost); }
+        h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
+        .message { font-size: 15px; color: var(--text-tertiary); line-height: 1.6; margin-bottom: 24px; }
+        .link {
+            display: inline-block;
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">Brightbean</div>
+        <div class="icon">
+            {% icon "circle-exclamation" css_class="w-[48px] h-[48px]" %}
+        </div>
+        <h1>Invitation Expired</h1>
+        <p class="message">
+            This invitation link is no longer valid. It may have expired or already been used. Please contact your organization admin to request a new invitation.
+        </p>
+        <a href="/" class="link">Go to Brightbean</a>
+    </div>
+</body>
+</html>

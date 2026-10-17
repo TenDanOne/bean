@@ -1,0 +1,56 @@
+{% extends "public/base.html" %}
+
+{% block title %}Privacy Policy | BrightBean Studio{% endblock %}
+
+{% block content %}
+<article class="public-prose">
+    <div class="public-kicker">BrightBean Studio</div>
+    <h1>Privacy Policy</h1>
+    <p><strong>Last updated: August 2026</strong></p>
+
+    <h2>Who operates BrightBean Studio</h2>
+    <p>
+        BrightBean Studio is an internal social media management application operated by our company in Mexico.
+        For privacy questions, contact <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+    </p>
+
+    <h2>Information we process</h2>
+    <ul>
+        <li>Account information needed to identify an authorized user and their BrightBean workspace.</li>
+        <li>Basic TikTok profile information returned after authorization, such as the account identifier, display name, avatar, and union identifier when provided.</li>
+        <li>OAuth access and refresh tokens required to maintain an authorized connection.</li>
+        <li>Videos, captions, publishing status, and post identifiers when an authorized user uses the publishing workflow.</li>
+    </ul>
+
+    <h2>How we use information</h2>
+    <p>
+        We use this information only to authenticate authorized company users, maintain connected social accounts,
+        publish approved content, and operate and secure the internal application. We do not sell this information,
+        use it for advertising, or use it to build advertising profiles.
+    </p>
+
+    <h2>Storage and security</h2>
+    <p>
+        OAuth credentials are stored in encrypted database fields. Access is limited to authorized company users and
+        administrators who need it to operate the internal application. No security measure can guarantee absolute security,
+        but we use reasonable technical and organizational safeguards for this internal deployment.
+    </p>
+
+    <h2>Sharing and service providers</h2>
+    <p>
+        Information is sent to the selected social platform only when an authorized user requests a connected-account action.
+        We may use infrastructure providers to host the application and database; those providers process information only
+        to provide the infrastructure and under applicable access controls.
+    </p>
+
+    <h2>Retention and deletion</h2>
+    <p>
+        We retain information while the connected account or company workspace is active and as needed for operational and
+        security records. An authorized user can disconnect a social account in BrightBean. To request deletion or ask a
+        privacy question, contact <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+    </p>
+
+    <h2>Changes</h2>
+    <p>We may update this policy when the internal application or its data practices change. The latest version will remain available on this page.</p>
+</article>
+{% endblock %}

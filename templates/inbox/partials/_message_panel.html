@@ -1,0 +1,152 @@
+{% load humanize common_extras %}
+<div class="flex flex-col h-full">
+    <!-- Message header -->
+    <div class="px-5 py-4 border-b border-app-subtle flex-shrink-0">
+        <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+                {% if message.sender_avatar_url %}
+                <img src="{{ message.sender_avatar_url }}" alt="" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                {% else %}
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-app-tertiary flex-shrink-0" style="background: var(--surface-2);">
+                    {{ message.sender_name|make_list|first|upper }}
+                </div>
+                {% endif %}
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold text-app">{{ message.sender_name }}</span>
+                        {% if message.sender_handle %}
+                        <span class="text-[12px] text-app-ghost">@{{ message.sender_handle }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <div class="flex items-center gap-1">
+                            {% platform_icon message.social_account.platform size="4" %}
+                            <span class="text-[11px] text-app-tertiary">{{ message.social_account.account_name|default:message.social_account.account_handle }}</span>
+                        </div>
+                        <span class="text-[11px] text-app-ghost">{{ message.received_at|date:"N j, Y g:i A" }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- Status dropdown -->
+                <div x-data="{ statusOpen: false }" class="relative">
+                    <button @click="statusOpen = !statusOpen"
+                            class="badge-pill badge-status-{{ message.status }} cursor-pointer hover:opacity-80 transition-opacity">
+                        {{ message.get_status_display }}
+                        {% icon "chevron-down" css_class="w-2.5 h-2.5 ml-0.5" %}
+                    </button>
+                    <div x-show="statusOpen" @click.away="statusOpen = false" x-cloak
+                         x-transition
+                         class="absolute right-0 top-full mt-1 relief-float py-1 z-50 min-w-[120px]">
+                        {% for value, label in status_choices %}
+                        <button hx-post="{% url 'inbox:change_status' workspace_id=workspace.id message_id=message.id %}"
+                                hx-vals='{"status": "{{ value }}"}'
+                                hx-target="#inbox-detail-panel"
+                                hx-swap="innerHTML"
+                                @click="statusOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-[12px] text-app-body hover:bg-app-1 transition-colors {% if message.status == value %}font-semibold{% endif %}">
+                            {{ label }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% comment %}
+                Sentiment, editable, beside the status it sits next to
+                conceptually — one says where the conversation stands, the other
+                how it sounded.
+
+                It was analysed by keyword and shown read-only, which in Spanish
+                gets it wrong often enough to be worse than nothing. Now whoever
+                answers can correct it, and the model records that a human did
+                (`sentiment_source`), so the automatic guess never overwrites a
+                deliberate call.
+
+                Disabled rather than hidden for a viewer: seeing that the label
+                exists and is not yours to change beats wondering why other
+                people's screenshots have a control you do not.
+                {% endcomment %}
+                <div x-data="{ sentimentOpen: false }" class="relative">
+                    <button @click="{% if request|can:'reply_from_inbox' %}sentimentOpen = !sentimentOpen{% endif %}"
+                            {% if not request|can:"reply_from_inbox" %}disabled title="Your role cannot change sentiment"{% endif %}
+                            class="badge-pill badge-sentiment-{{ message.sentiment }} cursor-pointer hover:opacity-80 transition-opacity disabled:cursor-not-allowed disabled:opacity-60">
+                        {{ message.get_sentiment_display }}
+                        {% if message.sentiment_source == "manual" %}
+                        <span title="Set by a person, not the automatic guess">·</span>
+                        {% endif %}
+                        {% if request|can:"reply_from_inbox" %}
+                        {% icon "chevron-down" css_class="w-2.5 h-2.5 ml-0.5" %}
+                        {% endif %}
+                    </button>
+                    <div x-show="sentimentOpen" @click.away="sentimentOpen = false" x-cloak
+                         x-transition
+                         class="absolute right-0 top-full mt-1 relief-float py-1 z-50 min-w-[120px]">
+                        {% for value, label in sentiment_choices %}
+                        <button hx-post="{% url 'inbox:change_sentiment' workspace_id=workspace.id message_id=message.id %}"
+                                hx-vals='{"sentiment": "{{ value }}"}'
+                                hx-target="#inbox-detail-panel"
+                                hx-swap="innerHTML"
+                                @click="sentimentOpen = false"
+                                class="w-full text-left px-3 py-1.5 text-[12px] text-app-body hover:bg-app-1 transition-colors {% if message.sentiment == value %}font-semibold{% endif %}">
+                            {{ label }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Assignment dropdown -->
+                {% include "inbox/partials/_assignment_dropdown.html" %}
+
+                {% comment %}
+                Moderation. Only where it means something on the platform — a
+                direct message is not on a public post, and a video-publish
+                notification is not a comment at all despite being filed as one
+                by an older webhook. `is_moderatable` answers both, and the two
+                views read the same property, so a row without the buttons is
+                also refused if someone posts to the endpoint.
+
+                Shown disabled rather than hidden when the grant is missing, so
+                someone looking for "how do I delete this" finds the answer
+                instead of concluding the feature does not exist.
+                {% endcomment %}
+                {% if message.is_moderatable %}
+                {% include "inbox/partials/_moderation_actions.html" %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Message body + thread -->
+    <div class="flex-1 overflow-y-auto px-5 py-4">
+        {% comment %}
+        The message being answered, drawn as the first turn of the conversation
+        rather than as a card with a "Comment" label. It was the only message in
+        the panel without a face, which made the thread start with an anonymous
+        block and then acquire people.
+
+        Its badges sit above it because they are about the message as a task —
+        how it sounded, how long it has been waiting — not about what was said.
+        {% endcomment %}
+        <div class="flex items-center gap-2 mb-2">
+            {% if sla_config and sla_config.is_active and message.status != 'resolved' and message.status != 'archived' %}
+            {% include "inbox/partials/_sla_badge.html" %}
+            {% endif %}
+        </div>
+
+        <div id="inbox-thread" class="space-y-3">
+            {% include "inbox/partials/_thread_bubble.html" with turn=root_turn %}
+
+            {% comment %}
+            Platform messages, replies still in flight, and internal notes, one
+            timeline and one bubble. Child messages used to render in a block of
+            their own below this one, which split a single conversation in two.
+            {% endcomment %}
+            {% for turn in thread %}
+            {% include "inbox/partials/_thread_bubble.html" with turn=turn %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Reply composer (pinned to bottom) -->
+    {% include "inbox/partials/_reply_composer.html" %}
+</div>

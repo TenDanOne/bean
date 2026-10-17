@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load common_extras %}
+
+{% block title %}Analytics — {{ workspace.name }} — Brightbean{% endblock %}
+
+{% block content %}
+<div style="padding: 22px 24px 40px; display: flex; flex-direction: column; flex: 1;">
+    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--neutral-100);">
+        <div>
+            <h1 style="font-size: 1.5rem; font-weight: 600; color: var(--neutral-900); letter-spacing: -0.01em;">Analytics</h1>
+            <p style="font-size: 0.8125rem; color: var(--text-tertiary); margin-top: 2px;">Performance across your connected channels.</p>
+        </div>
+    </div>
+
+    {% comment %}
+    Two different situations that used to share one message.
+
+    Someone who may connect channels and has none needs the button. Someone who
+    simply was not given any needs to know that — the old copy told them "no
+    accounts are connected to this workspace", which was false, and then offered
+    a button that 403s.
+    {% endcomment %}
+    <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px;">
+        {% if request|can:"manage_social_accounts" %}
+        <div style="text-align: center; max-width: 420px;">
+            <div style="width: 72px; height: 72px; border-radius: var(--radius-2xl); background: var(--primary-soft); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+                {% icon "chart-line" css_class="w-[32px] h-[32px]" %}
+            </div>
+            <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Connect an account to see analytics</h2>
+            <p style="font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
+                No analytics-enabled accounts are connected to this workspace yet. Connect one to start tracking per-post performance.
+            </p>
+            <a href="{% url 'social_accounts:connect' workspace_id=workspace.id %}" class="btn-brand" style="width: auto; padding: 9px 20px;">Connect a channel</a>
+        </div>
+        {% else %}
+        {% include "common/_no_access.html" with icon="chart-line" title="No channels to show numbers for" body="You can see analytics for the channels you have been given, with metrics turned on. None of them are here yet." ask=workspace_owner.display_name %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

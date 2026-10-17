@@ -1,0 +1,59 @@
+{% comment %}
+Which brands this person works on. Loaded via HTMX into a modal.
+
+Checkboxes only. There used to be a role picker beside each brand, which asked
+the same question once per brand — and let someone end up an Editor here and a
+Viewer there, a difference nothing on screen ever showed. The role is now a
+single choice on the member row and applies wherever they are ticked here.
+{% endcomment %}
+<form hx-post="{% url 'members:manage_workspaces' membership_id=membership.id %}"
+      hx-target="#member-{{ membership.id }}"
+      hx-swap="outerHTML">
+    {% csrf_token %}
+
+    <p class="text-xs mb-3" style="color: var(--text-tertiary);">
+        {% if current_role %}
+        They work as <strong style="color: var(--text-secondary);">{{ current_role|capfirst }}</strong>
+        on the brands ticked here. Change the role from the member's menu.
+        {% else %}
+        Tick the brands they work on. Set their role from the member's menu.
+        {% endif %}
+    </p>
+
+    <div class="space-y-2 max-h-64 overflow-y-auto mb-4">
+        {% for wd in workspace_data %}
+        <div class="flex items-center gap-3 py-2 px-3 rounded-lg" style="background: var(--neutral-50);">
+            <input type="checkbox" name="ws_{{ wd.workspace.id }}" value="1"
+                   id="assign-ws-{{ wd.workspace.id }}"
+                   {% if wd.assigned %}checked{% endif %}
+                   {% if wd.is_owner %}disabled{% endif %}
+                   class="accent-orange-500 cursor-pointer">
+            <label for="assign-ws-{{ wd.workspace.id }}" class="flex-1 text-sm cursor-pointer" style="color: var(--text-primary);">
+                {{ wd.workspace.name }}
+            </label>
+            {% if wd.is_owner %}
+            {% comment %}
+            The owner of a brand cannot be removed from it here — that would
+            leave the brand with nobody who can hand out access to it. Ownership
+            moves by transfer, not by unticking a box.
+            {% endcomment %}
+            <input type="hidden" name="ws_{{ wd.workspace.id }}" value="1">
+            <span class="text-xs px-2 py-1 rounded-full bg-app-2 text-app-secondary"
+                  title="Ownership is set when the brand is created and moved by transfer, not granted here.">
+                Owner
+            </span>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p class="text-sm" style="color: var(--text-tertiary);">No brands available.</p>
+        {% endfor %}
+    </div>
+
+    <div class="flex justify-end">
+        <button type="submit"
+                class="btn-opacity px-5 py-2 text-sm font-medium rounded-full cursor-pointer transition-colors"
+                style="background: var(--primary); color: var(--on-primary);">
+            Save
+        </button>
+    </div>
+</form>

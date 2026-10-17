@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access denied - Brightbean</title>
+    {% include "errors/_style.html" %}
+</head>
+<body>
+    <div class="card">
+        <div class="logo">Brightbean</div>
+        <div class="icon">
+            {% icon "lock" css_class="w-[48px] h-[48px]" %}
+        </div>
+        <div class="code">Error 403</div>
+        <h1>You don't have access to this</h1>
+        <p class="message">
+            Your role in this workspace doesn't include this action. Ask an owner or
+            manager to grant it, or switch to a workspace where you have it.
+        </p>
+
+        {% comment %} Django's permission_denied view passes the exception through, and every
+           raise PermissionDenied in this codebase carries a specific reason. Showing
+           it turns a dead end into something the user can actually act on. {% endcomment %}
+        {% if exception %}
+        <div class="reason">
+            <strong>Reason</strong>
+            {{ exception }}
+        </div>
+        {% endif %}
+
+        <a href="/" class="link">Back to Brightbean</a>
+    </div>
+</body>
+</html>

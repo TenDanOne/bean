@@ -1,0 +1,14 @@
+{% comment %}
+Platform brand mark.
+
+  {% include "social_accounts/partials/_platform_icon.html" with platform="youtube" size="5" %}
+
+The marks now come from apps/common/icons.py (Font Awesome Free brands) through
+the {% platform_icon %} builtin. This partial survives only so the templates
+already including it keep working — new code should call the tag directly:
+
+  {% platform_icon account.platform size="5" %}
+
+`size` is a Tailwind scale step: 5 gives w-5 h-5. The mark draws in currentColor.
+{% endcomment %}
+{% platform_icon platform size=size|default:"5" %}

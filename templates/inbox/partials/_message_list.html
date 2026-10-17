@@ -1,0 +1,20 @@
+{% load humanize %}
+{% comment %}
+Two depths in one partial, because HTMX swaps this same node either way and a
+second target would need a second view.
+
+  no ?post=  -> the folder list, one row per publication
+  ?post=X    -> that folder's comments, with a way back
+{% endcomment %}
+{% if showing_folders %}
+{% include "inbox/partials/_folder_list.html" %}
+{% else %}
+{% if active_post_id %}{% include "inbox/partials/_folder_breadcrumb.html" %}{% endif %}
+{% if inbox_messages %}
+{% for msg in inbox_messages %}
+{% include "inbox/partials/_message_row.html" with message=msg %}
+{% endfor %}
+{% else %}
+{% include "inbox/partials/_empty_state.html" %}
+{% endif %}
+{% endif %}

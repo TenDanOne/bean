@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Version History - {{ post.caption_snippet }}{% endblock %}
+
+{% block content %}
+<div>
+    <div class="flex items-center gap-3 mb-6">
+        <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}?mode=list&tab=approvals" class="text-app-ghost hover:text-app-secondary transition-colors">
+            {% icon "chevron-left" css_class="w-5 h-5" %}
+        </a>
+        <div>
+            <h1 class="text-xl font-bold text-app tracking-tight">Version History</h1>
+            <p class="text-sm text-app-tertiary mt-0.5">{{ post.caption_snippet }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-6">
+        <!-- Version list sidebar -->
+        <div class="col-span-3">
+            <h3 class="text-[0.8125rem] font-semibold text-app-body mb-3">Versions</h3>
+            <div class="space-y-1">
+                {% for v in versions %}
+                {% if v.version_number > 1 %}
+                <a href="{% url 'approvals:version_diff' workspace_id=workspace.id post_id=post.id %}?v1={{ v.version_number|add:"-1" }}&v2={{ v.version_number }}"
+                   class="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors {% if version_new and v.version_number == version_new.version_number %}bg-app-2 font-semibold text-app{% else %}text-app-secondary hover:bg-app-1{% endif %}">
+                    <span>v{{ v.version_number }}</span>
+                    <span class="text-[0.6875rem] text-app-ghost">{{ v.created_at|date:"M j, g:i A" }}</span>
+                </a>
+                {% else %}
+                <div class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {% if version_new and v.version_number == version_new.version_number %}bg-app-2 font-semibold text-app{% else %}text-app-secondary{% endif %}">
+                    <span>v1 <span class="text-[0.6875rem] text-app-ghost">(initial)</span></span>
+                    <span class="text-[0.6875rem] text-app-ghost">{{ v.created_at|date:"M j, g:i A" }}</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Diff view -->
+        <div class="col-span-9">
+            {% if version_old or version_new %}
+            <div class="flex items-center gap-2 mb-4">
+                {% if version_old %}
+                <span class="text-sm text-app-tertiary">v{{ version_old.version_number }}</span>
+                {% icon "arrow-right" css_class="w-4 h-4 text-app-ghost" %}
+                {% endif %}
+                {% if version_new %}
+                <span class="text-sm font-semibold text-app-strong">v{{ version_new.version_number }}</span>
+                <span class="text-[0.6875rem] text-app-ghost">by {{ version_new.created_by.display_name|default:"Unknown" }}</span>
+                {% endif %}
+            </div>
+
+            {% include "approvals/partials/version_diff.html" %}
+            {% else %}
+            <p class="text-sm text-app-ghost text-center py-8">No version history available</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

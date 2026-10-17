@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block page_title %}Connect Social Account{% endblock %}
+{% block content %}
+{% comment %}
+max-w-7xl, not the 4xl this used to be. The grid was never the reason this page
+showed three columns — 896px simply cannot hold four cards wide enough for
+"Instagram (Direct) · Sign in with Instagram, no Facebook needed".
+{% endcomment %}
+<div class="max-w-7xl">
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="{% url 'social_accounts:list' workspace_id=workspace_id %}" class="inline-flex items-center gap-1.5 text-sm text-app-tertiary hover:text-app-body transition-colors mb-4">
+            {% icon "chevron-left" css_class="w-4 h-4" %}
+            Back to Social Accounts
+        </a>
+        <h2 class="text-xl font-semibold text-app">Connect a Platform</h2>
+        <p class="text-sm text-app-tertiary mt-1">Select a platform to connect your social media account.</p>
+    </div>
+
+    <!-- Platform grid -->
+    <div class="overflow-y-auto pr-1">
+    {% comment %}
+    The fourth column only appears at xl, where it genuinely fits. Tailwind
+    compiles grid-cols-N to repeat(N, minmax(0, 1fr)); that minmax(0, …) is what
+    keeps a long platform name from pushing a track wider than its share and
+    scrolling the page sideways. The card's text column carries min-w-0 for the
+    same reason one level down.
+    {% endcomment %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for value, label in platform_choices %}
+        {% comment %}
+        Two states, and they should not merely differ in opacity. A platform you
+        can connect is a raised, live surface; one with no credentials set up is
+        pressed into the page and inert. Fading everything to 60% made the whole
+        grid look broken rather than half-available — which is what the page
+        actually looked like before this.
+        {% endcomment %}
+        <div class="relative p-5 {% if value in configured_platforms %}relief relief-interactive{% else %}relief-unavailable{% endif %}">
+            <div class="flex items-start gap-4">
+                <!-- Platform icon -->
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
+                    {% if value == 'facebook' %}bg-blue-50 text-blue-600
+                    {% elif value == 'instagram' %}bg-gradient-to-br from-purple-50 to-pink-50 text-pink-600
+                    {% elif value == 'instagram_login' %}bg-gradient-to-br from-purple-50 to-pink-50 text-pink-600
+                    {% elif value == 'linkedin_personal' %}bg-blue-50 text-blue-700
+                    {% elif value == 'linkedin_company' %}bg-blue-50 text-blue-700
+                    {% elif value == 'tiktok' %}bg-stone-900 text-app-inverse
+                    {% elif value == 'youtube' %}bg-red-50 text-red-600
+                    {% elif value == 'pinterest' %}bg-red-50 text-red-500
+                    {% elif value == 'threads' %}bg-app-2 text-app-strong
+                    {% elif value == 'bluesky' %}bg-sky-50 text-sky-500
+                    {% elif value == 'google_business' %}bg-blue-50 text-blue-500
+                    {% elif value == 'mastodon' %}bg-indigo-50 text-indigo-600
+                    {% elif value == 'devto' %}bg-app-2 text-app
+                    {% endif %}">
+                    {% platform_icon value size="5" brand_color=True %}
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-semibold text-app">{{ label }}</h3>
+                    <p class="text-xs text-app-ghost mt-0.5">
+                        {% if value == 'facebook' %}Your Pages &amp; Groups
+                        {% elif value == 'instagram' %}For accounts linked to a Facebook Page
+                        {% elif value == 'instagram_login' %}Sign in with Instagram &middot; no Facebook needed
+                        {% elif value == 'linkedin_personal' %}Personal profile
+                        {% elif value == 'linkedin_company' %}Company pages
+                        {% elif value == 'tiktok' %}Business or Creator account
+                        {% elif value == 'youtube' %}Videos &amp; Shorts
+                        {% elif value == 'pinterest' %}Pins &amp; Boards
+                        {% elif value == 'threads' %}Text &amp; Media
+                        {% elif value == 'bluesky' %}AT Protocol
+                        {% elif value == 'google_business' %}Local posts
+                        {% elif value == 'mastodon' %}Federated social
+                        {% elif value == 'devto' %}Articles &amp; posts
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            {% if value in configured_platforms %}
+            <form method="post" action="{% url 'social_accounts:connect' workspace_id=workspace_id %}" class="mt-4">
+                {% csrf_token %}
+                <input type="hidden" name="platform" value="{{ value }}">
+                <button type="submit" class="bbs-btn bbs-btn-primary w-full text-xs py-1.5">
+                    Connect
+                    {% icon "arrow-right" css_class="w-3.5 h-3.5" %}
+                </button>
+            </form>
+            {% else %}
+            <div class="mt-4">
+                <span class="bbs-btn bbs-btn-ghost bbs-denied w-full text-xs py-1.5" aria-disabled="true">
+                    Add TikTok Business credentials
+                </span>
+            </div>
+            {% endif %}
+
+            {% if value not in configured_platforms %}
+            <div class="absolute inset-0 rounded-xl cursor-not-allowed" title="Platform credentials not configured. Contact your administrator."></div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    </div>
+</div>
+{% endblock %}

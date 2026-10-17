@@ -1,0 +1,20 @@
+{% comment %}
+Platform brand mark, pixel-size API.
+
+  {% include "partials/_platform_icon.html" with platform="instagram" size="sm" %}
+
+  size: "sm" (16px, avatar overlay) or "md" (20px, connect list). Default: sm.
+
+This used to be a second, independently maintained icon set: different marks,
+different sizing API and different platform coverage from the one under
+social_accounts/, so a channel looked different depending on which partial the
+page happened to include. Both now resolve to the same source. Two behaviour
+changes worth knowing:
+
+  * Marks draw in currentColor instead of each brand's fixed hex, so they stay
+    legible on dark chips and in disabled states. Set the colour on the parent
+    if you want brand colour here.
+  * Google Business was a 6.3 KB SVG with a base64 JPEG embedded in it; it is
+    now the Google mark.
+{% endcomment %}
+{% if size == "md" %}{% platform_icon platform size="5" %}{% else %}{% platform_icon platform size="4" %}{% endif %}

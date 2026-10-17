@@ -1,0 +1,127 @@
+{% comment %}
+Single connected channel card — HTMX-swappable.
+Usage: {% include "social_accounts/partials/_account_card.html" with account=account workspace_id=workspace_id %}
+
+Pilot for the BBS visual language: every colour resolves through a token, so an
+organisation's brand colour reaches this card without anyone editing it. The
+archive menu is a native `popover` — the platform handles top-layer stacking,
+light dismiss and Escape, all of which the Alpine version reimplemented by hand.
+{% endcomment %}
+{% load social_accounts_tags %}
+<div id="account-{{ account.id }}" class="group relative relief relief-interactive enter-soft p-5">
+    <div class="flex items-start gap-4">
+        <!-- Avatar -->
+        <div class="flex-shrink-0">
+            {% if account.avatar_url %}
+            <img src="{{ account.avatar_url }}"
+                 alt="{{ account.account_name|default:account.account_handle }} profile picture"
+                 class="w-11 h-11 rounded-full object-cover"
+                 style="box-shadow: 0 0 0 2px var(--surface-2);">
+            {% else %}
+            {% comment %}
+            No avatar, so the platform mark is all there is to identify the
+            channel by — full brand colour earns its place here.
+            {% endcomment %}
+            <div class="w-11 h-11 rounded-full flex items-center justify-center"
+                 style="background: var(--surface-2);">
+                {% platform_icon account.platform size="5" brand_color=True %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-sm font-semibold truncate" style="color: var(--text-primary);">{{ account.account_name|default:account.account_handle }}</h3>
+                <span class="flex-shrink-0">
+                    {% platform_icon account.platform size="4" brand_color=True %}
+                </span>
+            </div>
+            {% if account.account_handle %}
+            <p class="text-xs truncate" style="color: var(--text-tertiary);">@{{ account.account_handle|cut:"@" }}</p>
+            {% endif %}
+            <div class="flex items-center gap-3 mt-2">
+                {% include "social_accounts/partials/_status_badge.html" with status=account.connection_status error=account.last_error %}
+                {% if account.follower_count %}
+                <span class="text-xs" style="color: var(--text-tertiary);">{{ account.follower_count|format_number }} followers</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2">
+            {% if account.needs_reconnect %}
+            <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=workspace_id account_id=account.id %}">
+                {% csrf_token %}
+                <button type="submit" class="bbs-btn bbs-btn-neutral text-xs px-3 py-1.5" style="color: var(--brand-700);">
+                    Reconnect
+                </button>
+            </form>
+            {% endif %}
+
+            <button type="button"
+                    popovertarget="archive-{{ account.id }}"
+                    class="bbs-btn bbs-btn-ghost p-1.5"
+                    aria-label="Remove {{ account.account_name|default:account.account_handle }}">
+                {% icon "xmark" css_class="w-4 h-4" %}
+            </button>
+
+            {% comment %}
+            Two outcomes where there used to be one. Archiving is the safe default
+            and what almost everyone means by "remove this channel"; permanent
+            deletion is a deliberate second step behind its own typed confirmation,
+            because it also destroys the channel's posts and its inbox history.
+            {% endcomment %}
+            <div popover id="archive-{{ account.id }}" class="relief-float p-4 w-72">
+                <p class="text-sm mb-1" style="color: var(--text-primary);">Archive <strong>{{ account.account_name|default:account.account_handle }}</strong>?</p>
+                <p class="text-xs mb-3" style="color: var(--text-tertiary);">It stops syncing and publishing. Its posts, comments and metrics are kept, and you can reconnect anytime.</p>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" popovertarget="archive-{{ account.id }}" popovertargetaction="hide"
+                            class="bbs-btn bbs-btn-ghost text-xs px-3 py-1.5">Cancel</button>
+                    <form method="post"
+                          action="{% url 'social_accounts:disconnect' workspace_id=workspace_id account_id=account.id %}"
+                          hx-post="{% url 'social_accounts:disconnect' workspace_id=workspace_id account_id=account.id %}"
+                          hx-target="#account-{{ account.id }}"
+                          hx-swap="outerHTML"
+                          hx-disabled-elt="find button">
+                        {% csrf_token %}
+                        <button type="submit" class="bbs-btn bbs-btn-primary text-xs px-3 py-1.5">Archive</button>
+                    </form>
+                </div>
+
+                <div class="mt-3 pt-3" style="border-top: 1px solid var(--border);">
+                    <button hx-get="{% url 'social_accounts:delete_account' workspace_id=workspace_id account_id=account.id %}"
+                            hx-target="#account-{{ account.id }}"
+                            hx-swap="outerHTML"
+                            class="text-[11px] font-medium cursor-pointer hover:underline"
+                            style="color: var(--error-700);">
+                        Delete permanently instead…
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if account.last_error and account.connection_status == "error" %}
+    <div class="mt-3 px-3 py-2 rounded-lg" style="background: var(--error-50);">
+        <p class="text-xs truncate" style="color: var(--error-700);">{{ account.last_error }}</p>
+    </div>
+    {% endif %}
+
+    {% comment %}
+    Posting schedule. Slots drive the queue: define "this channel posts Tue 9:00"
+    once and the queue fills the gaps by itself. Built but never verified end to
+    end, so the whole section stays behind BBS_SCHEDULING_ENABLED — six half-wired
+    features already turned up in this codebase and this has the same shape. The
+    heading goes with it; a section title over nothing is worse than no section.
+    {% endcomment %}
+    {% if scheduling_enabled and account.connection_status == "connected" %}
+    <div class="mt-4 pt-4" style="border-top: 1px solid var(--border);">
+        <div class="mb-3">
+            <h4 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary);">Posting Schedule</h4>
+            <p class="text-xs mt-0.5" style="color: var(--text-tertiary);">Set recurring time slots for when queued posts are automatically published.</p>
+        </div>
+        {% include "social_accounts/partials/_posting_slots_grid.html" with account=account workspace_id=workspace_id %}
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,45 @@
+{% extends "public/base.html" %}
+
+{% block title %}BrightBean Studio | Internal Social Publishing{% endblock %}
+
+{% block content %}
+<section class="public-hero" aria-labelledby="review-title">
+    <div class="public-kicker">Internal company workspace</div>
+    <h1 id="review-title" class="public-title">One calm place for our company's social publishing.</h1>
+    <p class="public-lede">
+        BrightBean Studio is an internal web application used by our company to connect authorized social accounts,
+        prepare content, and publish approved posts. It is not currently offered for sale and is not a public SaaS product.
+    </p>
+    <div class="public-actions">
+        <a class="public-button primary" href="{% url 'public_support' %}">Contact support</a>
+        <a class="public-button" href="{% url 'public_privacy' %}">Read privacy policy</a>
+    </div>
+</section>
+
+<section class="public-section" aria-labelledby="tiktok-title">
+    <h2 id="tiktok-title">TikTok integration</h2>
+    <div class="public-grid">
+        <article class="public-card">
+            <h3>Login Kit</h3>
+            <p>Authorized company users sign in with TikTok and connect their Business or Creator account to a BrightBean workspace.</p>
+        </article>
+        <article class="public-card">
+            <h3>Content Posting API</h3>
+            <p>BrightBean publishes video posts created by authorized users directly to their connected TikTok account using Direct Post.</p>
+        </article>
+        <article class="public-card">
+            <h3>Account control</h3>
+            <p>Users can disconnect a TikTok account from BrightBean. OAuth tokens are stored in encrypted database fields.</p>
+        </article>
+    </div>
+</section>
+
+<section class="public-section public-prose" aria-labelledby="data-title">
+    <h2 id="data-title">Data and access</h2>
+    <p>
+        BrightBean uses basic TikTok profile information to identify a connected account and uses authorized OAuth tokens
+        only to provide the requested publishing workflow. The application does not sell TikTok data, use it for advertising,
+        or share it with third parties for their own purposes.
+    </p>
+</section>
+{% endblock %}

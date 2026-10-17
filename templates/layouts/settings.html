@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block page_header %}{% endblock %}
+
+{% block sidebar_nav %}
+<!-- Settings sidebar replaces normal nav -->
+<a href="{% if request.workspace %}{% url 'calendar:calendar' workspace_id=request.workspace.id %}{% else %}/{% endif %}" class="sidebar-nav-item mb-2">
+    {% icon "arrow-left" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">Settings</span>
+</a>
+
+<div class="sidebar-section-label">Account</div>
+<a href="{% url 'accounts:settings' %}" class="sidebar-nav-item mb-1 {% if settings_active == 'profile' %}active{% endif %}">
+    {% icon "user" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">Profile</span>
+</a>
+<a href="{% url 'accounts:settings' %}?tab=preferences" class="sidebar-nav-item mb-1 {% if settings_active == 'preferences' %}active{% endif %}">
+    {% icon "sliders" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">Preferences</span>
+</a>
+
+<div class="sidebar-section-label">Organization</div>
+<a href="{% url 'organizations:settings' %}" class="sidebar-nav-item mb-1 {% if settings_active == 'general' %}active{% endif %}">
+    {% icon "desktop" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">General</span>
+</a>
+<a href="{% url 'organizations:workspaces' %}" class="sidebar-nav-item mb-1 {% if settings_active == 'workspaces' %}active{% endif %}">
+    {% icon "table-cells" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">Workspaces</span>
+</a>
+<a href="{% url 'members:list' %}" class="sidebar-nav-item mb-1 {% if settings_active == 'members' %}active{% endif %}">
+    {% icon "user-group" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">Team Members</span>
+</a>
+<a href="{% url 'api_keys:list' %}" class="sidebar-nav-item mb-1 {% if settings_active == 'api_keys' %}active{% endif %}">
+    {% icon "key" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">API Keys</span>
+</a>
+<a href="{% url 'organizations:cross_workspace_calendar' %}" class="sidebar-nav-item mb-1 {% if settings_active == 'calendars' %}active{% endif %}">
+    {% icon "calendar-days" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+    <span class="sidebar-nav-label">All Calendars</span>
+</a>
+{% endblock %}
+
+{% block content %}
+{% endblock %}

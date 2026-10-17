@@ -1,0 +1,1986 @@
+@import "tailwindcss";
+
+/* Scan all template directories for Tailwind class usage */
+@source "../../../templates/**/*.html";
+@source "../../../apps/**/templates/**/*.html";
+
+/* ═══════════════════════════════════════════════════════════════
+   WHITE-LABEL TOKEN ARCHITECTURE
+   Layer 1 → Brand Tokens   (swap these to white-label)
+   Layer 2 → Semantic Tokens (reference brand tokens)
+   Layer 3 → Component Tokens (reference semantic tokens)
+   To rebrand: change ONLY the brand token values below.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Brand Tokens - BrightBean Orange */
+  --brand-50:  #FFF7ED;
+  --brand-100: #FFEDD5;
+  --brand-200: #FED7AA;
+  --brand-300: #FDBA74;
+  --brand-400: #FB923C;
+  --brand-500: #F97316;
+  --brand-600: #EA580C;
+  --brand-700: #C2410C;
+  --brand-800: #9A3412;
+  --brand-900: #7C2D12;
+
+  /* Brand Tokens - BrightBean Green (the bean in the logo) — used for
+     selection controls (checkboxes, toggle switches) */
+  --brand-green-100: #EFF2DC;
+  --brand-green-200: #DDE4B9;
+  --brand-green-500: #94A43F;
+  --brand-green-600: #7B8A33;
+
+  --brand-font-display: Georgia, 'Times New Roman', serif;
+  --brand-font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --brand-font-mono: ui-monospace, SFMono-Regular, 'Cascadia Code', 'Consolas', monospace;
+
+  /* Semantic Tokens */
+  --primary:       var(--brand-500);
+  --primary-hover: var(--brand-600);
+  --primary-soft:  var(--brand-50);
+  --primary-muted: var(--brand-100);
+  --primary-ring:  var(--brand-200);
+
+  /* Neutrals - warm stone */
+  --neutral-950: #171412;
+  --neutral-900: #1C1917;
+  --neutral-800: #292524;
+  --neutral-700: #44403C;
+  --neutral-600: #57534E;
+  --neutral-500: #78716C;
+  --neutral-400: #A8A29E;
+  --neutral-300: #D6D3D1;
+  --neutral-200: #E7E5E4;
+  --neutral-100: #F5F5F4;
+  --neutral-50:  #FAFAF9;
+
+  /* Warm surface scale — the neumorphic body of the interface.
+
+     Neumorphism only reads as moulded when the surface and the light falling on
+     it share a hue; on a neutral grey the effect flattens into a generic drop
+     shadow. These are the brand orange desaturated almost to paper, so panels
+     feel warm without any of them looking like a warning state. Text keeps the
+     stone scale above: contrast is what makes an inbox readable at hour eight,
+     and tinting the text is where warm palettes usually go wrong. */
+  --warm-50:  #FDFAF6;
+  --warm-100: #FAF4EC;
+  --warm-200: #F3E9DC;
+  --warm-300: #E8D8C4;
+  --warm-400: #D9C3A9;
+
+  /* Surfaces */
+  --surface-0: #FFFFFF;      /* cards stay paper-white: they hold the reading */
+  --surface-page: var(--warm-100);
+  --surface-1: var(--warm-50);
+  --surface-2: var(--warm-100);
+  --surface-3: var(--warm-200);
+  --border:    var(--warm-300);
+  --border-hover: var(--warm-400);
+  --border-subtle: var(--warm-200);
+
+  /* Borders that identify a control — the edge of an input, a select, a
+     checkbox — rather than decorate a panel. WCAG 1.4.11 asks 3:1 for these
+     against their background, and the decorative border above sits at 1.4:1,
+     which is right for a divider and not enough for "where does this field
+     end". Neumorphism makes this worse than usual: soft shadow plus soft
+     border is exactly how a form becomes a guessing game. */
+  --border-control: #B28A62;
+
+  /* Text */
+  --text-primary:   var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  /* Not neutral-500 exactly: that clears AA on white but lands at 4.4:1 on the
+     warm panels, and this app puts secondary text on those constantly. Every
+     text token here is measured against --surface-2, the darkest surface words
+     actually sit on, not against white. */
+  --text-tertiary:  #766F6A;
+  --text-body:      var(--neutral-700);
+  --text-strong:    var(--neutral-800);
+  /* Not neutral-400 (#A8A29E). That measures 2.5:1 on white — below the 3:1
+     floor even for large text — and it carried 257 of this app's colour
+     classes, so it was never only decorative: timestamps, counts, helper text
+     and placeholders all used it. This is the lightest warm grey that still
+     clears 4.5:1, so words set in it are readable wherever they turn up. */
+  --text-ghost:     #776E69;
+  /* Genuinely decorative only — separators drawn as text, disabled glyphs.
+     Never put words a person needs to read in this. */
+  --text-faint:     var(--neutral-300);
+  --text-inverse:   #FFFFFF;
+
+  /* Text sitting on the brand orange.
+
+     White on #F97316 measures 2.8:1 — under the 4.5:1 AA floor and under even
+     the 3:1 large-text floor, on the primary action button of the whole app.
+     The brand orange is the identity and does not move, so the text darkens
+     instead: this reads 6.2:1 on the same background. Bright oranges and
+     yellows nearly always need dark text; white only ever looked right on
+     them because nobody measured it. */
+  --on-primary:     var(--neutral-900);
+
+  /* Illustrations */
+  --color-illustration-border: var(--neutral-200);
+  --color-illustration-card: #FFFFFF;
+  --color-illustration-element: var(--neutral-200);
+  --color-illustration-secondary-element: var(--neutral-100);
+  --color-illustration-accent: var(--brand-500);
+
+  /* Status */
+  --success-500: #22C55E; --success-50: #F0FDF4; --success-700: #15803D;
+  --warning-500: #EAB308; --warning-50: #FEFCE8; --warning-700: #A16207;
+  --error-500:   #EF4444; --error-50:   #FEF2F2; --error-700:   #B91C1C;
+  --info-500:    #3B82F6; --info-50:    #EFF6FF; --info-700:    #1D4ED8;
+
+  /* Accent palette */
+  --accent-teal:    #14B8A6; --accent-teal-soft:    #F0FDFA;
+  --accent-sky:     #0EA5E9; --accent-sky-soft:     #F0F9FF;
+  --accent-rose:    #F43F5E; --accent-rose-soft:    #FFF1F2;
+  --accent-amber:   #F59E0B; --accent-amber-soft:   #FFFBEB;
+  --accent-indigo:  #6366F1; --accent-indigo-soft:  #EEF2FF;
+  --accent-emerald: #10B981; --accent-emerald-soft: #ECFDF5;
+
+  /* Shadows — tinted with the brand, for the reason spelled out on the relief
+     tokens further down: a neutral shadow on a warm surface reads as grime. */
+  --shadow-xs:  0 1px 2px rgba(124,45,18,0.06);
+  --shadow-sm:  0 1px 3px rgba(124,45,18,0.09), 0 1px 2px rgba(124,45,18,0.05);
+  --shadow-md:  0 4px 6px rgba(124,45,18,0.07), 0 2px 4px rgba(124,45,18,0.05);
+  --shadow-lg:  0 10px 15px rgba(124,45,18,0.09), 0 4px 6px rgba(124,45,18,0.05);
+  --shadow-xl:  0 20px 25px rgba(124,45,18,0.09), 0 8px 10px rgba(124,45,18,0.05);
+  --shadow-primary: 0 4px 14px rgba(249,115,22,0.28);
+
+  /* Radii */
+  --radius-sm:   0.25rem;
+  --radius-md:   0.375rem;
+  --radius-lg:   0.5rem;
+  --radius-xl:   0.75rem;
+  --radius-2xl:  1rem;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:    150ms;
+  --dur-base:    200ms;
+  --dur-slow:    350ms;
+
+  /* Fonts */
+  --font-display: var(--brand-font-display);
+  --font-body:    var(--brand-font-body);
+  --font-mono:    var(--brand-font-mono);
+}
+
+/* Base */
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Auth page background pattern */
+.auth-bg {
+  background-color: var(--surface-1);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(249,115,22,0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(20,184,166,0.04), transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR - uses CSS variables that Tailwind can't express
+   ═══════════════════════════════════════════════════════════════ */
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+  text-decoration: none;
+}
+.sidebar-nav-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+}
+.sidebar-nav-item.active {
+  background: var(--primary-soft);
+  color: var(--brand-700);
+  font-weight: 600;
+}
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-ghost);
+  padding: 14px 10px 4px;
+}
+.sidebar-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+}
+.sidebar-logo-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+img.sidebar-logo-mark {
+  background: transparent;
+}
+
+/* Sidebar collapsed state - desktop only */
+@media (min-width: 1024px) {
+  .sidebar-collapsed .sidebar-nav-item {
+    justify-content: center;
+    padding: 8px;
+    gap: 0;
+  }
+  .sidebar-collapsed .sidebar-nav-label,
+  .sidebar-collapsed .sidebar-section-label,
+  .sidebar-collapsed .sidebar-section-label-wrap,
+  .sidebar-collapsed .sidebar-badge {
+    display: none;
+  }
+}
+
+/* Mobile: larger touch targets for sidebar nav */
+@media (max-width: 1023px) {
+  .sidebar-nav-item {
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+}
+
+/* Focus ring utility */
+.focus-ring:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+/* Interactive element utilities — CSP-safe replacements for inline handlers */
+.btn-neutral {
+  transition: background var(--dur-fast) ease;
+}
+.btn-neutral:hover {
+  background: var(--neutral-200) !important;
+}
+
+.btn-neutral-surface:hover {
+  background: var(--neutral-50) !important;
+}
+
+.btn-neutral-100 {
+  transition: background var(--dur-fast) ease;
+}
+.btn-neutral-100:hover {
+  background: var(--neutral-100) !important;
+}
+
+.btn-danger-soft {
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.btn-danger-soft:hover {
+  background: var(--error-500, #EF4444) !important;
+  color: white !important;
+}
+
+.btn-danger-soft-bg {
+  transition: background var(--dur-fast) ease;
+}
+.btn-danger-soft-bg:hover {
+  background: #FEF2F2 !important;
+}
+
+.btn-primary-hover {
+  transition: background var(--dur-fast) ease;
+}
+.btn-primary-hover:hover {
+  background: var(--primary-hover) !important;
+}
+
+.btn-primary-lift {
+  transition: background var(--dur-fast) ease, transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+.btn-primary-lift:hover {
+  background: var(--primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(249,115,22,0.35);
+}
+
+.card-hover-lift {
+  transition: box-shadow var(--dur-fast) ease, border-color var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+.card-hover-lift:hover {
+  box-shadow: var(--shadow-lg) !important;
+  border-color: transparent !important;
+  transform: translateY(-2px);
+}
+
+.btn-surface-1:hover {
+  background: var(--surface-1) !important;
+}
+.btn-surface-2:hover {
+  background: var(--surface-2, #F5F5F4) !important;
+}
+
+.btn-error-darker {
+  transition: background var(--dur-fast) ease;
+}
+.btn-error-darker:hover {
+  background: var(--error-600, #DC2626) !important;
+}
+
+.btn-opacity:hover {
+  opacity: 0.9;
+}
+
+.btn-text-hover-primary {
+  transition: color var(--dur-fast) ease;
+}
+.btn-text-hover-primary:hover {
+  color: var(--text-primary) !important;
+}
+
+.btn-icon-hover {
+  transition: background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.btn-icon-hover:hover {
+  background: var(--surface-2) !important;
+  color: var(--text-primary) !important;
+}
+
+.btn-surface-neutral-50 {
+  transition: background var(--dur-fast) ease;
+}
+.btn-surface-neutral-50:hover {
+  background: var(--neutral-50) !important;
+}
+
+.btn-amber {
+  transition: background var(--dur-fast) ease;
+}
+.btn-amber:hover {
+  background: #FDE68A !important;
+}
+
+.btn-danger-tint {
+  transition: background var(--dur-fast) ease;
+}
+.btn-danger-tint:hover {
+  background: rgba(239,68,68,0.08) !important;
+}
+
+.btn-primary-tint {
+  transition: background var(--dur-fast) ease;
+}
+.btn-primary-tint:hover {
+  background: rgba(var(--primary-rgb, 249, 115, 22), 0.2) !important;
+}
+
+.input-focus {
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+.input-focus:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-ring) !important;
+}
+.input-focus:not(:focus) {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.input-focus-surface {
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, background var(--dur-fast) ease;
+}
+.input-focus-surface:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-ring) !important;
+  background: var(--surface-0) !important;
+}
+.input-focus-surface:not(:focus) {
+  border-color: var(--border);
+  box-shadow: none;
+  background: var(--surface-1);
+}
+
+/* Form input base */
+.form-input-styled {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-0);
+  color: var(--text-primary);
+  transition: all var(--dur-fast) ease;
+  outline: none;
+  width: 100%;
+}
+.form-input-styled::placeholder {
+  color: var(--text-ghost);
+}
+.form-input-styled:hover {
+  border-color: var(--border-hover);
+}
+.form-input-styled:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+.form-input-styled.is-error {
+  border-color: var(--error-500);
+}
+.form-input-styled.is-error:focus {
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+}
+
+/* Primary button */
+.btn-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--dur-base) var(--ease-out);
+  letter-spacing: 0.005em;
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--relief-raised), var(--shadow-primary);
+  width: 100%;
+}
+.btn-brand:active {
+  box-shadow: var(--relief-pressed);
+  transform: none;
+}
+.btn-brand:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(249,115,22,0.35);
+}
+.btn-brand:active {
+  transform: translateY(0);
+}
+
+/* Secondary / outline button */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--dur-base) var(--ease-out);
+  background: var(--surface-0);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-xs);
+  border: 1.5px solid var(--border);
+  width: 100%;
+}
+.btn-outline:hover {
+  background: var(--surface-1);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Ghost/link button */
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+  background: transparent;
+  color: var(--primary);
+}
+.btn-link:hover {
+  background: var(--primary-soft);
+}
+
+/* Social login button */
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--dur-base) var(--ease-out);
+  background: var(--surface-0);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+  width: 100%;
+  text-decoration: none;
+}
+.btn-social:hover {
+  background: var(--surface-1);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* Divider with text */
+.divider-text {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-ghost);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.divider-text::before,
+.divider-text::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Auth card */
+.auth-card {
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+}
+
+/* Alert boxes */
+.alert-error {
+  background: var(--error-50);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  color: var(--error-700);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.alert-success {
+  background: var(--success-50);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  color: var(--success-700);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.alert-info {
+  background: var(--info-50);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  color: var(--info-700);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* Date & time picker */
+.form-datetime {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-0);
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  transition: all var(--dur-fast) ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.form-datetime::placeholder {
+  color: var(--text-ghost);
+  font-weight: 400;
+}
+.form-datetime:hover {
+  border-color: var(--border-hover);
+}
+.form-datetime:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+/* Flatpickr alt-input inherits .form-datetime styling */
+.form-datetime.flatpickr-input + .form-datetime {
+  cursor: pointer;
+}
+
+/* ── Flatpickr theme overrides ──────────────────────────────── */
+.flatpickr-calendar {
+  font-family: var(--font-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.flatpickr-calendar.arrowTop::before,
+.flatpickr-calendar.arrowTop::after,
+.flatpickr-calendar.arrowBottom::before,
+.flatpickr-calendar.arrowBottom::after {
+  display: none;
+}
+.flatpickr-months {
+  padding: 0.25rem 0.25rem 0;
+}
+.flatpickr-months .flatpickr-month {
+  height: 36px;
+}
+.flatpickr-current-month {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  font-weight: 600;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  padding: 6px;
+  border-radius: var(--radius-md);
+  transition: background var(--dur-fast) ease;
+}
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+  background: var(--surface-2);
+}
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+  fill: var(--text-secondary);
+}
+span.flatpickr-weekday {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-ghost);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.flatpickr-day {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  transition: all var(--dur-fast) ease;
+  max-width: 36px;
+  height: 36px;
+  line-height: 32px;
+}
+.flatpickr-day:hover {
+  background: var(--surface-2);
+  border-color: transparent;
+}
+.flatpickr-day.today:not(.selected) {
+  border-color: var(--primary-muted);
+  background: transparent;
+}
+.flatpickr-day.today:not(.selected):hover {
+  background: var(--primary-soft);
+  border-color: var(--primary-muted);
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--text-ghost);
+}
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+  color: var(--neutral-300);
+}
+/* Time picker */
+.flatpickr-time {
+  border-top: 1px solid var(--border);
+}
+.flatpickr-time input {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.flatpickr-time .flatpickr-am-pm {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.flatpickr-time .flatpickr-am-pm:hover,
+.flatpickr-time .flatpickr-am-pm:focus {
+  background: var(--surface-2);
+}
+.flatpickr-time input:hover,
+.flatpickr-time input:focus {
+  background: var(--surface-1);
+}
+.flatpickr-time .numInputWrapper span.arrowUp::after {
+  border-bottom-color: var(--text-secondary);
+}
+.flatpickr-time .numInputWrapper span.arrowDown::after {
+  border-top-color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORM SELECTION CONTROLS — bean-green accents
+   Native checkboxes pick up the brand green via accent-color (the
+   Tailwind forms plugin isn't installed, so text-* utilities don't
+   restyle them and browsers fall back to their default blue).
+   ═══════════════════════════════════════════════════════════════ */
+.bb-checkbox {
+  accent-color: var(--brand-green-500);
+}
+.bb-checkbox:focus-visible {
+  outline: 2px solid var(--brand-green-200);
+  outline-offset: 1px;
+}
+
+/* Select with a custom chevron inset from the edge (the native arrow hugs
+   the right border). Pair with the usual border/padding utility classes. */
+.bb-select {
+  appearance: none;
+  /* Safety net: a select grows to fit its widest option, so user data — a long
+     tag, a long channel name — can push a whole toolbar off screen. It has
+     happened once already on the publish filters. */
+  max-width: 100%;
+  text-overflow: ellipsis;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2378716C' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.5rem;
+}
+
+/* Toggle switch:
+   <label class="bb-toggle"><input type="checkbox" …><span class="bb-toggle-track"></span></label> */
+.bb-toggle {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+}
+.bb-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.bb-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--neutral-300);
+  transition: background 0.15s ease;
+}
+.bb-toggle-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+.bb-toggle input:checked + .bb-toggle-track {
+  background: var(--brand-green-500);
+}
+.bb-toggle input:checked + .bb-toggle-track::after {
+  transform: translateX(16px);
+}
+.bb-toggle input:focus-visible + .bb-toggle-track {
+  outline: 2px solid var(--brand-green-200);
+  outline-offset: 1px;
+}
+.bb-toggle input:disabled + .bb-toggle-track {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 4 — SOFT RELIEF
+   Neumorphism gives a screen its tactile, moulded feel by lighting
+   surfaces from above: a light edge on top, a soft shadow below, all in
+   one colour. Done literally it also drops every border and outline to
+   near-zero contrast, which is fine for a landing page and punishing in a
+   tool someone reads comments in for hours — and it fights the per-org
+   brand colour, because the effect needs surface and background to match.
+   So this takes the depth and the softness and keeps a real border and
+   real text contrast. Soft to look at, still legible at hour eight.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Light comes from the top-left, consistently, or the illusion breaks.
+
+     The shadow is brand-900 rather than black. A neutral shadow over a warm
+     surface reads as dirt on the panel; tinting it with the same orange the
+     surfaces carry is what makes the whole thing look moulded from one
+     material instead of grey boxes on a beige page. The highlight is warmed to
+     match, otherwise the top edge looks blue against it. */
+  --relief-light: rgba(255, 252, 248, 0.95);
+  --relief-dark: rgba(124, 45, 18, 0.10);
+  --relief-dark-strong: rgba(124, 45, 18, 0.18);
+
+  /* Resting: barely lifted off the page. */
+  --relief-flat:
+    0 1px 2px var(--relief-dark),
+    inset 0 1px 0 var(--relief-light);
+
+  /* Interactive at rest — the default for cards and buttons. */
+  --relief-raised:
+    0 1px 2px var(--relief-dark),
+    0 4px 10px -3px var(--relief-dark),
+    0 12px 24px -12px var(--relief-dark-strong),
+    inset 0 1px 0 var(--relief-light);
+
+  /* Hover: lifts a little further, nothing that shifts layout. */
+  --relief-hover:
+    0 2px 4px var(--relief-dark),
+    0 8px 18px -4px var(--relief-dark-strong),
+    0 20px 36px -16px var(--relief-dark-strong),
+    inset 0 1px 0 var(--relief-light);
+
+  /* Pressed / active: the surface pushes in. */
+  --relief-pressed:
+    inset 0 2px 4px var(--relief-dark-strong),
+    inset 0 1px 2px var(--relief-dark);
+
+  /* Inputs read as wells carved into the page rather than boxes on it. */
+  --relief-well:
+    inset 0 2px 3px var(--relief-dark),
+    inset 0 1px 0 rgba(23, 20, 18, 0.04);
+
+  /* Floating layers: menus, dialogs, toasts. */
+  --relief-float:
+    0 8px 16px -4px var(--relief-dark),
+    0 24px 48px -12px var(--relief-dark-strong),
+    inset 0 1px 0 var(--relief-light);
+}
+
+/* ── Surfaces ────────────────────────────────────────────────── */
+
+.relief {
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--relief-raised);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+/* Only for surfaces that genuinely respond to the pointer. A card that
+   lifts but does nothing when clicked is a lie the interface tells. */
+.relief-interactive:hover {
+  box-shadow: var(--relief-hover);
+  border-color: var(--border-hover);
+}
+
+.relief-interactive:active {
+  box-shadow: var(--relief-pressed);
+}
+
+.relief-flat {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--relief-flat);
+}
+
+.relief-well {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--relief-well);
+}
+
+.relief-float {
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--relief-float);
+}
+
+/* ── Focus ───────────────────────────────────────────────────── */
+/* Soft styling must never come at the cost of knowing where you are.
+   Keyboard focus gets a hard, high-contrast ring on every relief surface. */
+
+.relief:focus-visible,
+.relief-flat:focus-visible,
+.relief-well:focus-visible,
+.relief-interactive:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 5 — NATIVE MOTION
+   Menus, dialogs and their animations no longer need a framework.
+   `popover` and `<dialog>` bring their own top-layer stacking, light
+   dismiss, focus trapping and Escape handling — all of it behaviour the
+   Alpine versions in this codebase reimplement by hand, and all of it
+   free and more correct from the platform. `@starting-style` plus
+   `transition-behavior: allow-discrete` animates elements in and out of
+   `display: none`, which used to be the one thing CSS couldn't do and the
+   usual reason to reach for JS in the first place.
+
+   Alpine stays where there is real state to manage — the composer's
+   channel selection, per-platform extras, live preview. Swapping that for
+   hand-rolled DOM work would be a lot of risk for no gain.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Popovers: dropdowns, menus, tooltips ────────────────────── */
+
+[popover] {
+  border: none;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+[popover]:popover-open {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+}
+
+[popover] {
+  opacity: 0;
+  translate: 0 -0.35rem;
+  scale: 0.98;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    translate var(--dur-fast) var(--ease-out),
+    scale var(--dur-fast) var(--ease-out),
+    overlay var(--dur-fast) allow-discrete,
+    display var(--dur-fast) allow-discrete;
+}
+
+/* The state an entering popover animates *from*. Without this it would
+   simply appear: there is no previous state for the browser to interpolate. */
+@starting-style {
+  [popover]:popover-open {
+    opacity: 0;
+    translate: 0 -0.35rem;
+    scale: 0.98;
+  }
+}
+
+/* ── Dialogs ─────────────────────────────────────────────────── */
+
+dialog {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: min(90vw, 40rem);
+  max-height: 85vh;
+}
+
+dialog[open] {
+  opacity: 1;
+  scale: 1;
+}
+
+dialog {
+  opacity: 0;
+  scale: 0.97;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    scale var(--dur-base) var(--ease-spring),
+    overlay var(--dur-base) allow-discrete,
+    display var(--dur-base) allow-discrete;
+}
+
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
+
+dialog::backdrop {
+  background: rgba(23, 20, 18, 0.32);
+  backdrop-filter: blur(2px);
+  opacity: 1;
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    overlay var(--dur-base) allow-discrete,
+    display var(--dur-base) allow-discrete;
+}
+
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* ── Entrances for server-rendered content ───────────────────── */
+/* HTMX swaps in markup that was never on the page. `@starting-style` gives
+   it something to animate from, so a new row eases in instead of snapping. */
+
+.enter-soft {
+  animation: enter-soft var(--dur-base) var(--ease-out);
+}
+
+@keyframes enter-soft {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────── */
+/* Not decoration: for some people this is the difference between usable
+   and nauseating. Transitions collapse to instant, nothing is removed. */
+
+@media (prefers-reduced-motion: reduce) {
+  [popover],
+  dialog,
+  dialog::backdrop {
+    transition-duration: 1ms;
+  }
+
+  .enter-soft {
+    animation: none;
+  }
+
+  .relief,
+  .relief-interactive {
+    transition-duration: 1ms;
+  }
+
+  .pulse-badge,
+  .slideUp {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 6 — COMPONENTS
+   Every rule below resolves through the token layers, so restyling BBS
+   or applying an organisation's brand colour is a change to variables,
+   never a sweep through templates. That is the whole reason the tokens
+   exist — and the reason 1,868 hard-coded colour classes in the templates
+   silently opted out of white-labelling.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+
+.bbs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  cursor: pointer;
+  /* Colour and shadow only: transforms on hover shift the layout and make
+     a row of buttons jitter as the pointer crosses it. */
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.bbs-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Keep compact controls visually dense while giving icon-only controls a
+   comfortable hit area when this utility is added. */
+.bbs-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.bbs-btn:disabled,
+.bbs-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.bbs-btn-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--relief-raised);
+}
+
+.bbs-btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  box-shadow: var(--relief-hover);
+}
+
+.bbs-btn-primary:active:not(:disabled) {
+  box-shadow: var(--relief-pressed);
+}
+
+.bbs-btn-neutral {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  border-color: var(--border);
+  box-shadow: var(--relief-raised);
+}
+
+.bbs-btn-neutral:hover:not(:disabled) {
+  background: var(--surface-1);
+  border-color: var(--border-hover);
+  box-shadow: var(--relief-hover);
+}
+
+.bbs-btn-neutral:active:not(:disabled) {
+  box-shadow: var(--relief-pressed);
+}
+
+.bbs-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.bbs-btn-ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.bbs-btn-danger {
+  background: var(--error-50);
+  color: var(--error-700);
+  border-color: color-mix(in srgb, var(--error-500) 25%, transparent);
+}
+
+.bbs-btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--error-500) 14%, var(--surface-0));
+}
+
+/* ── Fields ──────────────────────────────────────────────────── */
+
+.bbs-field {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--relief-well);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.bbs-field::placeholder {
+  color: var(--text-ghost);
+}
+
+.bbs-field:focus {
+  outline: none;
+  background: var(--surface-0);
+  border-color: var(--primary);
+  box-shadow:
+    var(--relief-well),
+    0 0 0 3px var(--primary-ring);
+}
+
+.bbs-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Badges ──────────────────────────────────────────────────── */
+
+.bbs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.bbs-badge-primary { background: var(--primary-soft); color: var(--brand-700); }
+.bbs-badge-success { background: var(--success-50); color: var(--success-700); }
+.bbs-badge-warning { background: var(--warning-50); color: var(--warning-700); }
+.bbs-badge-error   { background: var(--error-50);   color: var(--error-700); }
+.bbs-badge-info    { background: var(--info-50);    color: var(--info-700); }
+
+/* ── Denied affordances ──────────────────────────────────────── */
+/* A control your role can't use stays visible and inert rather than
+   vanishing, so the hierarchy is legible instead of the interface just
+   looking incomplete. Reserved for actions; anything that leaks a secret
+   is hidden outright. */
+
+.bbs-denied {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 7 — TOKEN UTILITIES
+   Drop-in replacements for the hard-coded Tailwind colour classes that
+   litter the templates (`text-stone-700`, `bg-white`, `border-stone-200`).
+   Those bypass the token layers entirely, which is why 57% of this app's
+   colour decisions never responded to an organisation's brand colour.
+
+   Declared with `@utility` rather than as plain classes so Tailwind's
+   variants still apply: `hover:bg-app-2` and `focus:border-app-brand` have
+   to keep working, and roughly a third of the colour classes in these
+   templates carry a variant. A plain `.bg-app-2` would silently drop them.
+   ═══════════════════════════════════════════════════════════════ */
+
+@utility text-app          { color: var(--text-primary); }
+@utility text-app-secondary{ color: var(--text-secondary); }
+@utility text-app-tertiary { color: var(--text-tertiary); }
+@utility text-app-ghost    { color: var(--text-ghost); }
+@utility text-app-inverse  { color: var(--text-inverse); }
+@utility text-app-on-primary { color: var(--on-primary); }
+
+/* Compatibility for legacy templates that still pair the old inverse token
+   with the BrightBean primary surface. New markup should use
+   `text-app-on-primary` directly. */
+.text-app-inverse.bg-orange-500,
+.text-app-inverse[class*="bg-orange-"],
+.text-app-inverse[style*="background: var(--primary)"] {
+  color: var(--on-primary);
+}
+@utility text-app-brand    { color: var(--primary); }
+@utility text-app-brand-deep { color: var(--brand-700); }
+@utility text-app-error    { color: var(--error-700); }
+@utility text-app-success  { color: var(--success-700); }
+@utility text-app-warning  { color: var(--warning-700); }
+
+@utility bg-app            { background-color: var(--surface-0); }
+@utility bg-app-1          { background-color: var(--surface-1); }
+@utility bg-app-2          { background-color: var(--surface-2); }
+@utility bg-app-3          { background-color: var(--surface-3); }
+@utility bg-app-page       { background-color: var(--surface-page); }
+@utility bg-app-brand      { background-color: var(--primary); }
+@utility bg-app-brand-soft { background-color: var(--primary-soft); }
+@utility bg-app-error-soft { background-color: var(--error-50); }
+@utility bg-app-success-soft { background-color: var(--success-50); }
+@utility bg-app-warning-soft { background-color: var(--warning-50); }
+
+@utility border-app        { border-color: var(--border); }
+@utility border-app-hover  { border-color: var(--border-hover); }
+@utility border-app-brand  { border-color: var(--primary); }
+
+@utility text-app-body     { color: var(--text-body); }
+@utility text-app-strong   { color: var(--text-strong); }
+@utility text-app-faint    { color: var(--text-faint); }
+@utility border-app-subtle { border-color: var(--border-subtle); }
+@utility ring-app          { --tw-ring-color: var(--border); }
+@utility placeholder-app-ghost { &::placeholder { color: var(--text-ghost); } }
+@utility divide-app-subtle { & > :not(:last-child) { border-color: var(--border-subtle); } }
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 8 — NEUMORPHIC DEFAULTS
+   The relief in layers 4-6 only reaches markup that opts in by name, which
+   left most of the 41 pages flat. This layer applies it by element instead,
+   so a page nobody has touched still comes out moulded.
+
+   The hard part is buttons: relief belongs on a solid button and looks absurd
+   on a bare icon or a text link styled as a button. Rather than guess, these
+   rules key off intent the markup already declares — a `bg-*` class means
+   someone decided this control is a surface. Ghost and text buttons carry no
+   background and are left alone, which is the correct answer for them anyway.
+
+   Everything here is overridable: .relief, .relief-float and .bbs-* win, so
+   the components from layer 6 keep their own behaviour.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Form controls: wells carved into the page ──────────────────
+   An input is a hole you put something into, not a tile sitting on top. This
+   is the one place neumorphism is unambiguously right, and it covers every
+   form in the app without a single template edit. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+textarea,
+select {
+  background: var(--surface-0);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--relief-well);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  /* Keep the well while focused — losing it makes the field pop forward and
+     the whole form jitters as you tab through it. */
+  box-shadow: var(--relief-well), 0 0 0 3px var(--primary-ring);
+}
+
+input:disabled, textarea:disabled, select:disabled {
+  background: var(--surface-2);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* The native arrow is a system widget and reads as foreign next to all this.
+   Inline data URI so no extra request and nothing for the CSP to block. */
+select {
+  appearance: none;
+  /* Safety net: a select grows to fit its widest option, so user data — a long
+     tag, a long channel name — can push a whole toolbar off screen. It has
+     happened once already on the publish filters. */
+  max-width: 100%;
+  text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2378716C' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 1rem;
+  padding-right: 2rem;
+}
+
+/* Selection controls get the same moulded treatment, in the brand green the
+   logo already uses for exactly this. */
+input[type="checkbox"], input[type="radio"] {
+  accent-color: var(--brand-green-500);
+}
+
+/* ── Buttons that declare themselves a surface ──────────────────
+   `[class*="bg-"]` is the opt-in: a button with a background was meant to look
+   like an object. Excluded: anything already carrying a relief or bbs
+   component, and transparent backgrounds, which are ghost buttons wearing a
+   hover colour. */
+button:is([class^="bg-"], [class*=" bg-"]):not(.relief):not(.relief-float):not([class*="bbs-btn"]):not([class*="bg-transparent"]),
+a[role="button"]:is([class^="bg-"], [class*=" bg-"]):not(.relief):not([class*="bbs-btn"]),
+input[type="submit"], input[type="button"] {
+  box-shadow: var(--relief-raised);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+button:is([class^="bg-"], [class*=" bg-"]):not(.relief):not(.relief-float):not([class*="bbs-btn"]):not([class*="bg-transparent"]):hover:not(:disabled),
+input[type="submit"]:hover:not(:disabled) {
+  box-shadow: var(--relief-hover);
+}
+
+/* Pressing pushes the surface in. This is the part that sells the material,
+   and it is cheap: no layout moves, so nothing reflows. */
+button:is([class^="bg-"], [class*=" bg-"]):not(.relief):not(.relief-float):not([class*="bbs-btn"]):not([class*="bg-transparent"]):active:not(:disabled),
+input[type="submit"]:active:not(:disabled) {
+  box-shadow: var(--relief-pressed);
+}
+
+button:disabled, input[type="submit"]:disabled {
+  box-shadow: none;
+}
+
+/* Ghost and icon buttons: no resting relief, but they still answer the press.
+   Without this they are the only controls in the app that feel dead. */
+button:not(:is([class^="bg-"], [class*=" bg-"])):not(.relief):not([class*="bbs-btn"]):active:not(:disabled) {
+  box-shadow: var(--relief-pressed);
+}
+
+/* ── Floating layers ────────────────────────────────────────────
+   Alpine menus are a positioned panel with a background. Popovers and the
+   component classes already have their own float in layers 5 and 6. */
+[x-show][class*="absolute"]:is([class^="bg-"], [class*=" bg-"]):not(.relief-float):not([class*="bbs-"]),
+[x-show][class*="fixed"]:is([class^="bg-"], [class*=" bg-"]):not(.relief-float):not([class*="bbs-"]) {
+  box-shadow: var(--relief-float);
+  border-radius: var(--radius-xl);
+}
+
+/* ── Focus, once, for everything ────────────────────────────────
+   Neumorphism's failure mode is that low contrast swallows the focus ring, so
+   this one stays hard and unmissable. Keyboard users are not a style choice. */
+:where(a, button, [tabindex]:not([tabindex="-1"]), summary):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 9 — ADOPTING THE PER-PAGE COMPONENTS
+   Twenty templates carry their own <style> block, and about fourteen of them
+   define a card, a dropdown or a field by hand — .a-card, .idea-card,
+   .preview-card, .ml-asset-card and so on. They predate the relief system, so
+   they were the reason whole pages still looked flat while the rest of the app
+   had depth.
+
+   Rather than edit twenty templates, the classes are adopted here. One file
+   still decides how a card looks; those blocks keep owning layout, which is
+   the part that genuinely is page-specific.
+
+   Selectors are doubled (.a-card.a-card) on purpose. A page's <style> block is
+   parsed after this stylesheet, so at equal specificity it wins — and several
+   of these do set their own box-shadow. Doubling the class outranks them
+   without resorting to !important, which would then be impossible to override
+   in turn.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Resting surfaces */
+.a-card.a-card,
+.idea-card.idea-card,
+.preview-card.preview-card,
+.ml-asset-card.ml-asset-card,
+.bb-card.bb-card,
+.caption-wrap.caption-wrap,
+.info-box.info-box {
+  box-shadow: var(--relief-raised);
+  border-color: var(--border);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+.idea-card.idea-card:hover,
+.ml-asset-card.ml-asset-card:hover,
+.preview-card.preview-card:hover {
+  box-shadow: var(--relief-hover);
+  border-color: var(--border-hover);
+}
+
+/* Grabbing a card should feel like picking it up off the board. */
+.idea-card.idea-card:active,
+.idea-card.idea-card.dragging {
+  box-shadow: var(--relief-float);
+}
+
+/* Floating layers */
+.idea-modal.idea-modal,
+.idea-pill-dropdown.idea-pill-dropdown,
+.emoji-picker-popup.emoji-picker-popup,
+.toast-saved.toast-saved {
+  box-shadow: var(--relief-float);
+}
+
+/* Recessed surfaces: things content sits *in* rather than on. */
+.kanban-column.kanban-column,
+.ml-trim-track.ml-trim-track,
+.ml-edit-canvas.ml-edit-canvas,
+.char-bar.char-bar,
+.idea-media-zone.idea-media-zone {
+  box-shadow: var(--relief-well);
+}
+
+/* Selects and filter pills that were built as bare boxes */
+.filter-select.filter-select,
+.org-filter-select.org-filter-select {
+  box-shadow: var(--relief-well);
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+
+.filter-select.filter-select:focus,
+.org-filter-select.org-filter-select:focus {
+  box-shadow: var(--relief-well), 0 0 0 3px var(--primary-ring);
+}
+
+/* Controls: no resting shadow — a row of pills all raised is noise — but they
+   must answer the press, or they are the only dead things on the page. */
+.idea-pill-btn.idea-pill-btn:active,
+.view-btn.view-btn:active,
+.filter-chip.filter-chip:active,
+.tag-chip.tag-chip:active,
+.ml-filter-pill.ml-filter-pill:active,
+.publish-tab.publish-tab:active,
+.create-tab.create-tab:active,
+.bb-btn.bb-btn:active,
+.acc-pill.acc-pill:active {
+  box-shadow: var(--relief-pressed);
+}
+
+/* The active tab or selected pill is pressed *in* and stays there. That is the
+   whole affordance neumorphism buys you: state you can read as a shape. */
+.view-btn.view-btn.active,
+.publish-tab.publish-tab.active,
+.create-tab.create-tab.active,
+.ml-filter-pill.ml-filter-pill.active,
+.a-pill-group > a.active,
+.a-pill-group > button.active {
+  box-shadow: var(--relief-pressed);
+}
+
+/* The standalone pages (error screens, invitations, the OAuth consent form)
+   render outside base.html, so nothing else reaches them. */
+.card.card {
+  box-shadow: var(--relief-float);
+  border-color: var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 10 — UNAVAILABLE SURFACES
+   Neumorphism's real advantage over flat design is that "you can't use this"
+   can be a shape rather than a fade. The connect-a-channel grid used to drop
+   every unconfigured platform to 60% opacity, which reads as "this page failed
+   to load" rather than "these are not set up yet".
+
+   Pressed into the page instead: still legible, obviously not clickable, and
+   the available ones stand out because they are the only things raised.
+   ═══════════════════════════════════════════════════════════════ */
+
+.relief-unavailable {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--relief-well);
+  /* Text stays fully opaque — someone still has to read which platform this is
+     and why it is unavailable. Only the decoration recedes. */
+  color: var(--text-tertiary);
+}
+
+/* The platform mark and any coloured chip inside recede, the words do not. */
+.relief-unavailable svg,
+.relief-unavailable [class*="bg-"] {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.relief-unavailable h3 {
+  color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 11 — SCROLLING
+   Two problems this solves.
+
+   First: `overflow-x: auto` alone makes the *other* axis compute to `auto`
+   too, per spec. So a horizontal tab strip grows a vertical scrollbar the
+   moment its content is one pixel taller than the box — which is what put a
+   little ▲▼ widget at the end of the Publish tabs.
+
+   Second: every scrollable area in the app used the platform default, so the
+   same list looked different on Windows and macOS and neither matched anything
+   else here. These are quiet, warm, and consistent.
+   ═══════════════════════════════════════════════════════════════ */
+
+.scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;   /* the whole point: never scroll a strip vertically */
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}
+
+/* Firefox and anything else honouring the standard properties. */
+* {
+  scrollbar-color: var(--warm-400) transparent;
+}
+
+/* WebKit. Overlay-style: no track chrome, so a scrollbar never draws a hard
+   line through the soft surfaces around it. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--warm-400);
+  border-radius: var(--radius-full);
+  /* Transparent border shrinks the visible thumb without shrinking the grab
+     target, which stays a comfortable 10px. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Strips where even a thin scrollbar is visual noise — filter chips, tab rows.
+   They still scroll by wheel, trackpad and touch. */
+.scroll-x-hidden {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-x-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 12 — STANDARDISING THE PER-PAGE COMPONENTS
+   Measured across the templates that define their own controls: 8 different
+   border radii, 7 font sizes, 3 font weights and 7 transition declarations for
+   what are, visually, the same button. Nobody chose that; it accumulated.
+
+   These rules normalise the properties that should be uniform — radius, type
+   scale, timing, focus — and leave alone the ones that legitimately differ.
+   Padding stays per-component: a tab and a filter chip really are different
+   shapes. Colour stays per-component too, since it carries state.
+
+   Selectors are doubled so they outrank the page <style> block that defines
+   them, which the browser parses after this file. Same reasoning as layer 9.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Controls: pills, tabs, chips ───────────────────────────── */
+.btn.btn,
+.bb-btn.bb-btn,
+.view-btn.view-btn,
+.publish-tab.publish-tab,
+.create-tab.create-tab,
+.inbox-tab.inbox-tab,
+.idea-pill-btn.idea-pill-btn,
+.ml-filter-pill.ml-filter-pill,
+.ml-tool-btn.ml-tool-btn,
+.filter-chip.filter-chip,
+.tag-chip.tag-chip,
+.post-chip.post-chip,
+.cross-post-chip.cross-post-chip,
+.badge-pill.badge-pill,
+.acct-pill.acct-pill {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+  cursor: pointer;
+}
+
+/* Anything already round stays round; the odd 6px / 8px / 10px values become
+   one radius from the scale. Tabs keep square bottoms — they meet a border. */
+.btn.btn,
+.bb-btn.bb-btn,
+.ml-tool-btn.ml-tool-btn,
+.post-chip.post-chip,
+.cross-post-chip.cross-post-chip {
+  border-radius: var(--radius-lg);
+}
+
+.view-btn.view-btn,
+.idea-pill-btn.idea-pill-btn,
+.ml-filter-pill.ml-filter-pill,
+.filter-chip.filter-chip,
+.tag-chip.tag-chip,
+.badge-pill.badge-pill,
+.acct-pill.acct-pill {
+  border-radius: var(--radius-full);
+}
+
+/* Two sizes, not seven. Small for dense filter rows, base for real actions. */
+.filter-chip.filter-chip,
+.tag-chip.tag-chip,
+.post-chip.post-chip,
+.cross-post-chip.cross-post-chip,
+.badge-pill.badge-pill {
+  font-size: 0.6875rem;
+}
+
+.btn.btn,
+.bb-btn.bb-btn,
+.view-btn.view-btn,
+.publish-tab.publish-tab,
+.create-tab.create-tab,
+.inbox-tab.inbox-tab,
+.idea-pill-btn.idea-pill-btn,
+.ml-filter-pill.ml-filter-pill {
+  font-size: 0.8125rem;
+}
+
+/* ── Selects the pages drew themselves ──────────────────────── */
+.publish-filter-select.publish-filter-select,
+.cal-filter-select.cal-filter-select,
+.org-filter-select.org-filter-select,
+.filter-select.filter-select {
+  font-family: var(--font-body);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-control);
+  background-color: var(--surface-0);
+  color: var(--text-secondary);
+  transition:
+    box-shadow var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+  /* Same guard as layer 8: a select is as wide as its longest option, and user
+     data has already pushed one toolbar off screen once. */
+  max-width: 14rem;
+  text-overflow: ellipsis;
+}
+
+/* ── Cards and modals ───────────────────────────────────────── */
+.a-card.a-card,
+.a-eng-card.a-eng-card,
+.bb-card.bb-card,
+.idea-card.idea-card,
+.ml-asset-card.ml-asset-card,
+.preview-card.preview-card {
+  border-radius: var(--radius-xl);
+}
+
+.idea-modal.idea-modal,
+.modal-pop.modal-pop,
+.card.card {
+  border-radius: var(--radius-2xl);
+}
+
+/* ── One focus treatment for all of them ────────────────────── */
+.btn.btn:focus-visible,
+.bb-btn.bb-btn:focus-visible,
+.view-btn.view-btn:focus-visible,
+.publish-tab.publish-tab:focus-visible,
+.create-tab.create-tab:focus-visible,
+.inbox-tab.inbox-tab:focus-visible,
+.idea-pill-btn.idea-pill-btn:focus-visible,
+.ml-filter-pill.ml-filter-pill:focus-visible,
+.ml-tool-btn.ml-tool-btn:focus-visible,
+.publish-filter-select.publish-filter-select:focus-visible,
+.cal-filter-select.cal-filter-select:focus-visible,
+.org-filter-select.org-filter-select:focus-visible,
+.filter-select.filter-select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Disabled reads the same everywhere, which it did not before. */
+.btn.btn:disabled,
+.bb-btn.bb-btn:disabled,
+.view-btn.view-btn:disabled,
+.ml-tool-btn.ml-tool-btn:disabled,
+.idea-pill-btn.idea-pill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Inbox ──────────────────────────────────────────────────────
+   A message list is correctly a list, not a stack of raised cards — turning
+   forty comments into forty floating tiles is how an inbox becomes unreadable.
+   So only two things change: the whole shell becomes one raised panel, and the
+   selected row is pressed *into* it. Reading which message is open becomes a
+   shape rather than only a tint, which is the point of the whole exercise. */
+
+.inbox-shell {
+  background: var(--surface-0);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--relief-raised);
+}
+
+.inbox-row {
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.inbox-row.is-active {
+  box-shadow: var(--relief-pressed);
+}
+
+/* The unread dot picks up the brand rather than a hardcoded colour. */
+.inbox-row.is-unread::before {
+  background: var(--primary);
+}
+
+/* Filter row: the selects already inherit the control border from layer 12;
+   this just stops them crowding on narrow screens. */
+.inbox-filters {
+  gap: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYER 13 — LOADING BAR
+   There was no loading state anywhere: 0 hx-indicator across 57 HTMX swap
+   points, so clicking a Publish tab read as "the click did nothing".
+
+   A skeleton system was built here first and removed — placeholders shaped
+   like the real content looked worse than nothing on these surfaces. This is
+   the smaller claim: a thin bar that says something is in flight, without
+   pretending to know what is coming.
+
+   The delay is the part that matters. A bar that flashes for 80ms reads as a
+   glitch, so it lives in the transition rather than a JS timer: if the response
+   lands before 180ms the class comes off before the transition starts and
+   nothing is ever painted.
+   ═══════════════════════════════════════════════════════════════ */
+
+[aria-busy="true"] {
+  position: relative;
+}
+
+[aria-busy="true"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 2;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--primary),
+    transparent
+  );
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 120ms var(--ease-out) 180ms;
+  animation: loading-sweep 1.1s var(--ease-out) infinite;
+}
+
+[aria-busy="true"].is-loading::before {
+  opacity: 1;
+}
+
+/* Animating background-position rather than transform, because the bar is a
+   2px pseudo-element with no layout of its own — there is nothing here for the
+   repaint to be expensive about. */
+@keyframes loading-sweep {
+  from { background-position: -40% 0; }
+  to   { background-position: 140% 0; }
+}
+
+/* Content fades slightly so the change is legible without the layout moving. */
+[aria-busy="true"].is-loading > * {
+  opacity: 0.5;
+  transition: opacity 120ms var(--ease-out) 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [aria-busy="true"]::before {
+    animation: none;
+    background: var(--primary);
+  }
+}
+
+/* ── Native select menus ────────────────────────────────────────
+   A styled <select> only styles the closed box: the open list is drawn by the
+   operating system, which is why the inbox filters look like the rest of the
+   app until you click one and get a raw blue Windows menu.
+
+   The list itself cannot be restyled without replacing the select with a
+   scripted menu — and that trades working keyboard support, type-ahead and
+   mobile native pickers for a nicer palette. Not worth it.
+
+   What can be done is style the options themselves, which Firefox and Chromium
+   on Linux/Windows do honour, and make the closed control unmistakably ours. */
+
+select option {
+  background: var(--surface-0);
+  color: var(--text-primary);
+  padding: 6px 10px;
+}
+
+select option:checked {
+  background: var(--primary-soft);
+  color: var(--brand-700);
+  font-weight: 600;
+}
+
+/* The closed control is fully ours, so the filter row reads as one system even
+   though the opened list is the platform's. */
+.filter-select {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--surface-0);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-full);
+  padding: 5px 26px 5px 12px;
+  box-shadow: var(--relief-well);
+  transition:
+    box-shadow var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.filter-select:hover {
+  border-color: var(--text-tertiary);
+}
+
+.filter-select:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* The sort toggle is a button, not a select — no room needed for an arrow. */
+button.filter-select {
+  padding: 5px 12px;
+}
+
+button.filter-select:active {
+  box-shadow: var(--relief-pressed);
+}

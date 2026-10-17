@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Content Categories - {{ workspace.name }} - Brightbean{% endblock %}
+
+{% block page_header %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Content Categories</h1>
+        <p class="text-sm text-app-tertiary mt-1">Organize posts by category for calendar filtering and queue scheduling.</p>
+    </div>
+    <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}" class="text-sm text-app-tertiary hover:text-app-body flex items-center gap-1">
+        {% icon "chevron-left" css_class="w-4 h-4" %}
+        Back to Calendar
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl" x-data="{ showForm: false, editId: null }">
+
+    <!-- Add Category Form -->
+    <div class="mb-6">
+        <button @click="showForm = !showForm" class="btn-brand text-sm py-2 px-4 flex items-center gap-1.5">
+            {% icon "plus" css_class="w-4 h-4" %}
+            Add Category
+        </button>
+
+        <form x-show="showForm" x-cloak
+              hx-post="{% url 'composer:category_create' workspace_id=workspace.id %}"
+              hx-target="body"
+              hx-swap="none"
+              @htmx:after-request="if(event.detail.successful) { showForm = false; this.reset(); }"
+              class="mt-3 p-4 bg-app-1 rounded-xl border border-app flex items-end gap-3">
+            {% csrf_token %}
+            <div class="flex-1">
+                <label class="block text-xs font-semibold text-app-body mb-1">Name</label>
+                <input type="text" name="name" placeholder="e.g., Educational" required class="form-input w-full text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-app-body mb-1">Color</label>
+                <input type="color" name="color" value="#3B82F6" class="w-10 h-[38px] rounded-lg border border-app cursor-pointer p-0.5">
+            </div>
+            <button type="submit" class="btn-brand text-sm py-2 px-4">Save</button>
+            <button type="button" @click="showForm = false" class="text-sm text-app-tertiary hover:text-app-body py-2 px-3">Cancel</button>
+        </form>
+    </div>
+
+    <!-- Category List -->
+    <div id="category-list"
+         hx-get="{% url 'composer:category_list' workspace_id=workspace.id %}"
+         hx-trigger="categoryChanged from:body"
+         hx-select="#category-items"
+         hx-target="#category-items"
+         hx-swap="outerHTML">
+        <div id="category-items" class="space-y-2">
+            {% for cat in categories %}
+            <div class="relief relief-interactive flex items-center gap-3 p-3 group transition-colors"
+                 x-data="{ editing: false }">
+                <!-- View mode -->
+                <template x-if="!editing">
+                    <div class="flex items-center gap-3 w-full">
+                        <span class="w-4 h-4 rounded-full flex-shrink-0" style="background: {{ cat.color }};"></span>
+                        <span class="flex-1 text-sm font-medium text-app-strong">{{ cat.name }}</span>
+                        <span class="text-xs text-app-ghost">{{ cat.posts.count }} post{{ cat.posts.count|pluralize }}</span>
+                        <button @click="editing = true" class="opacity-0 group-hover:opacity-100 text-app-ghost hover:text-app-secondary transition-all p-1">
+                            {% icon "pencil" css_class="w-4 h-4" %}
+                        </button>
+                        <form x-data hx-post="{% url 'composer:category_delete' workspace_id=workspace.id category_id=cat.id %}"
+                              hx-swap="none"
+                              class="opacity-0 group-hover:opacity-100 transition-all"
+                              @submit="if(!confirm('Delete this category?')) $event.preventDefault()">
+                            {% csrf_token %}
+                            <button type="submit" class="text-app-ghost hover:text-red-500 transition-colors p-1">
+                                {% icon "trash" css_class="w-4 h-4" %}
+                            </button>
+                        </form>
+                    </div>
+                </template>
+
+                <!-- Edit mode -->
+                <template x-if="editing">
+                    <form hx-post="{% url 'composer:category_edit' workspace_id=workspace.id category_id=cat.id %}"
+                          hx-swap="none"
+                          @htmx:after-request="editing = false"
+                          class="flex items-center gap-3 w-full">
+                        {% csrf_token %}
+                        <input type="color" name="color" value="{{ cat.color }}" class="w-8 h-8 rounded border border-app cursor-pointer p-0.5">
+                        <input type="text" name="name" value="{{ cat.name }}" class="form-input flex-1 text-sm" required>
+                        <button type="submit" class="text-sm font-semibold" style="color: var(--primary);">Save</button>
+                        <button type="button" @click="editing = false" class="text-sm text-app-tertiary">Cancel</button>
+                    </form>
+                </template>
+            </div>
+            {% empty %}
+            <div class="text-center py-12">
+                <div class="w-12 h-12 rounded-full bg-app-2 flex items-center justify-center mx-auto mb-3">
+                    {% icon "tag" css_class="w-6 h-6 text-app-ghost" %}
+                </div>
+                <p class="text-sm font-medium text-app-body">No categories yet</p>
+                <p class="text-xs text-app-tertiary mt-1">Create categories to organize your posts.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

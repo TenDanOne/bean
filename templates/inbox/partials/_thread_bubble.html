@@ -1,0 +1,110 @@
+{% load humanize %}
+{% comment %}
+One turn of the conversation. The only bubble in the inbox.
+
+Takes `turn`, a dict built by _thread_turns in views.py — side, author, body,
+timestamp. The deciding happens there on purpose: this used to be three
+partials, each working out "who is this from" its own way, and they drifted into
+three visual languages. The worst of it was invisible — a reply you had just
+sent was drawn by one template and, once sync confirmed it, by another, so the
+same message changed shape underneath you.
+
+A direct message and a comment thread render through this identically. For
+whoever is answering they are the same act: someone wrote, we answer, maybe they
+continue. What differs between them is where the message came from, and that is
+a line of metadata, not a different way of reading a screen.
+
+The avatar is always there, on every side and every kind. In a publication
+thread several people talk at once and a face is how you follow who is who
+without re-reading names; in a DM there is only one of them and it looks
+redundant — but keeping it is what makes the two surfaces read the same, and
+that consistency is worth more than the pixels.
+{% endcomment %}
+
+<div class="flex gap-2.5 items-start {% if turn.side == 'right' %}flex-row-reverse{% endif %}">
+
+    <span class="flex-shrink-0 w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-[10px] font-bold"
+          style="{% if turn.side == 'none' %}background: var(--warning-50); color: var(--warning-700);{% elif turn.side == 'right' %}background: var(--primary-muted); color: var(--brand-700);{% else %}background: var(--surface-2); color: var(--text-secondary);{% endif %}"
+          aria-hidden="true">
+        {% if turn.avatar_url %}
+        <img src="{{ turn.avatar_url }}" alt="" class="w-full h-full object-cover">
+        {% else %}
+        {{ turn.initial }}
+        {% endif %}
+    </span>
+
+    <div class="min-w-0 {% if turn.side == 'none' %}flex-1{% else %}max-w-[85%]{% endif %}">
+        {% comment %}
+        The corner nearest the avatar is squared off — the small cue that says
+        which side a bubble belongs to even before you read it.
+        {% endcomment %}
+        <div class="px-3.5 py-2.5 rounded-xl {% if turn.side == 'right' %}rounded-tr-sm{% else %}rounded-tl-sm{% endif %}"
+             style="{% if turn.side == 'none' %}background: var(--warning-50); border: 1px solid rgba(234,179,8,0.25);{% elif turn.side == 'right' %}background: var(--primary-soft); border: 1px solid var(--primary-muted);{% else %}background: var(--surface-1); border: 1px solid var(--border);{% endif %}">
+
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+                <span class="text-[12px] font-semibold" style="color: {% if turn.side == 'none' %}var(--warning-700){% else %}var(--text-primary){% endif %};">{{ turn.name }}</span>
+                {% if turn.handle %}
+                <span class="text-[11px] text-app-tertiary truncate">@{{ turn.handle }}</span>
+                {% endif %}
+                {% if turn.side == "none" %}
+                <span class="badge-pill" style="background: var(--surface-0); color: var(--warning-700);">Internal note</span>
+                {% endif %}
+                {% if turn.pending %}
+                {% comment %}
+                The one thing that changes as sync confirms a reply. The bubble
+                itself must not — a message that reshapes when the platform
+                acknowledges it reads as a second, different message.
+                {% endcomment %}
+                <span class="badge-pill inline-flex items-center gap-1" style="background: var(--surface-0); color: var(--text-tertiary);">
+                    {% icon "clock" css_class="w-2.5 h-2.5" %} Sending
+                </span>
+                {% endif %}
+                <time datetime="{{ turn.at|date:'c' }}"
+                      class="text-[11px] ml-auto text-app-ghost">{{ turn.at|timesince }} ago</time>
+            </div>
+
+            {% if turn.side == "right" %}
+            {% comment %}
+            Two identities in one bubble: the channel is the public voice, the
+            team member is who to ask about it. They belong together — stacked
+            as separate blocks they read as two different messages.
+            {% endcomment %}
+            <div class="flex items-center gap-1.5 mb-1.5 pb-1.5" style="border-bottom: 1px solid var(--border);">
+                {% if turn.sent_by %}
+                    {% if turn.sent_by.avatar and turn.sent_by.avatar.name %}
+                    <img src="{{ turn.sent_by.avatar.url }}" alt="" class="w-4 h-4 rounded-full object-cover flex-shrink-0">
+                    {% else %}
+                    <span class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-app-inverse flex-shrink-0"
+                          style="background: var(--primary);" aria-hidden="true">{{ turn.sent_by.display_name|make_list|first|upper }}</span>
+                    {% endif %}
+                    <span class="text-[11px] font-medium text-app-secondary">{{ turn.sent_by.display_name }}</span>
+                {% else %}
+                    {% comment %} No local record: written straight on the platform. {% endcomment %}
+                    {% icon "arrow-up-right-from-square" css_class="w-3 h-3 flex-shrink-0 text-app-ghost" %}
+                    <span class="text-[11px] text-app-tertiary">Written on {{ turn.platform|default:"the platform" }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <p class="text-[13px] leading-relaxed whitespace-pre-wrap" style="color: {% if turn.side == 'none' %}var(--warning-700){% else %}var(--text-secondary){% endif %};">{{ turn.body }}</p>
+        </div>
+
+        {% comment %}
+        Moderation, under the bubble it belongs to.
+
+        The panel header carries these for the message being answered; a thread
+        turn had nothing at all — and a reply we wrote appears *only* here,
+        because the feed excludes outbound messages. So the one thing in the
+        product you would most expect to be able to take back was the one thing
+        with no control anywhere.
+
+        Not shown on a note (never published) or on a reply still in flight
+        (no platform id yet to act on).
+        {% endcomment %}
+        {% if turn.message.is_moderatable %}
+        <div class="mt-1 {% if turn.side == 'right' %}flex justify-end{% endif %}">
+            {% include "inbox/partials/_moderation_actions.html" with message=turn.message %}
+        </div>
+        {% endif %}
+    </div>
+</div>

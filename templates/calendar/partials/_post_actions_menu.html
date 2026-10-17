@@ -1,0 +1,38 @@
+{% comment %}
+Per-post kebab actions menu (Edit + Delete) for the Publish list tabs.
+The dropdown is teleported to <body> with fixed positioning so it escapes any
+overflow-clipped container. Delete dispatches the `open-delete-modal` window event;
+include `_delete_post_modal.html` once in the same tab partial to handle it.
+Expects context: workspace, post_id, account_id.
+{% endcomment %}
+<div x-data="{ open: false, menuStyle: {} }" class="relative"
+     @click.outside="open = false"
+     @scroll.window="open = false"
+     @keydown.escape.window="open = false">
+    <button @click.stop="
+        open = !open;
+        if (open) {
+            const r = $el.getBoundingClientRect();
+            menuStyle = { position: 'fixed', top: (r.bottom + 4) + 'px', left: (r.right - 144) + 'px', zIndex: 9999 };
+        }
+    "
+            class="p-1.5 rounded-full border border-app text-app-ghost hover:border-app-hover hover:text-app-secondary transition-colors cursor-pointer">
+        {% icon "ellipsis-vertical" css_class="w-3.5 h-3.5" %}
+    </button>
+    <template x-teleport="body">
+        <div :style="open ? menuStyle : { display: 'none' }"
+             @click.outside="open = false"
+             class="relief-float w-36 py-1">
+            <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=post_id %}?account={{ account_id }}"
+               class="flex items-center gap-2 px-3 py-2 text-sm text-app-body hover:bg-app-1 transition-colors">
+                {% icon "pencil" css_class="w-4 h-4 text-app-ghost" %}
+                Edit
+            </a>
+            <button @click.stop="open = false; $dispatch('open-delete-modal', { postId: '{{ post_id }}', accountId: '{{ account_id }}' })"
+                    class="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
+                {% icon "trash" css_class="w-4 h-4" %}
+                Delete
+            </button>
+        </div>
+    </template>
+</div>

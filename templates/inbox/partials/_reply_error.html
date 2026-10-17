@@ -1,0 +1,7 @@
+{% comment %} Send failure. Rendered into the composer, never into the thread — nothing was
+   published, so it must not look like a reply. {% endcomment %}
+<div class="flex items-start gap-2 px-3 py-2 rounded-lg text-[12px]"
+     style="background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C;">
+    {% icon "circle-exclamation" css_class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" %}
+    <span>{{ error_message }}</span>
+</div>

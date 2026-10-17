@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 200px);">
+    <div style="text-align: center; max-width: 480px; padding: 0 24px;">
+        <!-- Icon -->
+        <div style="
+            width: 64px; height: 64px; margin: 0 auto 24px;
+            background: var(--primary-soft);
+            border: 1.5px solid var(--primary-muted);
+            border-radius: var(--radius-xl);
+            display: flex; align-items: center; justify-content: center;
+        ">
+            {% icon "table-cells" css_class="w-[28px] h-[28px]" %}
+        </div>
+
+        <!-- Heading -->
+        <h2 style="
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.015em;
+            margin-bottom: 8px;
+        ">No workspaces yet</h2>
+
+        <p style="
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 32px;
+        ">Create a workspace to start scheduling posts, managing content, and collaborating with your team.</p>
+
+        <!-- Create workspace form -->
+        <form method="post" action="{% url 'workspaces:create' %}" style="
+            background: var(--surface-0);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            text-align: left;
+        ">
+            {% csrf_token %}
+            <label style="
+                display: block;
+                font-size: 0.8125rem;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 6px;
+            ">Workspace name</label>
+            <input
+                type="text"
+                name="name"
+                placeholder="e.g. My Brand, Client Name"
+                required
+                class="form-input-styled"
+                style="margin-bottom: 16px;"
+            >
+            <button type="submit" class="btn-brand">
+                Create Workspace
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

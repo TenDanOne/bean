@@ -1,0 +1,24 @@
+from django.urls import path
+
+from . import views
+
+app_name = "members"
+
+urlpatterns = [
+    path("", views.member_list, name="list"),
+    path("invite/", views.invite_member, name="invite"),
+    path("invite/<uuid:invitation_id>/resend/", views.resend_invite, name="resend_invite"),
+    path("invite/<uuid:invitation_id>/revoke/", views.revoke_invite, name="revoke_invite"),
+    path("invite/<str:token>/accept/", views.accept_invite, name="accept_invite"),
+    path("<uuid:membership_id>/role/", views.update_member_role, name="update_role"),
+    path("<uuid:membership_id>/remove/", views.remove_member, name="remove"),
+    path("<uuid:membership_id>/workspaces/", views.manage_workspaces, name="manage_workspaces"),
+    # Workspace-scoped: channel assignment only means anything inside one
+    # workspace, and the workspace_id is what lets RBACMiddleware resolve the
+    # assigner's own membership.
+    path(
+        "workspace/<uuid:workspace_id>/<uuid:membership_id>/channels/",
+        views.manage_channels,
+        name="manage_channels",
+    ),
+]

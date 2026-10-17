@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not found - Brightbean</title>
+    {% include "errors/_style.html" %}
+</head>
+<body>
+    <div class="card">
+        <div class="logo">Brightbean</div>
+        <div class="icon">
+            {% icon "magnifying-glass" css_class="w-[48px] h-[48px]" %}
+        </div>
+        <div class="code">Error 404</div>
+        <h1>This page doesn't exist</h1>
+        <p class="message">
+            The link may be out of date, or the workspace, post or channel it pointed
+            at was deleted. Note that Brightbean also returns this when an item exists
+            but belongs to another workspace.
+        </p>
+
+        {% if request_path %}
+        <div class="reason">
+            <strong>Requested path</strong>
+            {{ request_path }}
+        </div>
+        {% endif %}
+
+        <a href="/" class="link">Back to Brightbean</a>
+    </div>
+</body>
+</html>

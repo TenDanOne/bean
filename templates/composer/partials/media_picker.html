@@ -1,0 +1,59 @@
+{% comment %}
+Media Library picker modal content - loaded via HTMX.
+Context: assets, workspace, post (optional).
+{% endcomment %}
+
+{% if assets %}
+<div class="grid grid-cols-4 gap-3">
+    {% for asset in assets %}
+    <div class="group relative rounded-xl overflow-hidden border border-app aspect-square cursor-pointer hover:border-orange-400 hover:shadow-md transition-all duration-150"
+         {% if post %}
+         hx-post="{% url 'composer:attach_media' workspace_id=workspace.id post_id=post.id %}"
+         {% else %}
+         hx-post="{% url 'composer:attach_pending_media' workspace_id=workspace.id %}"
+         {% endif %}
+         hx-vals='{"media_asset_id": "{{ asset.id }}"}'
+         hx-target="#media-list"
+         hx-swap="beforeend"
+         @click="showMediaPicker = false">
+        {% if asset.thumbnail %}
+        <img src="{{ asset.thumbnail.url }}" class="w-full h-full object-cover" alt="{{ asset.filename }}">
+        {% elif asset.is_video and asset.file %}
+        <video src="{{ asset.file.url }}#t=0.5" class="w-full h-full object-cover" muted preload="metadata"></video>
+        {% elif asset.file %}
+        <img src="{{ asset.file.url }}" class="w-full h-full object-cover" alt="{{ asset.filename }}">
+        {% else %}
+        <div class="w-full h-full bg-app-2 flex items-center justify-center">
+            {% icon "file-lines" css_class="w-8 h-8 text-app-faint" %}
+        </div>
+        {% endif %}
+        <!-- Overlay on hover -->
+        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-150 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-sm">
+                {% icon "plus" css_class="w-4 h-4 text-app-body" %}
+            </div>
+        </div>
+        {% if asset.is_video %}
+        <div class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold text-app-inverse bg-black/60 backdrop-blur-sm">
+            {{ asset.duration|floatformat:0 }}s
+        </div>
+        {% endif %}
+        {% if asset.is_shared %}
+        <span class="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold text-app-inverse"
+              style="background: rgba(20,184,166,0.9); letter-spacing: 0.06em;">SHARED</span>
+        {% endif %}
+        <div class="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <span class="text-[10px] text-app-inverse font-medium truncate block">{{ asset.filename }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-12">
+    <div class="w-14 h-14 mx-auto rounded-2xl bg-app-2 flex items-center justify-center mb-3">
+        {% icon "image" css_class="w-6 h-6 text-app-faint" %}
+    </div>
+    <p class="text-sm font-medium text-app-tertiary mb-1">No media yet</p>
+    <p class="text-xs text-app-ghost">Upload files to your media library to use them here</p>
+</div>
+{% endif %}

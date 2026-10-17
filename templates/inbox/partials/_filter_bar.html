@@ -1,0 +1,134 @@
+{% load humanize %}
+<!-- Filter bar -->
+<div class="px-4 py-2.5 border-b border-app-subtle flex items-center gap-2 flex-wrap flex-shrink-0" style="background: var(--surface-1);">
+    <!-- Carries the active view shortcut into every filter request; without it,
+         filtering from "Mine" or "Unassigned" silently drops you back to "All". -->
+    <input type="hidden" name="view" value="{{ current_view|default:'all' }}">
+    <!-- Search -->
+    <div class="relative w-full order-first">
+        {% icon "magnifying-glass" css_class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-app-ghost pointer-events-none" %}
+        <input type="text"
+               name="q"
+               value="{{ active_filters.q|default:'' }}"
+               placeholder="Search messages..."
+               class="w-full pl-8 pr-3 py-1.5 text-[12px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+               hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}"
+               hx-target="#inbox-message-list"
+               hx-swap="innerHTML"
+               hx-trigger="keyup changed delay:400ms"
+               hx-include="[name='platform'],[name='type'],[name='status'],[name='sentiment'],[name='view'],[name='range'],[name='sort']">
+    </div>
+
+    <!-- Platform filter -->
+    <select name="platform" class="filter-select"
+            hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}"
+            hx-target="#inbox-message-list"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='type'],[name='status'],[name='sentiment'],[name='view']">
+        <option value="">All platforms</option>
+        {% for account in social_accounts %}
+        <option value="{{ account.platform }}" {% if account.platform in active_filters.platform %}selected{% endif %}>{{ account.get_platform_display|default:account.platform|title }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Type filter -->
+    <select name="type" class="filter-select"
+            hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}"
+            hx-target="#inbox-message-list"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='platform'],[name='status'],[name='sentiment'],[name='view']">
+        <option value="">All types</option>
+        <option value="comment" {% if 'comment' in active_filters.type %}selected{% endif %}>Comments</option>
+        <option value="mention" {% if 'mention' in active_filters.type %}selected{% endif %}>Mentions</option>
+        <option value="dm" {% if 'dm' in active_filters.type %}selected{% endif %}>DMs</option>
+        <option value="review" {% if 'review' in active_filters.type %}selected{% endif %}>Reviews</option>
+    </select>
+
+    <!-- Status filter -->
+    <select name="status" class="filter-select"
+            hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}"
+            hx-target="#inbox-message-list"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='platform'],[name='type'],[name='sentiment'],[name='view']">
+        <option value="">All statuses</option>
+        <option value="unread" {% if 'unread' in active_filters.status %}selected{% endif %}>Unread</option>
+        <option value="open" {% if 'open' in active_filters.status %}selected{% endif %}>Open</option>
+        <option value="resolved" {% if 'resolved' in active_filters.status %}selected{% endif %}>Resolved</option>
+        <option value="archived" {% if 'archived' in active_filters.status %}selected{% endif %}>Archived</option>
+        {% comment %}
+        Hidden and Deleted are not statuses — they are moderation flags on the
+        same row, and the Status column only holds the four above. They live in
+        this dropdown because "what has been dealt with" and "what state is it
+        in" are the same question for the person working the inbox. The view
+        splits them out before it filters on the Status column.
+        {% endcomment %}
+        <option value="hidden" {% if 'hidden' in active_filters.status %}selected{% endif %}>Hidden</option>
+        <option value="deleted" {% if 'deleted' in active_filters.status %}selected{% endif %}>Deleted</option>
+    </select>
+
+    <!-- Sentiment filter -->
+<!--- <select name="sentiment" class="filter-select"
+            hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}"
+            hx-target="#inbox-message-list"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='platform'],[name='type'],[name='status'],[name='view'],[name='range'],[name='sort']">
+        <option value="">All sentiment</option>
+        <option value="positive" {% if 'positive' in active_filters.sentiment %}selected{% endif %}>Positive</option>
+        <option value="neutral" {% if 'neutral' in active_filters.sentiment %}selected{% endif %}>Neutral</option>
+        <option value="negative" {% if 'negative' in active_filters.sentiment %}selected{% endif %}>Negative</option>
+    </select> 
+-->
+
+    {% comment %}
+    A named window rather than two date pickers. "Last 7 days" is the question
+    people actually ask, and making them enter two dates to express it is three
+    interactions for one thought.
+
+    Both of these keep the publication folders — narrowing by date leaves the
+    publications intact, and a folder counting only what passed the filter is
+    exactly what makes "which video still has old comments" answerable.
+    {% endcomment %}
+    <select name="range" class="filter-select"
+            hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}"
+            hx-target="#inbox-message-list"
+            hx-swap="innerHTML"
+            hx-include="[name='q'],[name='platform'],[name='type'],[name='status'],[name='sentiment'],[name='view'],[name='sort']">
+        <option value="">Any date</option>
+        <option value="7d" {% if active_filters.range == '7d' %}selected{% endif %}>Last 7 days</option>
+        <option value="30d" {% if active_filters.range == '30d' %}selected{% endif %}>Last 30 days</option>
+        <option value="90d" {% if active_filters.range == '90d' %}selected{% endif %}>Last 3 months</option>
+        <option value="365d" {% if active_filters.range == '365d' %}selected{% endif %}>Last year</option>
+    </select>
+
+    {% comment %}
+    A switch, not a menu. An icon-only button that toggles between two states —
+    the arrow for descending (newest first) or ascending (oldest first) — with
+    no select arrow, because there is no list to open.
+
+    The filter bar lives outside the #inbox-message-list swap target, so its
+    markup never re-renders and the request must carry the new value itself.
+    HTMX 2 binds a click listener on the element before Alpine (defer) does, so
+    a declarative hx-vals is read *before* @click toggles the state — the
+    request always shipped the previous sort and the list never reordered.
+    Making Alpine own the whole interaction fixes it: @click flips `sort`, then
+    fires htmx.ajax with the freshly toggled value via `values`, and the other
+    filters are still collected through `hx-include` on the source element.
+
+    Working a backlog from the bottom means answering whoever has been waiting
+    longest, which is what the SLA this inbox tracks is about.
+    {% endcomment %}
+    <button type="button"
+        id="sort-button"
+        x-data="{ sort: '{{ active_filters.sort|default:'newest' }}' }"
+        @click="sort = sort === 'oldest' ? 'newest' : 'oldest'; htmx.ajax('GET', '{% url 'inbox:feed' workspace_id=workspace.id %}', { source: $el, target: '#inbox-message-list', swap: 'innerHTML', values: { sort: sort } })"
+        class="filter-select flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+        hx-include="[name='q'],[name='platform'],[name='type'],[name='status'],[name='sentiment'],[name='view'],[name='range']"
+        :title="sort === 'oldest' ? 'Oldest first unanswered comment — click for newest' : 'Newest first unanswered comment — click for oldest'">
+        <template x-if="sort === 'oldest'">
+            {% icon "arrow-up-wide-short" css_class="w-3.5 h-3.5" label="Sorted oldest first — click for newest" %}
+        </template>
+        <template x-if="sort === 'newest'">
+            {% icon "arrow-down-wide-short" css_class="w-3.5 h-3.5" label="Sorted newest first — click for oldest" %}
+        </template>
+    </button>
+</div>

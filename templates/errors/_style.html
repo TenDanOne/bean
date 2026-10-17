@@ -1,0 +1,53 @@
+{% comment %} Shared chrome for the error pages. Deliberately self-contained: Django's
+   server_error view renders 500.html with an EMPTY context — no context
+   processors, no request — so an error page that leaned on base.html would
+   itself fail exactly when it is needed most. Inline CSS also survives a
+   collectstatic or storage failure. {% endcomment %}
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: var(--surface-1);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+    .card {
+        background: var(--surface-0);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .logo { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 24px; letter-spacing: -0.02em; }
+    .icon { margin-bottom: 16px; color: var(--text-ghost); }
+    .code { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-ghost); text-transform: uppercase; margin-bottom: 8px; }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
+    .message { font-size: 15px; color: var(--text-tertiary); line-height: 1.6; margin-bottom: 20px; }
+    .reason {
+        background: var(--surface-1);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        text-align: left;
+        margin-bottom: 20px;
+        word-break: break-word;
+    }
+    .reason strong { color: var(--text-primary); display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .link {
+        display: inline-block;
+        font-size: 14px;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .link:hover { text-decoration: underline; }
+</style>

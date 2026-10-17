@@ -1,0 +1,51 @@
+{% extends "public/base.html" %}
+
+{% block title %}Terms of Service | BrightBean Studio{% endblock %}
+
+{% block content %}
+<article class="public-prose">
+    <div class="public-kicker">BrightBean Studio</div>
+    <h1>Terms of Service</h1>
+    <p><strong>Last updated: August 2026</strong></p>
+
+    <h2>Internal use</h2>
+    <p>
+        BrightBean Studio is an internal application operated by our company in Mexico. Access is limited to users who are
+        authorized by the company. These terms govern the use of the BrightBean Studio application and its connected social
+        media workflows.
+    </p>
+
+    <h2>Authorized accounts</h2>
+    <p>
+        You may connect a social media account only when you are authorized to manage it. You are responsible for maintaining
+        the security of your BrightBean credentials and for the content and actions performed through accounts you connect.
+    </p>
+
+    <h2>Acceptable use</h2>
+    <ul>
+        <li>Use BrightBean only for legitimate company work and approved social media activity.</li>
+        <li>Follow the terms, policies, and technical requirements of each connected social platform.</li>
+        <li>Do not attempt to bypass access controls, misuse tokens, or connect accounts without permission.</li>
+        <li>Do not upload content that violates applicable law or the rules of the connected platform.</li>
+    </ul>
+
+    <h2>Connected platforms</h2>
+    <p>
+        BrightBean does not control the availability, policies, moderation decisions, or API limits of third-party platforms.
+        A platform may revoke access or change its API without notice. Disconnecting an account stops BrightBean's authorized
+        access, subject to any platform-side token behavior.
+    </p>
+
+    <h2>Availability</h2>
+    <p>
+        BrightBean is provided for internal operational use. We may change, suspend, or discontinue features when needed for
+        security, maintenance, compliance, or company operations.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+        Questions about these terms should be sent to
+        <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+    </p>
+</article>
+{% endblock %}

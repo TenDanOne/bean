@@ -1,0 +1,70 @@
+{% comment %}Single asset row for list view. Expects: asset, workspace{% endcomment %}
+
+<div class="grid grid-cols-12 gap-3 px-4 py-2.5 items-center border-b cursor-pointer transition-colors hover:bg-app-1"
+     style="border-color: var(--surface-2, #F5F5F4);"
+     @click="openDetail('{{ asset.id }}')">
+
+  <!-- Name + thumbnail -->
+  <div class="col-span-5 flex items-center gap-3 min-w-0">
+    <div class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0" style="background: var(--surface-2, #F5F5F4);">
+      {% if asset.thumbnail %}
+        <img src="{{ asset.thumbnail.url }}" alt="" class="w-full h-full object-cover">
+      {% elif asset.file_type == 'image' or asset.file_type == 'gif' %}
+        <img src="{{ asset.file.url }}" alt="" class="w-full h-full object-cover">
+      {% else %}
+        <div class="w-full h-full flex items-center justify-center">
+          {% if asset.file_type == 'video' %}
+            {% icon "play" css_class="w-4 h-4" %}
+          {% elif asset.file_type == 'document' %}
+            {% icon "file-lines" css_class="w-4 h-4" %}
+          {% else %}
+            {% icon "image" css_class="w-4 h-4" %}
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+    <div class="min-w-0">
+      <p class="text-sm font-medium truncate" style="color: var(--text-primary);">{{ asset.original_filename }}</p>
+      {% if asset.tags %}
+      <div class="flex gap-1 mt-0.5">
+        {% for tag in asset.tags|slice:":3" %}
+        <span class="text-xs px-1.5 py-0.5 rounded-full" style="background: var(--surface-2); color: var(--text-tertiary);">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Type -->
+  <div class="col-span-2">
+    <span class="ml-type-badge"
+          style="{% if asset.file_type == 'video' %}background: var(--error-50); color: var(--error-700);{% elif asset.file_type == 'gif' %}background: var(--accent-indigo-soft); color: #4338CA;{% elif asset.file_type == 'document' %}background: var(--info-50); color: var(--info-700);{% else %}background: var(--surface-2); color: var(--text-secondary);{% endif %}">
+      {{ asset.get_file_type_display }}
+    </span>
+  </div>
+
+  <!-- Size -->
+  <div class="col-span-2 text-xs" style="color: var(--text-secondary);">
+    {{ asset.human_file_size }}
+    {% if asset.width and asset.height %}
+    <br><span style="color: var(--text-ghost);">{{ asset.width }}&times;{{ asset.height }}</span>
+    {% endif %}
+  </div>
+
+  <!-- Date -->
+  <div class="col-span-2 text-xs" style="color: var(--text-secondary);">
+    {{ asset.created_at|date:"M j, Y" }}
+  </div>
+
+  <!-- Actions -->
+  <div class="col-span-1 flex justify-end">
+    <button @click.stop
+            class="btn-icon-hover w-7 h-7 rounded-lg flex items-center justify-center"
+            style="color: var(--text-ghost);"
+            hx-post="{% url 'media_library:asset_star' workspace_id=workspace.id asset_id=asset.id %}"
+            hx-swap="outerHTML"
+            hx-target="closest div[class*='grid-cols-12']">
+      {% icon "star" css_class="w-3.5 h-3.5" %}
+    </button>
+  </div>
+</div>

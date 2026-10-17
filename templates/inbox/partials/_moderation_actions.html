@@ -1,0 +1,73 @@
+{% load common_extras %}
+{% comment %}
+Hide and delete, kept visibly apart. They are not two settings of one control:
+hiding takes the comment out of public view and can be undone; deleting cannot.
+
+Both need the role *and* the per-channel grant. When either is missing the
+button stays visible and inert with the reason, because an action that silently
+disappears reads as "this product cannot do that".
+{% endcomment %}
+
+{% can_on message.social_account "can_moderate" as may_moderate %}
+{% can_on message.social_account "can_delete_comments" as may_delete %}
+
+{% if message.deleted_on_platform %}
+{% comment %}
+Nothing left to act on. The row survives so the thread and who-did-what
+survive with it, but the comment itself is gone from the platform.
+{% endcomment %}
+<span class="badge-pill" style="background: var(--surface-2); color: var(--text-tertiary);"
+      title="Deleted on {{ message.deleted_on_platform|date:'N j, Y, H:i' }}{% if message.moderated_by %} by {{ message.moderated_by.display_name }}{% endif %}">
+    Deleted
+</span>
+
+{% else %}
+
+{% if may_moderate and request|can:"reply_from_inbox" %}
+<button type="button"
+        hx-post="{% url 'inbox:toggle_hidden' workspace_id=workspace.id message_id=message.id %}"
+        hx-target="#inbox-detail-panel"
+        hx-swap="innerHTML"
+        {% comment %} Stops a double-click sending two opposite toggles. {% endcomment %}
+        hx-disabled-elt="this"
+        class="badge-pill badge-status-{% if message.is_hidden %}archived{% else %}open{% endif %} cursor-pointer hover:opacity-80 transition-opacity"
+        title="{% if message.is_hidden %}Make this visible on the platform again{% else %}Stop the public from seeing this. You can undo it{% endif %}">
+    {% if message.is_hidden %}Unhide{% else %}Hide{% endif %}
+</button>
+{% else %}
+<button type="button" disabled
+        class="badge-pill badge-status-open cursor-not-allowed opacity-60"
+        title="{% if not request|can:'reply_from_inbox' %}Your role cannot moderate comments.{% else %}You don't have Moderate on this channel. Ask a workspace owner or manager.{% endif %}">
+    Hide
+</button>
+{% endif %}
+
+{% comment %}
+Deletion used to be shown only on our own comments, on the belief that
+platforms let you delete nothing else. That was wrong — a channel owner may
+delete comments on their own videos — and it was unreachable regardless: the
+feed excludes outbound messages, so this branch could never be true and the
+button never rendered once. Not even the disabled explanation, because that
+was nested inside it too.
+{% endcomment %}
+{% if may_delete %}
+<button type="button"
+        hx-post="{% url 'inbox:delete_comment' workspace_id=workspace.id message_id=message.id %}"
+        hx-target="#inbox-detail-panel"
+        hx-swap="innerHTML"
+        hx-disabled-elt="this"
+        hx-confirm="Delete this comment on {{ message.social_account.account_name|default:message.social_account.account_handle }}? This cannot be undone. To take it out of public view reversibly, use Hide instead."
+        class="badge-pill badge-type cursor-pointer hover:opacity-80 transition-opacity"
+        style="color: #DC2626;"
+        title="Delete permanently on the platform. Cannot be undone.">
+    Delete
+</button>
+{% else %}
+<button type="button" disabled
+        class="badge-pill badge-type cursor-not-allowed opacity-60"
+        title="{% if not request|can:'reply_from_inbox' %}Your role cannot moderate comments.{% else %}Deleting is permanent, so it needs Delete on this channel and a role of manager or above.{% endif %}">
+    Delete
+</button>
+{% endif %}
+
+{% endif %}

@@ -1,0 +1,84 @@
+{% comment %}
+Template gallery - featured templates banner + category filter + card grid.
+Uses Alpine.js for client-side category filtering.
+{% endcomment %}
+
+<div x-data="{ activeCategory: 'all' }">
+
+    <!-- Featured templates banner -->
+    <div class="rounded-2xl bg-gradient-to-br from-green-50 via-green-50/60 to-white border border-green-100 p-6 mb-8">
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Aside -->
+            <div class="flex-shrink-0 lg:w-48 flex flex-col justify-center">
+                <span class="text-xs font-semibold text-green-700 tracking-wide">Featured templates</span>
+                <h2 class="text-xl font-bold text-app mt-1" style="letter-spacing: -0.01em;">Our top picks</h2>
+                <p class="text-sm text-app-tertiary mt-1">Helpful starting points to plan your next post.</p>
+            </div>
+            <!-- Featured cards -->
+            <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {% for tpl in featured_templates %}
+                <button type="button"
+                        @click="$dispatch('use-builtin-template', { id: {{ tpl.id }} })"
+                        class="relief relief-interactive text-left p-4 hover:shadow-sm transition-all group cursor-pointer"
+                        style="border-top: 3px solid rgba({{ tpl.color }}, 0.6);">
+                    <div class="text-2xl mb-2">{{ tpl.emoji }}</div>
+                    <h3 class="text-base font-semibold text-app-strong mb-1 line-clamp-2">{{ tpl.title }}</h3>
+                    <p class="text-sm text-app-tertiary line-clamp-3">{{ tpl.description }}</p>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Category filter chips -->
+    <div class="flex items-center gap-2 mb-6 scroll-x-hidden pb-1 -mx-1 px-1">
+        {% for cat in template_categories %}
+        <button type="button"
+                @click="activeCategory = '{{ cat.slug }}'"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border whitespace-nowrap transition-all duration-150 cursor-pointer"
+                :class="activeCategory === '{{ cat.slug }}'
+                    ? 'bg-stone-500 text-app-inverse border-stone-600'
+                    : 'bg-app text-app-tertiary border-app hover:border-app-hover hover:text-app-body'">
+            {% if cat.slug == "all" %}
+            {% icon "table-cells" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "tip" %}
+            {% icon "lightbulb" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "case-study" %}
+            {% icon "file-lines" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "story" %}
+            {% icon "book" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "how-to" %}
+            {% icon "pencil" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "question" %}
+            {% icon "circle-question" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "opinion" %}
+            {% icon "comments" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "list" %}
+            {% icon "list-check" css_class="w-3.5 h-3.5" %}
+            {% elif cat.slug == "behind-the-scenes" %}
+            {% icon "chart-line" css_class="w-3.5 h-3.5" %}
+            {% endif %}
+            {{ cat.label }}
+        </button>
+        {% endfor %}
+    </div>
+
+    <!-- Template grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {% for tpl in builtin_templates %}
+        <button type="button"
+                x-show="activeCategory === 'all' || activeCategory === '{{ tpl.category }}'"
+                x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                @click="$dispatch('use-builtin-template', { id: {{ tpl.id }} })"
+                class="relief relief-interactive text-left p-4 hover:shadow-sm transition-all group cursor-pointer"
+                style="border-top: 3px solid rgba({{ tpl.color }}, 0.45);">
+            <div class="text-2xl mb-2">{{ tpl.emoji }}</div>
+            <h3 class="text-base font-semibold text-app-strong mb-1 line-clamp-2 group-hover:text-app">{{ tpl.title }}</h3>
+            <p class="text-sm text-app-tertiary line-clamp-3">{{ tpl.description }}</p>
+        </button>
+        {% endfor %}
+    </div>
+
+</div>
