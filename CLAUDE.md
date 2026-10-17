@@ -1,5 +1,21 @@
 # CLAUDE.md
 
+## BEAN by ITHOS — reglas del proyecto (leer primero)
+
+Fork personal y no comercial de BrightBean Studio. Esta sección va en español; el resto del archivo se conserva en inglés tal cual.
+
+- **Antes de abrir código:** leer `vault/00-Indice.md` (y `graphify-out/GRAPH_REPORT.md` si existe). **Al cerrar fase:** actualizar `HANDOFF.md`.
+- **Nombre:** «BEAN by ITHOS» (en la UI: BEAN). Uso personal, un solo usuario por ahora; roles/RBAC se conservan intactos.
+- **Plataformas activas:** YouTube, Instagram (vía Facebook/Meta Graph), Facebook, TikTok. Las demás se OCULTAN con `DEFAULT_ENABLED_PLATFORMS` de `apps/social_accounts/platforms.py` (override por env `BBS_ENABLED_PLATFORMS`), nunca se borran (choices, migraciones y providers intactos).
+- **Sin worker 24/7:** modo MANUAL (botón «Procesar pendientes» que drena la cola de django-background-tasks) + `POST /cron/run` con Bearer `CRON_SECRET`, dormido (503 sin secreto, 401 con bearer malo). Un post programado sale cuando el usuario procesa.
+- **Despliegue:** Railway (un solo servicio web); BD Supabase (pooler 6543 + directo 5432); medios en Cloudflare R2 (`STORAGE_BACKEND=s3`); dominio `bean.ithos.mx`; Sentry opcional por `SENTRY_DSN`; correo MailerSend por SMTP.
+- **Marca:** estilo ITHOS (kit de SIMU, isotipo ITHOS, Figtree) con paleta propia que combina los colores originales de BrightBean con los de ITHOS, como agradecimiento indirecto. Paleta final pendiente de elección del usuario. No usar logos de BrightBean.
+- **AGPL:** repo público GitHub `TenDanOne/bean`, `LICENSE` intacto, aviso «BEAN by ITHOS está basado en BrightBean Studio (AGPL-3.0)» con enlace al código.
+- **App Review:** Meta, TikTok y Google (privacidad, términos, borrado de datos, demos).
+- **Regla de oro:** no romper funciones existentes. Cada fase cierra con `pytest` + `ruff` + `mypy` contra la línea base `docs/linea-base-2026-10-17.md`.
+- **Roles de agentes:** Haiku lee (`lector-vault`), Sonnet hace (`implementador`) y revisa a Haiku (`revisor`), Opus juzga (`juez-bean`; `design-system-bean` para lo visual).
+- **Hermanos de referencia (solo leer):** `C:\Users\ultra\Proyectos\simu` y `C:\Users\ultra\Proyectos\paax`.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## What this is

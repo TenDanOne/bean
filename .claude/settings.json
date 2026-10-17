@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(pytest*)",
+      "Bash(ruff check*)",
+      "Bash(ruff format --check*)",
+      "Bash(mypy*)",
+      "Bash(python manage.py check*)",
+      "Bash(npm run build*)",
+      "Bash(npm run start*)",
+      "PowerShell(git status*)",
+      "PowerShell(git diff*)",
+      "PowerShell(git log*)",
+      "PowerShell(git branch*)",
+      "PowerShell(pytest*)",
+      "PowerShell(ruff check*)",
+      "PowerShell(ruff format --check*)",
+      "PowerShell(mypy*)",
+      "PowerShell(python manage.py check*)",
+      "PowerShell(npm run build*)",
+      "PowerShell(npm run start*)"
+    ],
+    "ask": [
+      "Bash(python manage.py migrate*)",
+      "PowerShell(python manage.py migrate*)",
+      "Bash(git push*)",
+      "PowerShell(git push*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/validate-bash.sh",
+            "shell": "bash"
+          }
+        ]
+      }
+    ]
+  }
+}

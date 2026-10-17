@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BEAN by ITHOS · propuestas de paleta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f2a30;--ink2:#465b60;--bg:#f4f1ea;--card:#fdfbf7;--line:#d9d3c3}
+*{box-sizing:border-box}
+body{margin:0;font-family:Figtree,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:800;margin:0 0 4px}
+h2{font-size:1.4rem;font-weight:800;margin:0}
+.lead{color:var(--ink2);max-width:70ch;margin:0 0 24px}
+.prop{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 28px}
+.prop>p{color:var(--ink2);margin:4px 0 8px;max-width:80ch}
+.prop>.nota{font-size:.85rem;margin:0 0 12px}
+.modos{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.modos{grid-template-columns:1fr}}
+.tema{background:var(--surface-2);color:var(--text-primary);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:0}
+.tema h3{margin:0 0 8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary)}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px;margin-bottom:12px}
+.sw div{border:1px solid var(--border-control);border-radius:8px;overflow:hidden;font-size:.7rem;background:var(--surface-0)}
+.sw i{display:block;height:28px}
+.sw span{display:block;padding:3px 6px;color:var(--text-primary);overflow-wrap:anywhere}
+.sw b{font-weight:600;display:block}
+table{width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:12px}
+td,th{padding:3px 4px;border-bottom:1px solid var(--border);text-align:left;font-weight:500}
+td:last-child{white-space:nowrap}
+.ok{color:var(--ok-txt);font-weight:700}.ko{color:#b91c1c;font-weight:800}
+.app{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface-2);min-height:380px}
+.side{width:176px;flex:none;background:var(--surface-1);border-right:1px solid var(--border);padding:12px 10px;display:flex;flex-direction:column;gap:4px}
+.side svg{width:100%;height:auto;aspect-ratio:345.2 / 114.3;display:block;margin-bottom:10px;--logo-ink:var(--text-primary)}
+.nav{padding:6px 8px;border-radius:8px;font-size:.85rem;color:var(--text-secondary);font-weight:500}
+.nav.on{background:var(--sel-bg);color:var(--sel-fg);font-weight:700}
+.main{flex:1;min-width:0;padding:12px;display:flex;flex-direction:column;gap:10px}
+.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.top b{font-size:1.05rem;font-weight:800}
+.btn{font:inherit;font-weight:700;font-size:.85rem;border-radius:8px;padding:7px 12px;border:1px solid transparent;cursor:pointer}
+.btn.p{background:var(--primary);color:var(--on-primary)}
+.btn.p:hover{background:var(--primary-hover)}
+.btn.s{background:var(--surface-0);color:var(--text-primary);border-color:var(--border-control)}
+.btn.a{background:var(--accent);color:var(--on-accent)}
+.card{background:var(--surface-0);border:1px solid var(--border);border-radius:12px;padding:10px;box-shadow:0 1px 3px var(--shadow)}
+.card h4{margin:0 0 6px;font-size:.95rem}
+.post{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border);font-size:.82rem;flex-wrap:wrap}
+.post .t{color:var(--text-tertiary);font-size:.75rem;min-width:62px}
+.post .x{flex:1;min-width:110px;color:var(--text-primary)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--primary-soft);color:var(--text-primary);border:1px solid var(--border)}
+.chip u{width:8px;height:8px;border-radius:50%;display:inline-block}
+.badge{font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--accent-soft);color:var(--accent-txt)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.toast{background:var(--text-primary);color:var(--surface-0);border-radius:10px;padding:8px 12px;font-size:.82rem;font-weight:600;display:flex;gap:8px;align-items:center;box-shadow:0 8px 20px var(--shadow)}
+.toast em{font-style:normal;color:var(--toast-accent)}
+@media(max-width:560px){.app{flex-direction:column}.side{width:auto;border-right:0;border-bottom:1px solid var(--border);flex-direction:row;flex-wrap:wrap;align-items:center}.side svg{width:140px;margin:0 8px 0 0}}
+footer{text-align:center;color:var(--ink2);font-size:.85rem;margin-top:24px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 345.2 114.3"><g transform="scale(0.49225) translate(-2.8 -1.8)"><path fill="#e3a537" d="M228.09,30.38v23.07c0,10.34-8.38,18.72-18.72,18.72h-5.87c-9.74,0-17.63-7.9-17.63-17.63v-3.43c0-3.88-3.14-7.02-7.02-7.02h-28.17c-3.88,0-7.02-3.14-7.02-7.02h0c0-3.88,3.14-7.02,7.02-7.02h32.39c9.32,0,16.87,7.56,16.87,16.87v3.98c0,4,3.24,7.23,7.23,7.23h0c3.78,0,6.84-3.06,6.84-6.84v-17.18c0-10.01-8.12-18.13-18.13-18.13h0c-3.88,0-7.02-3.14-7.02-7.02h0c0-3.88,3.14-7.02,7.02-7.02h3.76c15.71,0,28.44,12.73,28.44,28.44Z"/>
+<path fill="#e3a537" d="M101.45,37.05h0c0,3.88-3.14,7.02-7.02,7.02h-37.92c-6.27,0-11.36,5.09-11.36,11.36v23.39c0,3.88-3.14,7.02-7.02,7.02h-.03c-3.88,0-7.02-3.14-7.02-7.02v-29.13c0-10.86,8.8-19.67,19.67-19.67h43.68c3.88,0,7.02,3.14,7.02,7.02Z"/>
+<path fill="#e3a537" d="M146.75,15.98h21.03c3.88,0,7.02-3.14,7.02-7.02h0c0-3.88-3.14-7.02-7.02-7.02H38.49c-19.64,0-35.55,15.92-35.55,35.55v57.74c0,3.88,3.14,7.02,7.02,7.02h.04c3.88,0,7.02-3.14,7.02-7.02v-50.31c0-15.99,12.96-28.94,28.94-28.94h52.4c9.48,0,17.16,7.68,17.16,17.16v19.7c0,2.91-2.36,5.28-5.28,5.28h-23.58c-15.15,0-27.43,12.28-27.43,27.43v21.73c0,3.88-3.14,7.02-7.02,7.02h-17.83c-17.37,0-31.45,14.08-31.45,31.45v34.51c0,17.87,14.49,32.36,32.36,32.36h45.07c3.88,0,7.02,3.14,7.02,7.02v7.2c0,3.89,3.15,7.04,7.04,7.04h0c3.89,0,7.04-3.15,7.04-7.04v-50.71c0-10.88,8.82-19.69,19.69-19.69h29.6c11.63,0,21.07-9.43,21.07-21.07h0c0-11.63-9.43-21.07-21.07-21.07h-10.57c-5.84,0-10.58-4.74-10.58-10.58v-26.28c0-2.91,2.36-5.28,5.28-5.28h26.92c3.88,0,7.02-3.14,7.02-7.02h0c0-3.88-3.14-7.02-7.02-7.02h-26.92c-2.91,0-5.28-2.36-5.28-5.28v-19.7c0-9.48,7.68-17.16,17.16-17.16ZM157.74,135.36h0c0,3.88-3.14,7.03-7.02,7.03h-37.28c-14.39,0-26.06,11.67-26.06,26.06v17.72c0,6.85-5.55,12.4-12.4,12.4h-38.3c-10.86,0-19.66-8.8-19.66-19.66v-30.44c0-11.11,9.01-20.12,20.12-20.12h15.07c3.88,0,7.02,3.14,7.02,7.02v28.1c0,3.88-3.14,7.02-7.02,7.02h-.04c-3.88,0-7.02-3.14-7.02-7.02v-14.29c0-3.74-3.03-6.77-6.77-6.77h0c-4.03,0-7.3,3.27-7.3,7.3v13.73c0,11.66,9.45,21.11,21.11,21.11h0c11.66,0,21.11-9.45,21.11-21.11v-28.05c0-3.88,3.14-7.02,7.02-7.02h4.5c9.18,0,16.62-7.44,16.62-16.62v-4.43c0-3.89-3.15-7.04-7.04-7.04h0c-3.89,0-7.04,3.15-7.04,7.04v.16c0,3.8-3.05,6.85-6.82,6.85h-.21c-3.89,0-7.04-3.15-7.04-7.04v-18.81c0-8.99,7.29-16.29,16.29-16.29h20.66c2.91,0,5.28,2.36,5.28,5.28v30.51c0,11.26,9.13,20.39,20.39,20.39h14.8c3.88,0,7.02,3.14,7.02,7.02Z"/>
+<path fill="#e3a537" d="M143.67,93.23h0c0,3.88,3.14,7.02,7.02,7.02h19.87c8.46,0,15.32,6.86,15.32,15.32v40.37c0,8.03-6.51,14.54-14.54,14.54h-35.26c-11.35,0-20.56,9.2-20.56,20.56v35.78c0,3.89,3.15,7.04,7.04,7.04h0c3.89,0,7.04-3.15,7.04-7.04v-7.19c0-3.88,3.14-7.02,7.02-7.02h58.68c18.12,0,32.81-14.69,32.81-32.81v-60.42c0-18.32-14.85-33.17-33.17-33.17h-44.24c-3.88,0-7.02,3.14-7.02,7.02ZM187.71,198.57h-51.1c-3.88,0-7.02-3.14-7.02-7.02h0c0-3.88,3.14-7.03,7.02-7.03h44.52c10.4,0,18.83-8.43,18.83-18.83v-51.22c0-3.88,3.14-7.02,7.02-7.02h0c3.89,0,7.05,3.16,7.05,7.05v57.75c0,14.53-11.78,26.31-26.31,26.31Z"/></g>
+<g transform="translate(134.78 5) scale(0.565) translate(0 -461)" fill="var(--logo-ink)">
+<path d="M0 562V461H35.35Q50.93 461 60.74 468.21Q70.56 475.43 70.56 490.29Q70.56 495.63 67.81 500.32Q65.07 505.01 60.02 508.76Q66.8 512.22 70.56 518.14Q74.31 524.05 74.31 532.57Q74.31 546.71 64.86 554.35Q55.41 562 40.11 562ZM22.65 500.68H34.63Q40.11 500.68 43.43 497.87Q46.75 495.05 46.75 490Q46.75 484.81 43.21 481.99Q39.68 479.18 33.76 479.18H22.65ZM22.65 541.51H37.51Q43.43 541.51 46.89 538.41Q50.36 535.31 50.36 530.4Q50.36 525.35 46.75 522.32Q43.14 519.29 36.79 519.29H22.65Z"/>
+<path d="M88.45 562V461H154.24V482.35H111.68V500.82H147.32V521.46H111.68V540.65H154.96V562Z"/>
+<path d="M164.49 562 203.73 461H228.55L267.79 562H243.27L235.91 542.81H196.37L189.01 562ZM203.88 522.32H228.26L216.14 490Z"/>
+<path d="M278.76 562V461H303.14L347.44 522.61V461H370.67V562H347.44L301.99 498.66V562Z"/>
+</g>
+<g transform="translate(134.78 73) scale(0.277) translate(0 -461)" fill="var(--logo-ink)"><path d="M0 459L18 459L18 562L0 562z"/><path fill-rule="evenodd" d="M35 487.3C56 487.3 70 502.78 70 526C70 549.22 56 564.7 35 564.7C14 564.7 0 549.22 0 526C0 502.78 14 487.3 35 487.3zM35 504.3C44.28 504.3 51 513.41 51 526C51 538.59 44.28 547.7 35 547.7C25.72 547.7 19 538.59 19 526C19 513.41 25.72 504.3 35 504.3z"/><path d="M78 490L99 490L123 562L102 562zM127 490L148 490L112.7 596L91.7 596z"/></g>
+<g transform="translate(186.86 70.68) scale(0.13827) translate(0 0)" fill="var(--logo-ink)"><path d="M2.47,16.91s8.11,66.11,8.11,99.45S2.47,219.2,2.47,219.2h44.17s-8.31-68.94-8.31-102.84,8.31-99.45,8.31-99.45H2.47Z"/><path d="M351.35,16.91s4.35,35.44,6.68,67.51l-78.89,21.38c1.32-35.02,8.09-88.89,8.09-88.89h-44.17s8.11,66.11,8.11,99.45-8.11,102.84-8.11,102.84h44.17s-5.56-46.15-7.58-81.5l79.82-21.63c0,.09,0,.19,0,.28,0,33.93-8.11,102.84-8.11,102.84h44.17s-8.31-68.94-8.31-102.84,8.31-99.45,8.31-99.45h-44.17Z"/><path d="M123.51,16.91h-51.02v32.05s29.77-6.01,56.08-6.01h.5c1.42,9.45,2.55,20.89,2.55,33.36,0,33.93-8.11,142.9-8.11,142.9h44.17s-8.31-109-8.31-142.9c0-12.47,1.16-23.91,2.61-33.36h2.63c23.08,0,54.08,6.01,54.08,6.01V16.91s-51.02,0-51.02,0h-44.17Z"/><path d="M504.11,11.5c-52.28,0-87.13,42.62-87.13,106.55s34.85,106.55,87.13,106.55,87.13-42.62,87.13-106.55-34.85-106.55-87.13-106.55ZM504.11,209.19c-28.46,0-49.07-49.07-49.07-91.13s20.61-91.33,49.07-91.33,49.07,49.27,49.07,91.33-20.61,91.13-49.07,91.13Z"/><path d="M745.46,128.04c-5.78-8.21-12.64-14.3-20.58-18.25-7.94-3.95-18.57-8.11-31.9-12.48-10.78-3.32-19.21-6.4-25.28-9.2-6.08-2.81-11.22-6.76-15.43-11.86-4.22-5.09-6.32-11.7-6.32-19.81,0-8.74,2.89-15.91,8.67-21.53,5.78-5.62,13.86-8.43,24.25-8.43,12.94,0,23.71,4.11,32.34,12.33,7.85,7.48,14.15,18.97,18.92,34.46.84,2.73,3.45,4.51,6.29,4.26l.39-.03c3.02-.27,5.37-2.73,5.49-5.76.43-11.07,1.02-31.24.45-39.69-.07-1.03-.69-1.95-1.62-2.4-21.69-10.69-43.53-18.45-60.2-18.45-21.17,0-38.12,5.2-50.86,15.6-12.74,10.4-19.11,24.86-19.11,43.37,0,13.32,2.74,24.03,8.23,32.14,5.49,8.11,12.2,14.15,20.14,18.1,7.94,3.95,18.47,8.01,31.6,12.17,10.78,3.54,19.35,6.76,25.72,9.67,6.37,2.92,11.66,7.02,15.87,12.33,4.21,5.3,6.32,12.32,6.32,21.06,0,11.44-3.43,19.87-10.29,25.28-6.86,5.41-15.29,8.11-25.28,8.11-15.68,0-29.16-5.25-40.42-15.76-10.33-9.63-17.99-23.15-22.96-40.56-.8-2.8-3.44-4.65-6.33-4.4-3.13.28-5.51,2.91-5.49,6.05.15,19.56-.02,28.8.42,43.48.03.84.41,1.64,1.06,2.17,7.06,5.78,17.4,12.95,28.6,17.01,11.63,4.22,27.79,7.29,40.73,7.29,14.5,0,27.39-2.34,38.66-7.02,11.27-4.68,20.18-11.8,26.75-21.37,6.56-9.57,9.85-21.32,9.85-35.26s-2.89-24.39-8.67-32.61Z"/></g>
+<g transform="translate(293.65 73)" fill="var(--logo-ink)"><path d="M0 0h6v1.5H3.75V7h-1.5V1.5H0z"/><path d="M7.5 7V0H9l2.5 4L14 0h1.5v7H14V2.7l-1.9 3h-1.2l-1.9-3V7z"/></g></symbol></svg>
+<div class="wrap">
+<h1>BEAN by ITHOS · propuestas de paleta</h1>
+<p class="lead">Tres combinaciones de los colores de BrightBean (oliva, naranja, cálidos) con los de ITHOS (petróleo, hueso, mandarina, dorado). Cada una en claro y oscuro, con los tokens reales de <code>styles.css</code> y el contraste calculado en esta página. Nada se ha aplicado a la app.</p>
+<div id="props"></div>
+<footer>BEAN by ITHOS · basado en BrightBean Studio (AGPL-3.0)</footer>
+</div>
+<script>
+const P=[
+{nombre:'A · Oliva y petróleo',desc:'Acción en oliva BrightBean oscurecido hasta AA con texto blanco; selección y tinta en petróleo ITHOS; lienzo hueso.',
+ nota:'Ajuste: el oliva original #7B8A33 da 3.8:1 con blanco; se oscurece a #657329 (5.2:1). En oscuro se usa oliva claro #94A43F con texto petróleo.',
+ l:{p:'#657329',ph:'#525f20',ps:'#e6ebcc',on:'#ffffff',s0:'#fdfbf7',s1:'#f9f6ef',s2:'#f4f1ea',s3:'#ebe6da',t1:'#0f2a30',t2:'#465b60',t3:'#566a6e',b:'#d9d3c3',bc:'#6d7f7c',sel:'#0e4a56',selfg:'#ffffff',ac:'#e3a537',acon:'#0f2a30',acs:'#f6e4bd',act:'#0f2a30',tk:'#e3a537'},
+ d:{p:'#94a43f',ph:'#a6b650',ps:'#1c2a1c',on:'#061215',s0:'#0c1c20',s1:'#09171a',s2:'#061215',s3:'#12272c',t1:'#ecf2f3',t2:'#a9bcc0',t3:'#8aa0a5',b:'#1f3a40',bc:'#5f8189',sel:'#7cc7d3',selfg:'#061215',ac:'#e3a537',acon:'#061215',acs:'#2c2410',act:'#e3a537',tk:'#e3a537'}},
+{nombre:'B · Mandarina puente',desc:'Acción en mandarina #c2410c (el naranja-700 de BrightBean es la mandarina de ITHOS); oliva como acento secundario (badges, éxito, gráficas); tinta petróleo; neutros cálidos de BrightBean.',
+ nota:'Ajuste: --border-control original #B28A62 no llega a 3:1 sobre el lienzo; se oscurece a #8f6a45. Blanco sobre #c2410c: 5.2:1 (AA).',
+ l:{p:'#c2410c',ph:'#a5370a',ps:'#fdeadb',on:'#ffffff',s0:'#ffffff',s1:'#fdfaf6',s2:'#faf4ec',s3:'#f3e9dc',t1:'#0f2a30',t2:'#465b60',t3:'#576a6d',b:'#e8d8c4',bc:'#8f6a45',sel:'#fdeadb',selfg:'#7c2d12',ac:'#657329',acon:'#ffffff',acs:'#eaefd2',act:'#4f5c1e',tk:'#94a43f'},
+ d:{p:'#ff8f4f',ph:'#ffa270',ps:'#2b1a12',on:'#061215',s0:'#0c1c20',s1:'#09171a',s2:'#061215',s3:'#12272c',t1:'#ecf2f3',t2:'#a9bcc0',t3:'#8aa0a5',b:'#24383d',bc:'#6a8a91',sel:'#2b1a12',selfg:'#ffb88f',ac:'#a8b84c',acon:'#061215',acs:'#1f2814',act:'#c3d170',tk:'#a8b84c'}},
+{nombre:'C · Grano tostado',desc:'Lienzo cálido BrightBean (#FAF4EC / #F3E9DC), tinta petróleo, acción oliva, dorado del isotipo y naranja para resaltados.',
+ nota:'Ajuste: oliva de acción #657329 (AA con blanco) y border-control #8f6a45 (el #B28A62 original no da 3:1); text-tertiary #4f6265 (el #576a6d daba 4.23:1 sobre surface-3). Dorado #e3a537 solo como relleno con texto petróleo, nunca como texto sobre claro.',
+ l:{p:'#657329',ph:'#525f20',ps:'#e8edcf',on:'#ffffff',s0:'#fdfaf6',s1:'#f3e9dc',s2:'#faf4ec',s3:'#ebdcc8',t1:'#0f2a30',t2:'#465b60',t3:'#4f6265',b:'#e0cfb8',bc:'#8f6a45',sel:'#0e4a56',selfg:'#ffffff',ac:'#e3a537',acon:'#0f2a30',acs:'#f8e6bf',act:'#8a3a0a',tk:'#e3a537'},
+ d:{p:'#a9ba4a',ph:'#bccb61',ps:'#26301a',on:'#1a130d',s0:'#251c14',s1:'#1f1710',s2:'#1a130d',s3:'#2e2318',t1:'#f3e9dc',t2:'#cdbba5',t3:'#b5a28b',b:'#3a2c20',bc:'#8f7a60',sel:'#e3a537',selfg:'#1a130d',ac:'#e3a537',acon:'#1a130d',acs:'#33270f',act:'#f0b955',tk:'#e3a537'}}
+];
+const TOK=[['--primary','p'],['--primary-hover','ph'],['--primary-soft','ps'],['--on-primary','on'],['--surface-0','s0'],['--surface-1','s1'],['--surface-2','s2'],['--surface-3','s3'],['--text-primary','t1'],['--text-secondary','t2'],['--text-tertiary','t3'],['--border','b'],['--border-control','bc'],['selección (nav)','sel'],['acento','ac']];
+const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+const cr=(a,b)=>{const[x,y]=[lum(a),lum(b)].sort((m,n)=>n-m);return(x+.05)/(y+.05)};
+// [etiqueta, fg, bg, mínimo]: 4.5 texto normal, 3 controles/UI
+const PAIRS=t=>[['texto / lienzo',t.t1,t.s2,4.5],['texto / tarjeta',t.t1,t.s0,4.5],['secundario / lienzo',t.t2,t.s2,4.5],['terciario / surface-3',t.t3,t.s3,4.5],['on-primary / primary',t.on,t.p,4.5],['on-primary / hover',t.on,t.ph,4.5],['texto / primary-soft',t.t1,t.ps,4.5],['primary / tarjeta (enlace)',t.p,t.s0,4.5],['selección: texto / fondo',t.selfg,t.sel,4.5],['acento: texto / fondo',t.acon,t.ac,4.5],['badge acento',t.act,t.acs,4.5],['border-control / lienzo',t.bc,t.s2,3],['border-control / tarjeta',t.bc,t.s0,3]];
+const $=h=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
+function tema(nombre,t,oscuro){
+  const vars={'--primary':t.p,'--primary-hover':t.ph,'--primary-soft':t.ps,'--on-primary':t.on,'--surface-0':t.s0,'--surface-1':t.s1,'--surface-2':t.s2,'--surface-3':t.s3,'--text-primary':t.t1,'--text-secondary':t.t2,'--text-tertiary':t.t3,'--border':t.b,'--border-control':t.bc,'--sel-bg':t.sel,'--sel-fg':t.selfg,'--accent':t.ac,'--on-accent':t.acon,'--accent-soft':t.acs,'--accent-txt':t.act,'--toast-accent':t.tk,'--shadow':oscuro?'rgba(0,0,0,.45)':'rgba(15,42,48,.14)','--ok-txt':oscuro?'#8fd18f':'#166534'};
+  const pairs=PAIRS(t).map(([n,f,b,m])=>{const r=cr(f,b),ok=r>=m;return `<tr><td>${n}</td><td>${f} / ${b}</td><td class="${ok?'ok':'ko'}">${r.toFixed(2)}:1 ${ok?'✓':'✗'} <small>(≥${m})</small></td></tr>`}).join('');
+  const sw=TOK.map(([n,k])=>`<div><i style="background:${t[k]}"></i><span><b>${n}</b>${t[k]}</span></div>`).join('');
+  const dot=c=>`<u style="background:${c}"></u>`;
+  return $(`<section class="tema" style="${Object.entries(vars).map(([k,v])=>k+':'+v).join(';')}"><h3>${nombre}</h3>
+  <div class="sw">${sw}</div>
+  <table aria-label="Contrastes"><tbody>${pairs}</tbody></table>
+  <div class="app">
+    <aside class="side"><svg role="img" aria-label="BEAN by ITHOS"><use href="#logo"/></svg>
+      <div class="nav">Panel</div><div class="nav on">Calendario</div><div class="nav">Bandeja</div><div class="nav">Analítica</div></aside>
+    <div class="main">
+      <div class="top"><b>Calendario</b><button class="btn p" type="button">Procesar pendientes</button></div>
+      <div class="card"><h4>Esta semana <span class="badge">3 posts</span></h4>
+        <div class="post"><span class="t">Lun 10:00</span><span class="x">Lanzamiento de temporada</span><span class="chip">${dot('#dc2626')}YouTube</span></div>
+        <div class="post"><span class="t">Mié 13:30</span><span class="x">Detrás de cámaras</span><span class="chip">${dot('#c026d3')}Instagram</span></div>
+        <div class="post"><span class="t">Vie 18:00</span><span class="x">Sorteo de aniversario</span><span class="row"><span class="chip">${dot('#2563eb')}Facebook</span><span class="chip">${dot('#111827')}TikTok</span></span></div>
+      </div>
+      <div class="row"><button class="btn p" type="button">Programar</button><button class="btn s" type="button">Guardar borrador</button><button class="btn a" type="button">Destacar</button></div>
+      <div class="toast" role="status"><em>●</em>Se procesaron 3 publicaciones pendientes</div>
+    </div>
+  </div></section>`);
+}
+const root=document.getElementById('props');
+P.forEach(p=>{
+  const s=$(`<article class="prop"><h2>${p.nombre}</h2><p>${p.desc}</p><p class="nota">${p.nota}</p><div class="modos"></div></article>`);
+  s.querySelector('.modos').append(tema('Modo claro',p.l,false),tema('Modo oscuro',p.d,true));
+  root.append(s);
+});
+</script>
+</body>
+</html>
