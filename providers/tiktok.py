@@ -299,15 +299,23 @@ class TikTokProvider(SocialProvider):
     ) -> str:
         """Validate privacy level and video duration against creator_info.
 
-        A creator_info failure is logged and ignored — a transient outage of
-        that endpoint must not block publishing; the video init call surfaces
-        any real error and :meth:`_raise_classified_publish_error` handles it.
+        A creator_info failure aborts the publish (TikTok's guidelines require
+        stopping and asking the user to retry); it stays retryable so the
+        publisher's backoff can try again.
         """
         try:
             info = self.query_creator_info(access_token)
-        except Exception:
-            logger.warning("TikTok creator_info query failed; proceeding with publish", exc_info=True)
-            return privacy_level
+        except Exception as exc:
+            logger.warning("TikTok creator_info query failed; aborting publish", exc_info=True)
+            # 401/403 = token or scope revoked: retrying won't help, fail now.
+            auth_failed = isinstance(exc, APIError) and exc.status_code in (401, 403)
+            raise PublishError(
+                "No se pudo consultar la configuración de la cuenta de TikTok (creator_info). "
+                + ("Reconecta la cuenta de TikTok." if auth_failed else "No se publicó; reintenta en unos minutos.")
+                + f" Detalle: {exc}",
+                platform=self.platform_name,
+                retryable=not auth_failed,
+            ) from exc
 
         options = info.get("privacy_level_options") or []
         if options and privacy_level not in options:

@@ -939,6 +939,8 @@
                                        tabindex="-1" aria-hidden="true" class="sr-only">
                             </div>
                             <p x-show="ttLoading" class="text-[11px] text-app-ghost mt-1">Loading account settings…</p>
+                            <p x-show="tt?.max_video_post_duration_sec" class="text-[11px] text-app-ghost mt-1"
+                               x-text="`TikTok acepta videos de hasta ${tt?.max_video_post_duration_sec} s en esta cuenta.`"></p>
                             <p x-show="ttSelfOnlyLocked" class="text-[11px] text-amber-600 mt-1">
                                 This TikTok app hasn't passed TikTok's content audit yet — only private posting ("Only you") is available until the audit is approved.
                             </p>
@@ -1318,6 +1320,15 @@
                 </div>
                 {% endif %}
             </div>
+
+            <!-- TikTok express consent, next to the publish/schedule button (TikTok Direct Post audit) -->
+            <p x-show="selectedAccounts.some(id => charLimits[id]?.platform === 'tiktok')" x-cloak
+               id="tiktok-consent" class="text-[11px] text-app-ghost px-4 pt-2">
+                Al publicar o programar en TikTok aceptas la
+                <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener" class="underline hover:text-app-secondary">Music Usage Confirmation</a>
+                de TikTok y, si declaras contenido de marca, la
+                <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener" class="underline hover:text-app-secondary">Branded Content Policy</a>.
+            </p>
 
             <!-- ── Action Bar ─────────────────────────────────────── -->
             <div class="action-bar">

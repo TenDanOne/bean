@@ -481,18 +481,31 @@ class TestPublishPost:
         assert result.platform_post_id == "v_pub_url~123"
 
     @patch.object(TikTokProvider, "_request")
-    def test_creator_info_failure_does_not_block_publish(self, mock_request):
+    def test_creator_info_failure_aborts_publish(self, mock_request):
         mock_request.side_effect = [
             APIError("creator_info down", platform="TikTok", status_code=500),
             _init_response(),
         ]
 
         provider = TikTokProvider({"client_key": "k", "client_secret": "s"})
-        result = provider.publish_post("tok", _video_content())
+        with pytest.raises(PublishError) as excinfo:
+            provider.publish_post("tok", _video_content())
 
-        assert result.platform_post_id == "v_pub_url~123"
+        assert "creator_info" in str(excinfo.value)
+        assert excinfo.value.retryable is True
         urls = [call.args[1] for call in mock_request.call_args_list]
-        assert urls == [CREATOR_INFO_URL, VIDEO_INIT_URL]
+        assert urls == [CREATOR_INFO_URL]
+
+    @patch.object(TikTokProvider, "_request")
+    def test_creator_info_auth_failure_is_not_retryable(self, mock_request):
+        mock_request.side_effect = [APIError("unauthorized", platform="TikTok", status_code=401)]
+
+        provider = TikTokProvider({"client_key": "k", "client_secret": "s"})
+        with pytest.raises(PublishError) as excinfo:
+            provider.publish_post("tok", _video_content())
+
+        assert excinfo.value.retryable is False
+        assert "Reconecta" in str(excinfo.value)
 
     @patch.object(TikTokProvider, "_request")
     def test_init_unaudited_error_becomes_non_retryable(self, mock_request):

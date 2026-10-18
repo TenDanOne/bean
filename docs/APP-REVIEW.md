@@ -216,11 +216,11 @@ YouTube/Google tiene su propio proceso (verificación de OAuth para scopes sensi
 | M5 | Callbacks de borrado/desautorización ya implementados (`signed_request` verificado con HMAC-SHA256, responden `{url, confirmation_code}`). Limitación: comparan con `account_platform_id` (id de Página / IG business), no con el app-scoped user id de Meta, por lo que rara vez coinciden. Pendiente: guardar ese user id al conectar y comparar con él | `apps/accounts/views.py`, `apps/social_accounts/views.py` |
 | M6 | El screencast de `instagram_basic` debe mostrar la selección de cuenta; confirmar que `select_account` lista Página + Instagram | `templates/social_accounts/account_select.html` |
 | M7 | Decidir si hace falta App Review: con un solo usuario con rol en la app no se exige. Si se opta por Advanced Access, hace falta Business Verification | (decisión; sin archivo) |
-| T1 | Si `creator_info` falla, el proveedor continúa; la guía pide detener y pedir reintento | `providers/tiktok.py::_check_creator_constraints` |
-| T2 | Avisar en el composer cuando el video exceda `max_video_post_duration_sec` | `templates/composer/compose.html`, `apps/composer/views.py::tiktok_creator_info` |
-| T3 | Confirmar/añadir vista previa del video y título de TikTok antes de publicar | `templates/composer/partials/preview_panel.html` |
-| T4 | Texto de consentimiento expreso junto al botón de publicar/programar para TikTok (envíos diferidos con «Procesar pendientes») | `templates/composer/compose.html` |
-| T5 | Mostrar el estado de procesamiento de TikTok (status fetch) en la UI tras publicar | `apps/publisher/engine.py`, `templates/calendar/partials/` |
+| T1 | HECHO: si `creator_info` falla, el proveedor aborta con `PublishError` (reintentable) y mensaje visible; test en `tests/providers/test_tiktok.py` | `providers/tiktok.py::_check_creator_constraints` |
+| T2 | HECHO (parcial): el composer muestra «TikTok acepta videos de hasta N s en esta cuenta» junto al selector (el cliente no conoce la duración del medio); el proveedor ya bloquea al publicar si `MediaAsset.duration` excede el límite | `templates/composer/compose.html`, `apps/composer/views.py::tiktok_creator_info` |
+| T3 | HECHO (ya existía): `preview_panel.html` muestra video y caption de TikTok | `templates/composer/partials/preview_panel.html` |
+| T4 | HECHO: párrafo `#tiktok-consent` sobre la barra de acciones (aplica a publicar y programar) con enlaces a Music Usage Confirmation y Branded Content Policy; test en `apps/composer/tests/test_tiktok_consent.py` | `templates/composer/compose.html` |
+| T5 | PENDIENTE: el engine no usa `_fetch_publish_status` (solo analytics); un estado «procesando → publicado» exige estado intermedio en `PlatformPost` (migración) y sondeo en el engine. Hoy el composer solo avisa que puede tardar unos minutos | `apps/publisher/engine.py`, `templates/calendar/partials/` |
 | T6 | El token de `/tiktok<token>.txt` debe coincidir con el del portal; verificar dominio `ithos.mx` o prefijo y registrar el redirect `social1` | `apps/accounts/urls_root.py` |
 | T7 | `publish_per_day=5` en el `RateLimitConfig` de TikTok limita a 5 publicaciones diarias; confirmar que basta tras la auditoría | `providers/tiktok.py` |
 | G1 | La UI está pasando a español; el screencast para los revisores debe llevar subtítulos en inglés | (decisión) |
