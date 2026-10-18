@@ -1,10 +1,25 @@
+import logging
+
+from allauth.core.exceptions import ImmediateHttpResponse
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from django.contrib import messages
+from django.shortcuts import redirect
 
 from apps.accounts.models import OAuthConnection
+
+logger = logging.getLogger(__name__)
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
     """Custom adapter that syncs Google social logins to OAuthConnection."""
+
+    def on_authentication_error(self, request, provider, error=None, exception=None, extra_context=None):
+        """Log why a social login failed (allauth's 401 page says nothing) and send the user back to login."""
+        logger.warning(
+            "Social login failed (provider=%s, error=%s): %r", getattr(provider, "id", provider), error, exception
+        )
+        messages.error(request, "No se pudo entrar con Google. Intenta de nuevo o usa tu correo y contraseña.")
+        raise ImmediateHttpResponse(redirect("account_login"))
 
     def populate_user(self, request, sociallogin, data):
         """Set user.name from Google profile (custom User model has 'name', not first/last)."""

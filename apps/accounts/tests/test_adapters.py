@@ -124,3 +124,21 @@ class TestSyncOAuthConnection:
         adapter.pre_social_login(request, sociallogin)
 
         assert not OAuthConnection.objects.exists()
+
+
+@pytest.mark.django_db
+class TestAuthenticationError:
+    def test_logs_cause_and_redirects_to_login(self, adapter, request_factory, caplog):
+        from allauth.core.exceptions import ImmediateHttpResponse
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.urls import reverse
+
+        request = request_factory.get("/accounts/google/login/callback/")
+        request.session = {}
+        request._messages = FallbackStorage(request)
+
+        with caplog.at_level("WARNING", logger="apps.accounts.adapters"), pytest.raises(ImmediateHttpResponse) as exc:
+            adapter.on_authentication_error(request, "google", error="unknown", exception=ValueError("invalid_client"))
+
+        assert exc.value.response.url == reverse("account_login")
+        assert "invalid_client" in caplog.text
