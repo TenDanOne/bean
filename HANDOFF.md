@@ -73,6 +73,14 @@ pytest && ruff check . && ruff format --check . && mypy apps/ config/ providers/
 - Multi-red ya existe: un `Post` → un `PlatformPost` por cuenta con `platform_specific_*`; `clone_post` para reutilizar.
 - **Falta correr pytest completo** (no hubo acceso a las credenciales de PG en esa sesión). ruff, `manage.py check` y mypy (sin errores nuevos) OK.
 
+**Sesión 2026-10-18 — BEAN vivo en Railway:**
+- Repo público https://github.com/TenDanOne/bean; CI verde (commit `72ed30e`: formato, mypy 0 errores, test bulk assign corregido).
+- Railway: servicio `web` en `web-production-70790.up.railway.app`; variables como Shared Variables (`${{shared.X}}`). Secretos en `C:\Users\ultra\bean-railway.env` (fuera del repo).
+- Lecciones: Railway tomó el `Procfile` sin shell (`$PORT` literal) → Procfile borrado. Config as Code deprecado → `railway.toml` borrado. El `preDeployCommand` nunca corrió → migrate en el CMD del Dockerfile, pero el Custom Start Command de la UI lo pisa: debe ser `sh -c 'python manage.py migrate --noinput && gunicorn ...'`.
+- Migraciones aplicadas a mano desde local contra Supabase (session pooler) con un script del scratchpad que lee `bean-railway.env` sin imprimirlo. Site id=1 → `bean.ithos.mx` / `BEAN`.
+- Login y registro responden 200. Registro abierto (decisión del usuario).
+- Pendientes: confirmar el Start Command con migrate en la UI; Healthcheck `/health/` en la UI; CNAME `bean.ithos.mx`; «Wait for CI»; cron externo opcional (cron-job.org → `POST /cron/run`); README/architecture aún mencionan Procfile/railway.toml (docs del upstream).
+
 **Después:**
 - Fase 5: releer y reescribir legales `templates/public/*`, `/legal/data-deletion/`, `docs/APP-REVIEW.md`.
 - Fase 6: Sentry, MailerSend SMTP, Supabase, R2, Railway, timeout de gunicorn/proxy > 25 s, repo público TenDanOne/bean (push solo con confirmación).
