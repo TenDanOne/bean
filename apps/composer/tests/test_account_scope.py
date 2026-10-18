@@ -6,6 +6,8 @@ autosave) deleted every sibling PlatformPost — including already-published
 ones, cascading away their PublishLog history.
 """
 
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -176,7 +178,9 @@ class ScopedSaveTests(AccountScopeTestsBase):
         self.assertTrue(PlatformPost.objects.filter(id=self.tt_pp.id).exists())
         self.assertTrue(PlatformPost.objects.filter(id=self.yt_pp.id).exists())
 
-    def test_scoped_publish_now_does_not_touch_draft_sibling(self):
+    @patch("apps.composer.views.drain_pending_tasks", return_value=0)
+    @patch("apps.composer.views.PublishEngine.poll_and_publish", return_value=0)
+    def test_scoped_publish_now_does_not_touch_draft_sibling(self, mock_publish, mock_drain):
         self.yt_pp.status = PlatformPost.Status.DRAFT
         self.yt_pp.published_at = None
         self.yt_pp.save(update_fields=["status", "published_at"])
@@ -189,8 +193,11 @@ class ScopedSaveTests(AccountScopeTestsBase):
         self.assertIsNone(self.yt_pp.scheduled_at)
         self.assertEqual(self.tt_pp.status, PlatformPost.Status.SCHEDULED)
         self.assertIsNotNone(self.tt_pp.scheduled_at)
+        mock_publish.assert_called_once()  # publish runs before the queue drain
 
-    def test_scoped_publish_now_does_not_reschedule_published_sibling(self):
+    @patch("apps.composer.views.drain_pending_tasks", return_value=0)
+    @patch("apps.composer.views.PublishEngine.poll_and_publish", return_value=0)
+    def test_scoped_publish_now_does_not_reschedule_published_sibling(self, mock_publish, mock_drain):
         response = self.client.post(self.save_url, data=self._payload(action="publish_now"))
         self.assertIn(response.status_code, (200, 204, 302))
 

@@ -582,8 +582,13 @@ class PublishEngine:
             if pp.post.platform_posts.filter(status=PlatformPost.Status.ON_HOLD).exists():
                 continue
             try:
+                # Atomic claim: publish-now calls this outside the task lock, so a concurrent drain could race.
+                claimed = PlatformPost.objects.filter(id=pp.id, status=PlatformPost.Status.SCHEDULED).update(
+                    status=PlatformPost.Status.PUBLISHING, updated_at=timezone.now()
+                )
+                if not claimed:
+                    continue
                 pp.status = PlatformPost.Status.PUBLISHING
-                pp.save(update_fields=["status", "updated_at"])
                 result = self._publish_platform_post(pp)
                 if result.get("success"):
                     self._sync_parent_published_at(pp.post)

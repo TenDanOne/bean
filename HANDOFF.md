@@ -64,6 +64,15 @@ pytest && ruff check . && ruff format --check . && mypy apps/ config/ providers/
 8. Modo oscuro (no existía en el original). Hex oscuros en `docs/marca/propuestas-paleta.html` §A; logo `static/marca/bean-by-ithos-oscuro.svg`.
 9. Decidir idioma de la UI (hoy en inglés).
 
+**Sesión 2026-10-17 (b) — preparar Railway:**
+- Hecho pendiente 1: «Publicar ahora» llama `PublishEngine().poll_and_publish()` antes del drain (`apps/composer/views.py`). Tests de `test_account_scope.py` lo mockean.
+- Reintentos (`apps/publisher/engine.py` `_process_retries`) ahora reservan la fila con un `update()` atómico, para que publicar-ahora + drain no publiquen dos veces (hallazgo del juez).
+- Pendiente 2 resuelto sin código: la página de ajustes ya exige ADMIN (`apps/organizations/views.py:49`).
+- `railway.toml`: `preDeployCommand` migrate + healthcheck `/health/`. Gunicorn `--timeout 120` (`Dockerfile`, `Procfile`).
+- Ver `vault/Decisiones/Despliegue.md` (session pooler, ALLOWED_HOSTS con `healthcheck.railway.app`).
+- Multi-red ya existe: un `Post` → un `PlatformPost` por cuenta con `platform_specific_*`; `clone_post` para reutilizar.
+- **Falta correr pytest completo** (no hubo acceso a las credenciales de PG en esa sesión). ruff, `manage.py check` y mypy (sin errores nuevos) OK.
+
 **Después:**
 - Fase 5: releer y reescribir legales `templates/public/*`, `/legal/data-deletion/`, `docs/APP-REVIEW.md`.
 - Fase 6: Sentry, MailerSend SMTP, Supabase, R2, Railway, timeout de gunicorn/proxy > 25 s, repo público TenDanOne/bean (push solo con confirmación).

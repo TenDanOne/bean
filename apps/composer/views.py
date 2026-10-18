@@ -27,6 +27,7 @@ from apps.common.validators import (
 from apps.members.channels import visible_accounts
 from apps.members.decorators import require_permission
 from apps.members.models import WorkspaceMembership
+from apps.publisher.engine import PublishEngine
 from apps.social_accounts.models import SocialAccount
 from apps.workspaces.models import Workspace
 from providers.tiktok import VALID_PRIVACY_LEVELS as TIKTOK_PRIVACY_LEVELS
@@ -1095,6 +1096,8 @@ def save_post(request, workspace_id, post_id=None):
     # BEAN runs without a 24/7 worker: publish-now would wait for one, so run due tasks here.
     if action == "publish_now":
         try:
+            # Publish first so the post isn't stuck behind slow sync tasks in the queue.
+            PublishEngine().poll_and_publish()
             drain_pending_tasks(max_seconds=20)
         except Exception:
             logger.exception("publish_now: draining pending tasks failed")
