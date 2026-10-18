@@ -1,6 +1,6 @@
 # BEAN on Railway: ONE web service built from the Dockerfile (no worker; see HANDOFF).
 # Background tasks run from the "Procesar pendientes" button, "publish now" and POST /cron/run.
-# Railway ignores the Procfile `release:` line with the dockerfile builder, so migrate runs
+# Migrate runs
 # here as a pre-deploy step; it also fires the post_migrate hooks that register recurring jobs.
 
 [build]
