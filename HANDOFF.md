@@ -28,20 +28,42 @@ pytest && ruff check . && ruff format --check . && mypy apps/ config/ providers/
 
 ---
 
-## RETOMAR AQUÍ — 2026-10-17 (corte por límite de uso)
+## RETOMAR AQUÍ — 2026-10-17 (cierre de sesión en OneDrive)
 
-**Commits:** `6585f53` original BrightBean · `4d121bf` fase 1 (forma de trabajo, línea base, propuestas de marca). Juez Fase 1: PASA.
+**Desde ahora trabajar abriendo Claude en `C:\Users\ultra\Proyectos\bean`.** El original en `OneDrive\Escritorio\bbs_unxio-main` ya no se toca. Borrarlo cuando el usuario confirme.
 
-**Decisiones cerradas:** paleta **A · Oliva y petróleo** (hex en `docs/marca/propuestas-paleta.html` §A) · logo `static/marca/bean-by-ithos.svg` (+ `-oscuro`) · Instagram = `instagram.py` (vía Facebook) · plataformas por `DEFAULT_ENABLED_PLATFORMS` en `apps/social_accounts/platforms.py` (+ env `BBS_ENABLED_PLATFORMS`) · modo manual + `/cron/run` dormido.
+**Commits:** `6585f53` original · `4d121bf` fase 1 · `6fbcb45` fases 2+3 · `629236c` fase 4.3. Juez: todas PASA (con pendientes).
 
-**En curso SIN commit al cortar (2 implementadores en paralelo):**
-- Fases 2+3: `platforms.py` (quitar instagram_login), `config/settings/base.py` (BBS_ENABLED_PLATFORMS, CRON_SECRET), `apps/common/background.py` (`drain_pending_tasks`), vista "Procesar pendientes" + `/cron/run`, publicar-ahora sin worker, `railway.toml`/`Procfile`/`.env.example`.
-- Fase 4.3: paleta A en `theme/static_src/src/styles.css`, Figtree local en `static/fonts/figtree/`, logo/favicon, "BrightBean"→"BEAN" en templates, atribución AGPL en pies + `NOTICE` + README.
+**Verificación al cierre:**
+- pytest: 1497 passed / 2 failed preexistentes (`test_preview` encoding cp1252, `test_channel_scoping` bulk_assign).
+- ruff check OK; mypy con 4 errores preexistentes.
+- Credenciales PG de tests: DATABASE_URL de `simu/.env` → env DB_USER/DB_PASSWORD (no escribirlas).
+- No correr dos pytest en paralelo.
 
-**Siguiente paso:**
-1. `git status` / `git diff --stat` para ver qué quedó a medias de esos dos agentes.
-2. Correr suite completa (credenciales PG: DATABASE_URL de `simu/.env` vía env DB_USER/DB_PASSWORD, no escribirlas): `pytest -q -p no:cacheprovider` → esperado solo los 2 fallos preexistentes; `ruff check .`; `mypy ...` (≤4 errores preexistentes).
-3. Juez (Opus) sobre fases 2, 3 y 4.3 → commit por fase.
-4. Luego Fase 5 (legal + `/legal/data-deletion/` + `docs/APP-REVIEW.md`) y Fase 6 (Sentry, MailerSend SMTP, Supabase, R2, Railway, GitHub público — push solo con confirmación).
+**Hecho:**
+- 4 plataformas (`platforms.py`, env `BBS_ENABLED_PLATFORMS`).
+- Sin worker:
+  - `drain_pending_tasks` (`apps/common/background.py`).
+  - Botón "Procesar pendientes" en ajustes de la organización (`POST /tasks/process/`).
+  - `POST /cron/run` con `CRON_SECRET`.
+  - Publicar ahora drena la cola.
+- Marca: paleta A Oliva y petróleo, Figtree local, logo/favicon ITHOS, BEAN en templates, NOTICE + pie AGPL.
 
-**Ojo:** no correr dos pytest en paralelo (comparten `test_brightbean_test`). El original sigue en `OneDrive\Escritorio\bbs_unxio-main` hasta confirmación del usuario.
+**Pendientes del juez (siguiente sesión, en este orden):**
+1. Publicar ahora: correr primero `run_publish_cycle` (o darle `priority`) dentro del drain, para que no espere detrás de syncs lentos (`apps/common/background.py`, `apps/composer/views.py:1095`).
+2. Botón "Procesar pendientes" visible solo para owner/admin (`templates/organizations/settings.html:229`); con más orgs, restringir a `is_superuser` (`apps/common/views.py:17`).
+3. Avisos que usaban naranja ahora salen oliva: pasar a `amber-*` en `templates/base.html:716,733` y `templates/approvals/partials/_approval_row.html:39`.
+4. `styles.css:61`: `--primary-soft` fijo → `var(--brand-100)`.
+5. Figtree solo trae Regular + ExtraBold: añadir SemiBold/Bold (o woff2 variable).
+6. Restos de marca:
+   - Textos: `templates/calendar/calendar.html:4` (title), `apps/members/services.py:616` (asunto), título en `apps/api/api.py`, README `.github/assets`.
+   - Colores inline en `calendar/partials/publish_calendar_shell.html:140` y `event_form.html:49`.
+   - 403/404/500 con variables no definidas.
+   - Logo en sidebar colapsada (`base.html:309`).
+7. Comentario de `BB_TRUSTED_PROXIES` separado en `config/settings/base.py:157-161`; `ruff format` de `scripts/marca/*.py`.
+8. Modo oscuro (no existía en el original). Hex oscuros en `docs/marca/propuestas-paleta.html` §A; logo `static/marca/bean-by-ithos-oscuro.svg`.
+9. Decidir idioma de la UI (hoy en inglés).
+
+**Después:**
+- Fase 5: releer y reescribir legales `templates/public/*`, `/legal/data-deletion/`, `docs/APP-REVIEW.md`.
+- Fase 6: Sentry, MailerSend SMTP, Supabase, R2, Railway, timeout de gunicorn/proxy > 25 s, repo público TenDanOne/bean (push solo con confirmación).
