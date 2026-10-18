@@ -27,7 +27,7 @@ Context: account (with prefetched posting_slots), workspace_id.
                             <input type="hidden" name="day_of_week" value="{{ day.value }}">
                             <button type="submit"
                                     class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 cursor-pointer {% if day.is_active %}bg-green-500{% else %}bg-stone-300{% endif %}"
-                                    title="{% if day.is_active %}Disable {{ day.name }}{% else %}Enable {{ day.name }}{% endif %}">
+                                    title="{% if day.is_active %}Desactivar {{ day.name }}{% else %}Activar {{ day.name }}{% endif %}">
                                 <span class="inline-block h-3.5 w-3.5 rounded-full bg-app shadow-sm transform transition-transform duration-200 {% if day.is_active %}translate-x-[18px]{% else %}translate-x-[3px]{% endif %}"></span>
                             </button>
                         </form>
@@ -51,7 +51,7 @@ Context: account (with prefetched posting_slots), workspace_id.
                                 <div x-show="!editing" class="flex items-center gap-0.5">
                                     <button type="button" @click="editing = true"
                                             class="text-xs tabular-nums cursor-pointer hover:text-orange-600 transition-colors {% if not day.is_active %}text-app-faint line-through{% else %}text-app-body{% endif %}"
-                                            title="Click to edit">
+                                            title="Clic para editar">
                                         {{ slot.time|time:"g:i A" }}
                                     </button>
                                     <form hx-post="{% url 'calendar:delete_posting_slot' workspace_id=workspace_id slot_id=slot.id %}"
@@ -61,7 +61,7 @@ Context: account (with prefetched posting_slots), workspace_id.
                                         <button type="submit"
                                                 x-show="hovered" x-transition.opacity
                                                 class="w-4 h-4 flex items-center justify-center text-app-faint hover:text-red-500 transition-all cursor-pointer"
-                                                title="Remove slot">
+                                                title="Quitar horario">
                                             {% icon "xmark" css_class="w-3 h-3" %}
                                         </button>
                                     </form>
@@ -79,12 +79,12 @@ Context: account (with prefetched posting_slots), workspace_id.
                                            @keydown.escape="editing = false">
                                     <button type="submit"
                                             class="w-5 h-5 flex items-center justify-center text-green-600 hover:text-green-700 cursor-pointer"
-                                            title="Save">
+                                            title="Guardar">
                                         {% icon "check" css_class="w-3.5 h-3.5" %}
                                     </button>
                                     <button type="button" @click="editing = false"
                                             class="w-5 h-5 flex items-center justify-center text-app-ghost hover:text-app-secondary cursor-pointer"
-                                            title="Cancel">
+                                            title="Cancelar">
                                         {% icon "xmark" css_class="w-3.5 h-3.5" %}
                                     </button>
                                 </form>
@@ -96,7 +96,7 @@ Context: account (with prefetched posting_slots), workspace_id.
                         <div x-data="{ adding: false, newTime: '09:00' }" class="mt-2">
                             <button x-show="!adding" @click="adding = true; $nextTick(() => $refs.timeInput_{{ day.value }}.focus())"
                                     class="inline-flex items-center justify-center w-6 h-6 rounded-full text-app-faint hover:text-orange-500 hover:bg-orange-50 transition-colors cursor-pointer"
-                                    title="Add time slot">
+                                    title="Agregar horario">
                                 {% icon "plus" css_class="w-3.5 h-3.5" %}
                             </button>
                             <form x-show="adding" x-cloak
@@ -113,12 +113,12 @@ Context: account (with prefetched posting_slots), workspace_id.
                                        class="w-[90px] text-xs px-1.5 py-1 rounded outline-none focus:border-orange-400">
                                 <button type="submit"
                                         class="w-5 h-5 flex items-center justify-center text-green-600 hover:text-green-700 cursor-pointer"
-                                        title="Add">
+                                        title="Agregar">
                                     {% icon "check" css_class="w-3.5 h-3.5" %}
                                 </button>
                                 <button type="button" @click="adding = false"
                                         class="w-5 h-5 flex items-center justify-center text-app-ghost hover:text-app-secondary cursor-pointer"
-                                        title="Cancel">
+                                        title="Cancelar">
                                     {% icon "xmark" css_class="w-3.5 h-3.5" %}
                                 </button>
                             </form>

@@ -14,7 +14,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
         <div class="flex-shrink-0">
             {% if account.avatar_url %}
             <img src="{{ account.avatar_url }}"
-                 alt="{{ account.account_name|default:account.account_handle }} profile picture"
+                 alt="{{ account.account_name|default:account.account_handle }} foto de perfil"
                  class="w-11 h-11 rounded-full object-cover"
                  style="box-shadow: 0 0 0 2px var(--surface-2);">
             {% else %}
@@ -43,7 +43,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
             <div class="flex items-center gap-3 mt-2">
                 {% include "social_accounts/partials/_status_badge.html" with status=account.connection_status error=account.last_error %}
                 {% if account.follower_count %}
-                <span class="text-xs" style="color: var(--text-tertiary);">{{ account.follower_count|format_number }} followers</span>
+                <span class="text-xs" style="color: var(--text-tertiary);">{{ account.follower_count|format_number }} seguidores</span>
                 {% endif %}
             </div>
         </div>
@@ -54,7 +54,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
             <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=workspace_id account_id=account.id %}">
                 {% csrf_token %}
                 <button type="submit" class="bbs-btn bbs-btn-neutral text-xs px-3 py-1.5" style="color: var(--brand-700);">
-                    Reconnect
+                    Reconectar
                 </button>
             </form>
             {% endif %}
@@ -62,7 +62,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
             <button type="button"
                     popovertarget="archive-{{ account.id }}"
                     class="bbs-btn bbs-btn-ghost p-1.5"
-                    aria-label="Remove {{ account.account_name|default:account.account_handle }}">
+                    aria-label="Quitar {{ account.account_name|default:account.account_handle }}">
                 {% icon "xmark" css_class="w-4 h-4" %}
             </button>
 
@@ -73,11 +73,11 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
             because it also destroys the channel's posts and its inbox history.
             {% endcomment %}
             <div popover id="archive-{{ account.id }}" class="relief-float p-4 w-72">
-                <p class="text-sm mb-1" style="color: var(--text-primary);">Archive <strong>{{ account.account_name|default:account.account_handle }}</strong>?</p>
-                <p class="text-xs mb-3" style="color: var(--text-tertiary);">It stops syncing and publishing. Its posts, comments and metrics are kept, and you can reconnect anytime.</p>
+                <p class="text-sm mb-1" style="color: var(--text-primary);">¿Archivar <strong>{{ account.account_name|default:account.account_handle }}</strong>?</p>
+                <p class="text-xs mb-3" style="color: var(--text-tertiary);">Deja de sincronizar y de publicar. Se conservan sus publicaciones, comentarios y métricas, y puedes reconectarla cuando quieras.</p>
                 <div class="flex gap-2 justify-end">
                     <button type="button" popovertarget="archive-{{ account.id }}" popovertargetaction="hide"
-                            class="bbs-btn bbs-btn-ghost text-xs px-3 py-1.5">Cancel</button>
+                            class="bbs-btn bbs-btn-ghost text-xs px-3 py-1.5">Cancelar</button>
                     <form method="post"
                           action="{% url 'social_accounts:disconnect' workspace_id=workspace_id account_id=account.id %}"
                           hx-post="{% url 'social_accounts:disconnect' workspace_id=workspace_id account_id=account.id %}"
@@ -85,7 +85,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
                           hx-swap="outerHTML"
                           hx-disabled-elt="find button">
                         {% csrf_token %}
-                        <button type="submit" class="bbs-btn bbs-btn-primary text-xs px-3 py-1.5">Archive</button>
+                        <button type="submit" class="bbs-btn bbs-btn-primary text-xs px-3 py-1.5">Archivar</button>
                     </form>
                 </div>
 
@@ -95,7 +95,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
                             hx-swap="outerHTML"
                             class="text-[11px] font-medium cursor-pointer hover:underline"
                             style="color: var(--error-700);">
-                        Delete permanently instead…
+                        Mejor eliminar de forma permanente…
                     </button>
                 </div>
             </div>
@@ -118,8 +118,8 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
     {% if scheduling_enabled and account.connection_status == "connected" %}
     <div class="mt-4 pt-4" style="border-top: 1px solid var(--border);">
         <div class="mb-3">
-            <h4 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary);">Posting Schedule</h4>
-            <p class="text-xs mt-0.5" style="color: var(--text-tertiary);">Set recurring time slots for when queued posts are automatically published.</p>
+            <h4 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-secondary);">Horario de publicación</h4>
+            <p class="text-xs mt-0.5" style="color: var(--text-tertiary);">Define horarios recurrentes para publicar automáticamente las publicaciones en cola.</p>
         </div>
         {% include "social_accounts/partials/_posting_slots_grid.html" with account=account workspace_id=workspace_id %}
     </div>

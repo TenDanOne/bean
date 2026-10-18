@@ -43,8 +43,8 @@ def get_checklist_items(workspace, membership=None):
     items = [
         {
             "key": "connect_accounts",
-            "title": "Connect social accounts",
-            "description": "Link your Instagram, LinkedIn, or other platforms",
+            "title": "Conecta tus redes",
+            "description": "Conecta YouTube, Facebook, Instagram o TikTok",
             "completed": SocialAccount.objects.for_workspace(workspace_id).exists(),
             "url": reverse(
                 "social_accounts:connect",
@@ -55,8 +55,8 @@ def get_checklist_items(workspace, membership=None):
         },
         {
             "key": "create_post",
-            "title": "Create your first post",
-            "description": "Draft and schedule content for your audience",
+            "title": "Crea tu primera publicación",
+            "description": "Redacta y programa contenido para tu audiencia",
             "completed": Post.objects.for_workspace(workspace_id).exists(),
             "url": reverse(
                 "composer:compose",
@@ -67,8 +67,8 @@ def get_checklist_items(workspace, membership=None):
         },
         {
             "key": "create_idea",
-            "title": "Create your first idea",
-            "description": "Capture content ideas to develop later",
+            "title": "Crea tu primera idea",
+            "description": "Guarda ideas de contenido para desarrollarlas después",
             "completed": Idea.objects.for_workspace(workspace_id).filter(author__isnull=False).exists(),
             "url": reverse(
                 "composer:create_landing",
@@ -79,8 +79,8 @@ def get_checklist_items(workspace, membership=None):
         },
         {
             "key": "invite_members",
-            "title": "Invite your team",
-            "description": "Add team members to collaborate on content",
+            "title": "Invita a tu equipo",
+            "description": "Agrega integrantes para colaborar en el contenido",
             "completed": WorkspaceMembership.objects.filter(
                 workspace_id=workspace_id,
                 workspace_role=WorkspaceMembership.WorkspaceRole.CLIENT,

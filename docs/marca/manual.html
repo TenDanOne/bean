@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manual de marca · BEAN by ITHOS</title>
+<style>
+/* Fuentes locales relativas (ruta desde docs/marca/); sin CDNs */
+@font-face{font-family:Figtree;font-weight:400;src:url("../../static/fonts/figtree/Figtree-Regular.ttf") format("truetype")}
+@font-face{font-family:Figtree;font-weight:800;src:url("../../static/fonts/figtree/Figtree-ExtraBold.ttf") format("truetype")}
+:root{--ink:#0f2a30;--ink2:#465b60;--bg:#f4f1ea;--card:#fdfbf7;--line:#d9d3c3;--primary:#657329;--accent:#e3a537}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 Figtree,system-ui,"Segoe UI",Roboto,sans-serif}
+main{max-width:960px;margin:0 auto;padding:32px 16px 64px}
+h1,h2,h3{font-weight:800;line-height:1.2;margin:0 0 .5em}
+h1{font-size:2.2rem}h2{font-size:1.5rem;margin-top:2.5em;padding-top:1em;border-top:1px solid var(--line)}h3{font-size:1.05rem}
+p{margin:0 0 1em;max-width:70ch;color:var(--ink2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.stage{display:flex;align-items:center;justify-content:center;min-height:140px;border-radius:8px;padding:24px;margin-bottom:12px}
+.stage img{max-width:100%;height:auto;max-height:90px}
+.dark{background:#061215}
+.sw{display:flex;align-items:center;gap:12px;padding:8px 0}
+.chip{width:44px;height:44px;border-radius:8px;border:1px solid var(--line);flex:none}
+code{font:600 .9em ui-monospace,Consolas,monospace;background:#ebe6da;padding:1px 6px;border-radius:4px}
+table{border-collapse:collapse;width:100%;background:var(--card);font-size:.95rem}
+td,th{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+.no{border-left:4px solid #b91c1c}.ok{border-left:4px solid var(--primary)}
+ul{margin:0 0 1em;padding-left:1.2em;color:var(--ink2)}
+.aviso{background:#f6e4bd;border:1px solid var(--accent);border-radius:12px;padding:16px;color:var(--ink)}
+footer{margin-top:3em;font-size:.85rem;color:var(--ink2)}
+</style>
+</head>
+<body>
+<main>
+<p style="margin-bottom:.2em">ITHOS · Manual de marca mínimo</p>
+<h1>BEAN by ITHOS</h1>
+<p>BEAN es la herramienta interna de ITHOS para preparar y publicar en redes. Su marca es la de ITHOS (isotipo, Figtree) con una paleta propia. Este manual fija lo mínimo para usarla sin romperla. Fecha: 2026-10-18.</p>
+
+<div class="aviso"><strong>No se usan logos de BrightBean.</strong> BEAN está basado en BrightBean Studio (AGPL-3.0); el agradecimiento va en el aviso del pie y en <code>NOTICE</code>, y de forma indirecta en la paleta (el oliva viene del verde de BrightBean oscurecido hasta cumplir contraste AA). Ningún logo, isotipo ni nombre de producto de BrightBean aparece en la interfaz ni en materiales.</div>
+
+<h2>1. Logos</h2>
+<p>Dos archivos SVG. No se redibujan ni se recolorean: se elige el que contrasta con el fondo.</p>
+<div class="grid">
+  <div class="card"><div class="stage" style="background:#fdfbf7"><img src="../../static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS, versión para fondo claro"></div>
+  <h3>Claro</h3><p><code>static/marca/bean-by-ithos.svg</code><br>Sobre papel/hueso (<code>#F4F1EA</code>, <code>#FDFBF7</code>) y blanco. Isotipo dorado <code>#E3A537</code>, texto petróleo <code>#0F2A30</code>.</p></div>
+  <div class="card"><div class="stage dark"><img src="../../static/marca/bean-by-ithos-oscuro.svg" alt="BEAN by ITHOS, versión para fondo oscuro"></div>
+  <h3>Oscuro</h3><p><code>static/marca/bean-by-ithos-oscuro.svg</code><br>Sobre petróleo muy oscuro (<code>#061215</code>, <code>#0C1C20</code>) y fotos oscuras.</p></div>
+</div>
+<ul>
+  <li><strong>Espacio libre:</strong> 1× la altura de la «B» alrededor, siempre.</li>
+  <li><strong>Tamaño mínimo:</strong> 24 px de alto en pantalla. Por debajo, usar solo el isotipo.</li>
+  <li><strong>Nombre:</strong> «BEAN by ITHOS» completo en títulos y legales; «BEAN» a secas dentro de la interfaz.</li>
+</ul>
+
+<h2>2. Paleta A · «Oliva y petróleo»</h2>
+<p>Elegida entre tres propuestas (<code>docs/marca/propuestas-paleta.html</code>). La verdad en código está en <code>theme/static_src/src/styles.css</code> (<code>:root</code>). Acción en oliva de BrightBean oscurecido (blanco sobre <code>#657329</code> da 5,2:1); tinta y selección en petróleo de ITHOS; lienzo hueso.</p>
+<div class="grid">
+  <div class="card">
+    <h3>Oliva (acción)</h3>
+    <div class="sw"><span class="chip" style="background:#F3F6E3"></span><span><code>--brand-50</code> #F3F6E3</span></div>
+    <div class="sw"><span class="chip" style="background:#E6EBCC"></span><span><code>--brand-100</code> #E6EBCC</span></div>
+    <div class="sw"><span class="chip" style="background:#D0D9A3"></span><span><code>--brand-200</code> #D0D9A3</span></div>
+    <div class="sw"><span class="chip" style="background:#B4C06F"></span><span><code>--brand-300</code> #B4C06F</span></div>
+    <div class="sw"><span class="chip" style="background:#94A43F"></span><span><code>--brand-400</code> #94A43F (primario en oscuro)</span></div>
+    <div class="sw"><span class="chip" style="background:#657329"></span><span><code>--brand-500</code> #657329 (<code>--primary</code>)</span></div>
+    <div class="sw"><span class="chip" style="background:#525F20"></span><span><code>--brand-600</code> #525F20 (hover)</span></div>
+    <div class="sw"><span class="chip" style="background:#424C1A"></span><span><code>--brand-700</code> #424C1A</span></div>
+    <div class="sw"><span class="chip" style="background:#343C15"></span><span><code>--brand-800</code> #343C15</span></div>
+    <div class="sw"><span class="chip" style="background:#272D10"></span><span><code>--brand-900</code> #272D10</span></div>
+  </div>
+  <div class="card">
+    <h3>Petróleo, hueso y dorado</h3>
+    <div class="sw"><span class="chip" style="background:#0F2A30"></span><span>Tinta <code>#0F2A30</code></span></div>
+    <div class="sw"><span class="chip" style="background:#465B60"></span><span>Texto secundario <code>#465B60</code></span></div>
+    <div class="sw"><span class="chip" style="background:#0E4A56"></span><span>Selección <code>#0E4A56</code></span></div>
+    <div class="sw"><span class="chip" style="background:#F4F1EA"></span><span>Lienzo <code>#F4F1EA</code></span></div>
+    <div class="sw"><span class="chip" style="background:#FDFBF7"></span><span>Tarjeta <code>#FDFBF7</code></span></div>
+    <div class="sw"><span class="chip" style="background:#D9D3C3"></span><span>Borde <code>#D9D3C3</code></span></div>
+    <div class="sw"><span class="chip" style="background:#E3A537"></span><span>Dorado (isotipo, acento) <code>#E3A537</code></span></div>
+  </div>
+  <div class="card" style="background:#061215;color:#ecf2f3">
+    <h3>Modo oscuro</h3>
+    <div class="sw"><span class="chip" style="background:#94A43F"></span><span>Primario <code style="color:#061215">#94A43F</code></span></div>
+    <div class="sw"><span class="chip" style="background:#0C1C20"></span><span>Tarjeta <code style="color:#061215">#0C1C20</code></span></div>
+    <div class="sw"><span class="chip" style="background:#061215"></span><span>Lienzo <code style="color:#061215">#061215</code></span></div>
+    <div class="sw"><span class="chip" style="background:#ECF2F3"></span><span>Texto <code style="color:#061215">#ECF2F3</code></span></div>
+    <div class="sw"><span class="chip" style="background:#7CC7D3"></span><span>Selección <code style="color:#061215">#7CC7D3</code></span></div>
+    <p style="color:#a9bcc0;margin-top:.8em">Pendiente de implementar en la app (el original no tenía oscuro).</p>
+  </div>
+</div>
+<p style="margin-top:1em">El dorado <code>#E3A537</code> solo como relleno con texto petróleo, nunca como texto sobre fondo claro.</p>
+
+<h2>3. Tipografía</h2>
+<p>Figtree en toda la interfaz (variable <code>--brand-font-display</code> / <code>--brand-font-body</code>), servida localmente desde <code>static/fonts/figtree/</code>. Hoy están Regular (400) y ExtraBold (800); falta SemiBold/Bold.</p>
+<div class="card">
+  <p style="font-weight:800;font-size:2rem;margin:0;color:var(--ink)">Publica con calma.</p>
+  <p style="font-size:1.1rem;margin:.4em 0 0">Preparar, aprobar y publicar desde un solo lugar. 0123456789</p>
+</div>
+
+<h2>4. Usos prohibidos</h2>
+<div class="grid">
+  <div class="card no"><ul>
+    <li>Usar logos, isotipos o nombres de BrightBean.</li>
+    <li>Recolorear o redibujar el isotipo ITHOS.</li>
+    <li>Deformar, rotar, añadir sombra, brillo o contorno al logo.</li>
+    <li>Poner el logo claro sobre fondos claros o el oscuro sobre claros.</li>
+  </ul></div>
+  <div class="card no"><ul>
+    <li>Dorado como color de texto sobre fondo claro.</li>
+    <li>Naranja de BrightBean en la interfaz (se remapea a oliva).</li>
+    <li>Otra tipografía que no sea Figtree.</li>
+    <li>Presentar BEAN como producto de terceros o comercial: es de uso personal/ITHOS.</li>
+  </ul></div>
+</div>
+
+<h2>5. Dónde vive la marca</h2>
+<table>
+<tr><th>Qué</th><th>Dónde</th></tr>
+<tr><td>Logos SVG</td><td><code>static/marca/</code></td></tr>
+<tr><td>Tokens de color y fuente</td><td><code>theme/static_src/src/styles.css</code> (<code>:root</code>)</td></tr>
+<tr><td>Fuentes</td><td><code>static/fonts/figtree/</code> (licencia OFL en la misma carpeta)</td></tr>
+<tr><td>Propuestas de paleta</td><td><code>docs/marca/propuestas-paleta.html</code></td></tr>
+<tr><td>Aviso AGPL</td><td>Pie de la app y <code>NOTICE</code>: «BEAN by ITHOS está basado en BrightBean Studio (AGPL-3.0)» con enlace al código (<code>github.com/TenDanOne/bean</code>)</td></tr>
+</table>
+
+<footer>BEAN by ITHOS · ITHOS™ · Marca de uso interno. Basado en BrightBean Studio (AGPL-3.0).</footer>
+</main>
+</body>
+</html>

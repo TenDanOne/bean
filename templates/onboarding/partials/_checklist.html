@@ -18,8 +18,8 @@
             {% icon "bolt" css_class="w-[15px] h-[15px]" %}
         </div>
         <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold text-app-strong">Get started</div>
-            <div class="text-xs text-app-ghost">{{ checklist_completed_count }} of {{ checklist_total_count }} complete</div>
+            <div class="text-sm font-semibold text-app-strong">Primeros pasos</div>
+            <div class="text-xs text-app-ghost">{{ checklist_completed_count }} de {{ checklist_total_count }} completados</div>
         </div>
         <!-- Progress ring -->
         <div class="relative w-8 h-8 flex-shrink-0">
@@ -50,8 +50,8 @@
                     {% icon "bolt" css_class="w-[15px] h-[15px]" %}
                 </div>
                 <div>
-                    <div class="text-sm font-semibold text-app-strong">Get started</div>
-                    <div class="text-xs text-app-ghost">{{ checklist_completed_count }} of {{ checklist_total_count }} complete</div>
+                    <div class="text-sm font-semibold text-app-strong">Primeros pasos</div>
+                    <div class="text-xs text-app-ghost">{{ checklist_completed_count }} de {{ checklist_total_count }} completados</div>
                 </div>
             </div>
             <div class="flex items-center gap-1">
@@ -62,7 +62,7 @@
                 <!-- Collapse button -->
                 <button @click="open = false"
                         class="w-6 h-6 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer"
-                        title="Minimize">
+                        title="Minimizar" aria-label="Minimizar">
                     {% icon "chevron-down" css_class="w-[14px] h-[14px]" %}
                 </button>
                 <!-- Dismiss button -->
@@ -70,7 +70,7 @@
                         hx-target="#onboarding-checklist"
                         hx-swap="outerHTML"
                         class="w-6 h-6 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer"
-                        title="Dismiss checklist">
+                        title="Descartar lista" aria-label="Descartar lista">
                     {% icon "xmark" css_class="w-[12px] h-[12px]" %}
                 </button>
             </div>

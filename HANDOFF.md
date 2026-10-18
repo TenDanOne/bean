@@ -84,3 +84,14 @@ pytest && ruff check . && ruff format --check . && mypy apps/ config/ providers/
 **Después:**
 - Fase 5: releer y reescribir legales `templates/public/*`, `/legal/data-deletion/`, `docs/APP-REVIEW.md`.
 - Fase 6: Sentry, MailerSend SMTP, Supabase, R2, Railway, timeout de gunicorn/proxy > 25 s, repo público TenDanOne/bean (push solo con confirmación).
+
+## RETOMAR AQUÍ — 2026-10-18 (Fase 5: listo para App Review, primera mitad)
+Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, sin regresiones.
+- Hecho:
+  - Paso 1: el grid de connect y el sidebar filtran por `enabled_platform_keys()`.
+  - Paso 2A: `LANGUAGE_CODE=es-mx`; base.html, social_accounts y onboarding en español.
+  - Paso 4: landing en `/` para anónimos; legales ES/EN; `/legal/data-deletion/` con sus callbacks de Meta (`/legal/data-deletion/callback/`, `/legal/meta/deauthorize/`); env `BEAN_CONTACT_EMAIL`.
+  - Paso 5: `docs/producto/*`, `docs/GUIA-USO.md`, `docs/APP-REVIEW.md` (brechas M1-M7, T1-T7), `docs/marca/manual.html`.
+- Railway necesita `PLATFORM_FACEBOOK_APP_SECRET` o los callbacks de Meta responden 503.
+- Siguiente: brechas de TikTok T1-T5 (docs/APP-REVIEW.md). Después: el resto del español (calendario, composer, aprobaciones, inbox, ajustes), el paso 3 (pulido visual), M1 (recortar scopes de Meta) y M5 (guardar el user id de Meta al conectar).
+- Tests locales: Postgres 17 con la credencial local de simu vía DB_USER/DB_PASSWORD (sin guardarla).

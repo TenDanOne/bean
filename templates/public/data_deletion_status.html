@@ -1,0 +1,11 @@
+{% extends "public/base.html" %}
+
+{% block title %}Solicitud de borrado / Deletion request | BEAN{% endblock %}
+
+{% block content %}
+<article class="public-prose">
+    <h1>Solicitud recibida</h1>
+    <p>Recibimos tu solicitud. Las cuentas de Meta vinculadas a tu usuario se desconectan y sus tokens se eliminan. Si quieres borrar también el historial, escríbenos a <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+    <p lang="en">We received your request. Meta accounts linked to your user are disconnected and their tokens deleted. If you also want your history deleted, email us at <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+</article>
+{% endblock %}

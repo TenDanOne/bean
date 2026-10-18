@@ -48,12 +48,17 @@ def _get_provider_for_platform(platform: str, org_id, **extra_credentials):
 
 
 def _get_visible_platform_choices():
-    """Return PlatformCredential.Platform.choices filtered to visible platforms.
+    """Return PlatformCredential.Platform.choices filtered to visible, enabled platforms.
 
-    Platforms without a PlatformVisibility row default to visible.
+    Platforms without a PlatformVisibility row default to visible; the enabled
+    list (``enabled_platform_keys``) always applies.
     """
     hidden = set(PlatformVisibility.objects.filter(is_visible=False).values_list("platform", flat=True))
-    return [(value, label) for value, label in PlatformCredential.Platform.choices if value not in hidden]
+    return [
+        (value, label)
+        for value, label in PlatformCredential.Platform.choices
+        if value not in hidden and value in enabled_platform_keys()
+    ]
 
 
 def _apply_analytics_scope_flag(provider, platform):
@@ -241,13 +246,13 @@ def connect_platform(request, workspace_id):
     # POST: initiate OAuth
     platform = request.POST.get("platform", "").strip()
     if platform not in dict(visible_platform_choices):
-        messages.error(request, "This platform is not available.")
+        messages.error(request, "Esta plataforma no está disponible.")
         return redirect("social_accounts:connect", workspace_id=workspace_id)
 
     if platform not in configured_platforms:
         messages.error(
             request,
-            f"Platform credentials for {platform} are not configured. Please contact your administrator.",
+            f"Las credenciales de {platform} no están configuradas. Consulta a tu administrador.",
         )
         return redirect("social_accounts:connect", workspace_id=workspace_id)
 
@@ -301,7 +306,7 @@ def oauth_callback(request, platform):
     error = request.GET.get("error")
     if error:
         error_desc = request.GET.get("error_description", error)
-        messages.error(request, f"OAuth error: {error_desc}")
+        messages.error(request, f"Error de OAuth: {error_desc}")
         session_data = request.session.pop(OAUTH_SESSION_KEY, {})
         workspace_id = session_data.get("workspace_id")
         if workspace_id:
@@ -312,30 +317,30 @@ def oauth_callback(request, platform):
     state_str = request.GET.get("state")
 
     if not code or not state_str:
-        messages.error(request, "Missing authorization code or state parameter.")
+        messages.error(request, "Falta el código de autorización o el parámetro state.")
         return redirect("dashboard")
 
     # Validate state
     try:
         state_data = _unsign_state(state_str)
     except signing.BadSignature:
-        messages.error(request, "Invalid or expired OAuth state. Please try again.")
+        messages.error(request, "El estado de OAuth no es válido o expiró. Inténtalo de nuevo.")
         return redirect("dashboard")
 
     # Validate nonce from session
     session_data = request.session.pop(OAUTH_SESSION_KEY, {})
     if not session_data or session_data.get("nonce") != state_data.get("nonce"):
-        messages.error(request, "OAuth session mismatch. Please try again.")
+        messages.error(request, "La sesión de OAuth no coincide. Inténtalo de nuevo.")
         return redirect("dashboard")
 
     # Validate platform matches
     if state_data.get("platform") != platform:
-        messages.error(request, "Platform mismatch in OAuth callback.")
+        messages.error(request, "La plataforma no coincide en el retorno de OAuth.")
         return redirect("dashboard")
 
     # Validate user
     if str(request.user.id) != state_data.get("user_id"):
-        raise PermissionDenied("OAuth state does not match current user.")
+        raise PermissionDenied("El estado de OAuth no corresponde al usuario actual.")
 
     workspace_id = state_data["workspace_id"]
 
@@ -344,10 +349,10 @@ def oauth_callback(request, platform):
 
     ws_membership = WorkspaceMembership.objects.filter(user=request.user, workspace_id=workspace_id).first()
     if not ws_membership:
-        raise PermissionDenied("You no longer have access to this workspace.")
+        raise PermissionDenied("Ya no tienes acceso a este espacio de trabajo.")
     perms = ws_membership.effective_permissions
     if not perms.get("manage_social_accounts", False):
-        raise PermissionDenied("You no longer have permission to manage social accounts.")
+        raise PermissionDenied("Ya no tienes permiso para administrar cuentas sociales.")
 
     try:
         # For Mastodon, we need instance-specific credentials from session + registration
@@ -391,19 +396,19 @@ def oauth_callback(request, platform):
                 else:
                     if platform == PlatformCredential.Platform.INSTAGRAM:
                         warning = (
-                            "No Instagram Business accounts were found for your account. "
-                            "Only Instagram Business or Creator accounts linked to a Facebook Page "
-                            "can be connected through this Instagram option. If you expected to "
-                            "see an account, make sure it is linked to a Page you manage, then reconnect."
+                            "No encontramos cuentas de Instagram Business en tu cuenta. "
+                            "Con esta opción solo se pueden conectar cuentas Business o Creator "
+                            "vinculadas a una página de Facebook. Si esperabas ver una cuenta, "
+                            "verifica que esté vinculada a una página que administras y vuelve a conectar."
                         )
                     else:
                         warning = (
-                            "No Facebook Pages were found for your account. "
-                            "Only Pages can be connected — personal profiles are not "
-                            "supported by the Facebook API. "
-                            "If you expected to see a Page, make sure you have admin "
-                            "access and try removing the app in Facebook Settings \u2192 "
-                            "Business Integrations, then reconnect."
+                            "No encontramos páginas de Facebook en tu cuenta. "
+                            "Solo se pueden conectar páginas: la API de Facebook no "
+                            "admite perfiles personales. "
+                            "Si esperabas ver una página, verifica que seas administrador "
+                            "e intenta quitar la app en Configuración de Facebook \u2192 "
+                            "Integraciones comerciales y vuelve a conectar."
                         )
                 messages.warning(request, warning)
                 return redirect("social_accounts:list", workspace_id=workspace_id)
@@ -419,7 +424,7 @@ def oauth_callback(request, platform):
             expires_in=tokens.expires_in,
             instance_url=extra_creds.get("instance_url", ""),
         )
-        messages.success(request, f"Connected {profile.name} successfully.")
+        messages.success(request, f"{profile.name} se conectó correctamente.")
 
     except (signing.BadSignature, PermissionDenied):
         raise
@@ -427,7 +432,7 @@ def oauth_callback(request, platform):
         logger.exception("OAuth callback failed for %s", platform)
         messages.error(
             request,
-            "Failed to connect account. Please try again.",
+            "No se pudo conectar la cuenta. Inténtalo de nuevo.",
         )
 
     return redirect("calendar:calendar", workspace_id=workspace_id)
@@ -443,7 +448,7 @@ def select_account(request):
     """Show page/account selection after multi-page OAuth."""
     page_data = request.session.get("oauth_page_select")
     if not page_data:
-        messages.error(request, "No accounts to select. Please start over.")
+        messages.error(request, "No hay cuentas para seleccionar. Empieza de nuevo.")
         return redirect("dashboard")
 
     workspace_id = page_data["workspace_id"]
@@ -462,7 +467,7 @@ def select_account(request):
     # POST: create accounts for selected pages
     selected_ids = request.POST.getlist("selected_pages")
     if not selected_ids:
-        messages.error(request, "Please select at least one account.")
+        messages.error(request, "Selecciona al menos una cuenta.")
         return render(
             request,
             "social_accounts/account_select.html",
@@ -487,7 +492,7 @@ def select_account(request):
             if not access_token:
                 messages.error(
                     request,
-                    f"Could not connect {page['name']}: the platform did not provide an account token.",
+                    f"No se pudo conectar {page['name']}: la plataforma no entregó un token de la cuenta.",
                 )
                 continue
 
@@ -512,7 +517,7 @@ def select_account(request):
 
     if connected:
         names = ", ".join(connected)
-        messages.success(request, f"Connected: {names}")
+        messages.success(request, f"Conectadas: {names}")
 
     return redirect("calendar:calendar", workspace_id=workspace_id)
 
@@ -537,7 +542,7 @@ def connect_bluesky(request, workspace_id):
     app_password = request.POST.get("app_password", "").strip()
 
     if not handle or not app_password:
-        messages.error(request, "Handle and app password are required.")
+        messages.error(request, "El handle y la contraseña de aplicación son obligatorios.")
         return render(
             request,
             "social_accounts/bluesky_connect.html",
@@ -558,13 +563,13 @@ def connect_bluesky(request, workspace_id):
             expires_in=tokens.expires_in,
             instance_url=provider.pds_url,
         )
-        messages.success(request, f"Connected {profile.name} on Bluesky.")
+        messages.success(request, f"{profile.name} se conectó en Bluesky.")
 
     except Exception:
         logger.exception("Bluesky connection failed")
         messages.error(
             request,
-            "Failed to connect Bluesky account. Check your handle and app password.",
+            "No se pudo conectar la cuenta de Bluesky. Revisa tu handle y tu contraseña de aplicación.",
         )
         return render(
             request,
@@ -593,7 +598,7 @@ def connect_devto(request, workspace_id):
 
     api_key = request.POST.get("api_key", "").strip()
     if not api_key:
-        messages.error(request, "A DEV.to API key is required.")
+        messages.error(request, "Se requiere una clave de API de DEV.to.")
         return render(
             request,
             "social_accounts/devto_connect.html",
@@ -609,10 +614,10 @@ def connect_devto(request, workspace_id):
             profile=profile,
             access_token=api_key,
         )
-        messages.success(request, f"Connected {profile.name} on DEV.to.")
+        messages.success(request, f"{profile.name} se conectó en DEV.to.")
     except Exception:
         logger.exception("DEV.to connection failed")
-        messages.error(request, "Failed to connect DEV.to account. Check your API key.")
+        messages.error(request, "No se pudo conectar la cuenta de DEV.to. Revisa tu clave de API.")
         return render(request, "social_accounts/devto_connect.html", {"workspace_id": workspace_id})
 
     return redirect("calendar:calendar", workspace_id=workspace_id)
@@ -637,7 +642,7 @@ def connect_mastodon(request, workspace_id):
 
     instance_url = _normalize_mastodon_instance_url(request.POST.get("instance_url", ""))
     if not instance_url:
-        messages.error(request, "Instance URL is required.")
+        messages.error(request, "La URL de la instancia es obligatoria.")
         return render(
             request,
             "social_accounts/mastodon_connect.html",
@@ -646,7 +651,9 @@ def connect_mastodon(request, workspace_id):
 
     # Validate against SSRF - reject private/reserved IP ranges
     if not _is_safe_url(instance_url):
-        messages.error(request, "Invalid instance URL. Private or reserved addresses are not allowed.")
+        messages.error(
+            request, "La URL de la instancia no es válida. No se permiten direcciones privadas ni reservadas."
+        )
         return render(
             request,
             "social_accounts/mastodon_connect.html",
@@ -679,7 +686,7 @@ def connect_mastodon(request, workspace_id):
             logger.exception("Mastodon app registration failed for %s", instance_url)
             messages.error(
                 request,
-                f"Failed to register with {instance_url}. Check the URL.",
+                f"No se pudo registrar con {instance_url}. Revisa la URL.",
             )
             return render(
                 request,
@@ -825,7 +832,7 @@ def disconnect(request, workspace_id, account_id):
     account_name = account.account_name or account.account_handle
     messages.success(
         request,
-        f"Archived {account_name}. Its posts, comments and metrics are kept — reconnect anytime.",
+        f"{account_name} se archivó. Se conservan sus publicaciones, comentarios y métricas; puedes reconectarla cuando quieras.",
     )
 
     # HTMX partial response
@@ -864,7 +871,7 @@ def delete_account(request, workspace_id, account_id):
                 "account_name": account_name,
                 "impact": impact,
                 "workspace_id": workspace_id,
-                "error": "The name didn't match, so nothing was deleted.",
+                "error": "El nombre no coincide, así que no se eliminó nada.",
             },
             status=422,
         )
@@ -884,7 +891,7 @@ def delete_account(request, workspace_id, account_id):
 
     messages.success(
         request,
-        f"Deleted {account_name} along with {impact['posts']} post(s) and {impact['messages']} message(s).",
+        f"Se eliminó {account_name} junto con {impact['posts']} publicación(es) y {impact['messages']} mensaje(s).",
     )
     if request.headers.get("HX-Request"):
         return render(request, "social_accounts/partials/_empty.html")

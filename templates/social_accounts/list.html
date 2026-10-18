@@ -1,13 +1,13 @@
 {% extends "layouts/workspace_settings.html" %}
 {% load common_extras %}
-{% block page_title %}Social Accounts{% endblock %}
+{% block page_title %}Cuentas sociales{% endblock %}
 {% block content %}
 <div class="max-w-4xl">
     <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8">
         <div>
-            <h2 class="text-xl font-semibold text-app">Social Accounts</h2>
-            <p class="text-sm text-app-tertiary mt-1">Manage connected social media accounts for this workspace.</p>
+            <h2 class="text-xl font-semibold text-app">Cuentas sociales</h2>
+            <p class="text-sm text-app-tertiary mt-1">Administra las cuentas de redes sociales conectadas a este espacio de trabajo.</p>
         </div>
         {% comment %} Shown but inert without the permission, so a lower role can see the
            channels exist and who to ask, instead of a silently missing button. {% endcomment %}
@@ -15,13 +15,13 @@
         <a href="{% url 'social_accounts:connect' workspace_id=workspace_id %}"
            class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
             {% icon "plus" css_class="w-4 h-4" %}
-            Connect Account
+            Conectar cuenta
         </a>
         {% else %}
         <span class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full opacity-60 cursor-not-allowed text-app-tertiary bg-app-1 border border-app"
-              title="Your role can't connect channels. Ask a workspace owner or manager.">
+              title="Tu rol no puede conectar canales. Pídeselo al propietario o a un gerente del espacio de trabajo.">
             {% icon "plus" css_class="w-4 h-4" %}
-            Connect Account
+            Conectar cuenta
         </span>
         {% endif %}
     </div>
@@ -37,8 +37,8 @@
     <!-- Summary footer -->
     <div class="mt-6 pt-4 border-t border-app">
         <p class="text-xs text-app-ghost">
-            {{ accounts|length }} account{{ accounts|length|pluralize }} connected.
-            Health checks run automatically every 6 hours.
+            {{ accounts|length }} cuenta{{ accounts|length|pluralize }} conectada{{ accounts|length|pluralize }}.
+            Revisamos su estado automáticamente cada 6 horas.
         </p>
     </div>
 
@@ -48,12 +48,12 @@
         <div class="mx-auto w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mb-5">
             {% icon "link" css_class="w-8 h-8 text-orange-400" %}
         </div>
-        <h3 class="text-base font-semibold text-app mb-2">No accounts connected yet</h3>
-        <p class="text-sm text-app-tertiary max-w-sm mx-auto mb-6">Connect your social media accounts to start publishing content, tracking engagement, and managing your inbox.</p>
+        <h3 class="text-base font-semibold text-app mb-2">Aún no hay cuentas conectadas</h3>
+        <p class="text-sm text-app-tertiary max-w-sm mx-auto mb-6">Conecta tus redes sociales para publicar contenido, medir la interacción y administrar tu bandeja.</p>
         <a href="{% url 'social_accounts:connect' workspace_id=workspace_id %}"
            class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
             {% icon "plus" css_class="w-4 h-4" %}
-            Connect Your First Account
+            Conecta tu primera cuenta
         </a>
     </div>
     {% endif %}

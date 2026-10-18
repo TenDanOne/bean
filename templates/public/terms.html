@@ -1,51 +1,48 @@
 {% extends "public/base.html" %}
 
-{% block title %}Terms of Service | BEAN{% endblock %}
+{% block title %}T&eacute;rminos / Terms of Service | BEAN{% endblock %}
 
 {% block content %}
 <article class="public-prose">
-    <div class="public-kicker">BEAN</div>
+    <div class="public-kicker">BEAN by ITHOS</div>
+    <p><a class="public-link" href="#es">Espa&ntilde;ol</a> &middot; <a class="public-link" href="#en">English</a></p>
+
+    <section id="es">
+    <h1>T&eacute;rminos de uso</h1>
+    <p><strong>&Uacute;ltima actualizaci&oacute;n: octubre 2026</strong></p>
+    <h2>Servicio</h2>
+    <p>BEAN es una herramienta de ITHOS para gestionar y publicar contenido en sus propias cuentas de redes sociales. El acceso es solo por invitaci&oacute;n a usuarios autorizados; no se ofrece al p&uacute;blico ni se vende.</p>
+    <h2>Uso aceptable</h2>
+    <ul>
+        <li>Conecta &uacute;nicamente cuentas que administras o para las que tienes autorizaci&oacute;n.</li>
+        <li>No publiques contenido ilegal, enga&ntilde;oso o que infrinja derechos de terceros.</li>
+        <li>Cumple los t&eacute;rminos y pol&iacute;ticas de cada plataforma (YouTube, Meta, TikTok).</li>
+    </ul>
+    <h2>Contenido y cuentas</h2>
+    <p>Eres responsable del contenido que publicas y de las cuentas que conectas. Puedes desconectarlas en cualquier momento; ver <a class="public-link" href="{% url 'public_data_deletion' %}#es">borrado de datos</a>.</p>
+    <h2>Disponibilidad y responsabilidad</h2>
+    <p>El servicio se ofrece &laquo;tal cual&raquo;, sin garant&iacute;a de disponibilidad continua; las publicaciones programadas salen cuando se procesa la cola. Podemos suspender el acceso ante uso indebido.</p>
+    <h2>Privacidad y c&oacute;digo</h2>
+    <p>Consulta la <a class="public-link" href="{% url 'public_privacy' %}#es">pol&iacute;tica de privacidad</a>. BEAN est&aacute; basado en BrightBean Studio (AGPL-3.0). Contacto: <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+    </section>
+
+    <section id="en" lang="en" style="margin-top: 48px;">
     <h1>Terms of Service</h1>
-    <p><strong>Last updated: August 2026</strong></p>
-
-    <h2>Internal use</h2>
-    <p>
-        BEAN is an internal application operated by our company in Mexico. Access is limited to users who are
-        authorized by the company. These terms govern the use of the BEAN application and its connected social
-        media workflows.
-    </p>
-
-    <h2>Authorized accounts</h2>
-    <p>
-        You may connect a social media account only when you are authorized to manage it. You are responsible for maintaining
-        the security of your BEAN credentials and for the content and actions performed through accounts you connect.
-    </p>
-
+    <p><strong>Last updated: October 2026</strong></p>
+    <h2>Service</h2>
+    <p>BEAN is an ITHOS tool to manage and publish content on its own social media accounts. Access is invitation-only for authorized users; it is not offered to the public or sold.</p>
     <h2>Acceptable use</h2>
     <ul>
-        <li>Use BEAN only for legitimate company work and approved social media activity.</li>
-        <li>Follow the terms, policies, and technical requirements of each connected social platform.</li>
-        <li>Do not attempt to bypass access controls, misuse tokens, or connect accounts without permission.</li>
-        <li>Do not upload content that violates applicable law or the rules of the connected platform.</li>
+        <li>Connect only accounts you manage or are authorized to use.</li>
+        <li>Do not publish illegal or misleading content, or content that infringes third-party rights.</li>
+        <li>Comply with each platform's terms and policies (YouTube, Meta, TikTok).</li>
     </ul>
-
-    <h2>Connected platforms</h2>
-    <p>
-        BEAN does not control the availability, policies, moderation decisions, or API limits of third-party platforms.
-        A platform may revoke access or change its API without notice. Disconnecting an account stops BEAN's authorized
-        access, subject to any platform-side token behavior.
-    </p>
-
-    <h2>Availability</h2>
-    <p>
-        BEAN is provided for internal operational use. We may change, suspend, or discontinue features when needed for
-        security, maintenance, compliance, or company operations.
-    </p>
-
-    <h2>Contact</h2>
-    <p>
-        Questions about these terms should be sent to
-        <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
-    </p>
+    <h2>Content and accounts</h2>
+    <p>You are responsible for the content you publish and the accounts you connect. You can disconnect them at any time; see <a class="public-link" href="{% url 'public_data_deletion' %}#en">data deletion</a>.</p>
+    <h2>Availability and liability</h2>
+    <p>The service is provided &ldquo;as is&rdquo; with no guarantee of continuous availability; scheduled posts go out when the queue is processed. We may suspend access in case of misuse.</p>
+    <h2>Privacy and source code</h2>
+    <p>See the <a class="public-link" href="{% url 'public_privacy' %}#en">privacy policy</a>. BEAN is based on BrightBean Studio (AGPL-3.0). Contact: <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+    </section>
 </article>
 {% endblock %}

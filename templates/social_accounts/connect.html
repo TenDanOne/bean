@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block page_title %}Connect Social Account{% endblock %}
+{% block page_title %}Conectar cuenta social{% endblock %}
 {% block content %}
 {% comment %}
 max-w-7xl, not the 4xl this used to be. The grid was never the reason this page
@@ -11,10 +11,10 @@ showed three columns — 896px simply cannot hold four cards wide enough for
     <div class="mb-8">
         <a href="{% url 'social_accounts:list' workspace_id=workspace_id %}" class="inline-flex items-center gap-1.5 text-sm text-app-tertiary hover:text-app-body transition-colors mb-4">
             {% icon "chevron-left" css_class="w-4 h-4" %}
-            Back to Social Accounts
+            Volver a cuentas sociales
         </a>
-        <h2 class="text-xl font-semibold text-app">Connect a Platform</h2>
-        <p class="text-sm text-app-tertiary mt-1">Select a platform to connect your social media account.</p>
+        <h2 class="text-xl font-semibold text-app">Conectar una plataforma</h2>
+        <p class="text-sm text-app-tertiary mt-1">Elige una plataforma para conectar tu cuenta de redes sociales.</p>
     </div>
 
     <!-- Platform grid -->
@@ -59,19 +59,19 @@ showed three columns — 896px simply cannot hold four cards wide enough for
                 <div class="flex-1 min-w-0">
                     <h3 class="text-sm font-semibold text-app">{{ label }}</h3>
                     <p class="text-xs text-app-ghost mt-0.5">
-                        {% if value == 'facebook' %}Your Pages &amp; Groups
-                        {% elif value == 'instagram' %}For accounts linked to a Facebook Page
-                        {% elif value == 'instagram_login' %}Sign in with Instagram &middot; no Facebook needed
-                        {% elif value == 'linkedin_personal' %}Personal profile
-                        {% elif value == 'linkedin_company' %}Company pages
-                        {% elif value == 'tiktok' %}Business or Creator account
-                        {% elif value == 'youtube' %}Videos &amp; Shorts
-                        {% elif value == 'pinterest' %}Pins &amp; Boards
-                        {% elif value == 'threads' %}Text &amp; Media
+                        {% if value == 'facebook' %}Tus páginas y grupos
+                        {% elif value == 'instagram' %}Para cuentas vinculadas a una página de Facebook
+                        {% elif value == 'instagram_login' %}Inicia sesión con Instagram &middot; sin necesitar Facebook
+                        {% elif value == 'linkedin_personal' %}Perfil personal
+                        {% elif value == 'linkedin_company' %}Páginas de empresa
+                        {% elif value == 'tiktok' %}Cuenta Business o Creator
+                        {% elif value == 'youtube' %}Videos y Shorts
+                        {% elif value == 'pinterest' %}Pines y tableros
+                        {% elif value == 'threads' %}Texto y medios
                         {% elif value == 'bluesky' %}AT Protocol
-                        {% elif value == 'google_business' %}Local posts
-                        {% elif value == 'mastodon' %}Federated social
-                        {% elif value == 'devto' %}Articles &amp; posts
+                        {% elif value == 'google_business' %}Publicaciones locales
+                        {% elif value == 'mastodon' %}Red social federada
+                        {% elif value == 'devto' %}Artículos y publicaciones
                         {% endif %}
                     </p>
                 </div>
@@ -82,20 +82,20 @@ showed three columns — 896px simply cannot hold four cards wide enough for
                 {% csrf_token %}
                 <input type="hidden" name="platform" value="{{ value }}">
                 <button type="submit" class="bbs-btn bbs-btn-primary w-full text-xs py-1.5">
-                    Connect
+                    Conectar
                     {% icon "arrow-right" css_class="w-3.5 h-3.5" %}
                 </button>
             </form>
             {% else %}
             <div class="mt-4">
                 <span class="bbs-btn bbs-btn-ghost bbs-denied w-full text-xs py-1.5" aria-disabled="true">
-                    Add TikTok Business credentials
+                    Faltan credenciales de la plataforma
                 </span>
             </div>
             {% endif %}
 
             {% if value not in configured_platforms %}
-            <div class="absolute inset-0 rounded-xl cursor-not-allowed" title="Platform credentials not configured. Contact your administrator."></div>
+            <div class="absolute inset-0 rounded-xl cursor-not-allowed" title="Credenciales de la plataforma sin configurar. Consulta a tu administrador."></div>
             {% endif %}
         </div>
         {% endfor %}

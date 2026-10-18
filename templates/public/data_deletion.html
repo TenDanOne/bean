@@ -1,0 +1,34 @@
+{% extends "public/base.html" %}
+
+{% block title %}Borrado de datos / Data deletion | BEAN{% endblock %}
+
+{% block content %}
+<article class="public-prose">
+    <div class="public-kicker">BEAN by ITHOS</div>
+    <p><a class="public-link" href="#es">Espa&ntilde;ol</a> &middot; <a class="public-link" href="#en">English</a></p>
+
+    <section id="es">
+    <h1>Borrado de datos</h1>
+    <p>Puedes revocar el acceso de BEAN y pedir que borremos tus datos as&iacute;:</p>
+    <ol>
+        <li><strong>En BEAN:</strong> desconecta la cuenta desde Cuentas sociales; sus tokens se eliminan.</li>
+        <li><strong>Facebook / Instagram:</strong> Facebook &gt; Configuraci&oacute;n &gt; Apps y sitios web &gt; quita BEAN. Meta nos notifica y procesamos la solicitud autom&aacute;ticamente.</li>
+        <li><strong>TikTok:</strong> TikTok &gt; Configuraci&oacute;n &gt; Gestionar apps (Seguridad y permisos) &gt; quita BEAN.</li>
+        <li><strong>YouTube / Google:</strong> Cuenta de Google &gt; Seguridad &gt; Conexiones con apps y servicios de terceros &gt; quita BEAN.</li>
+        <li><strong>Borrado completo del historial:</strong> escr&iacute;benos a <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a> indicando la cuenta conectada.</li>
+    </ol>
+    </section>
+
+    <section id="en" lang="en" style="margin-top: 48px;">
+    <h1>Data deletion</h1>
+    <p>You can revoke BEAN's access and ask us to delete your data as follows:</p>
+    <ol>
+        <li><strong>In BEAN:</strong> disconnect the account from Social accounts; its tokens are deleted.</li>
+        <li><strong>Facebook / Instagram:</strong> Facebook &gt; Settings &gt; Apps and Websites &gt; remove BEAN. Meta notifies us and the request is processed automatically.</li>
+        <li><strong>TikTok:</strong> TikTok &gt; Settings &gt; Manage apps (Security and permissions) &gt; remove BEAN.</li>
+        <li><strong>YouTube / Google:</strong> Google Account &gt; Security &gt; Third-party apps &amp; services &gt; remove BEAN.</li>
+        <li><strong>Full history deletion:</strong> email <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a> naming the connected account.</li>
+    </ol>
+    </section>
+</article>
+{% endblock %}

@@ -1,10 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
+    {% block robots %}{% endblock %}
     <title>{% block title %}BEAN{% endblock %}</title>
     <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
     <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
@@ -80,13 +80,14 @@
 <body class="public-shell">
     <div class="public-wrap">
         <header class="public-header">
-            <a class="public-brand" href="{% url 'public_review' %}">
+            <a class="public-brand" href="{% url 'dashboard' %}">
                 <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS">
             </a>
             <nav class="public-nav" aria-label="Public navigation">
-                <a href="{% url 'public_privacy' %}">Privacy</a>
-                <a href="{% url 'public_terms' %}">Terms</a>
-                <a href="{% url 'public_support' %}">Support</a>
+                <a href="{% url 'public_privacy' %}">Privacidad / Privacy</a>
+                <a href="{% url 'public_terms' %}">T&eacute;rminos / Terms</a>
+                <a href="{% url 'public_data_deletion' %}">Borrado de datos / Data deletion</a>
+                <a href="{% url 'public_support' %}">Soporte / Support</a>
             </nav>
         </header>
 
@@ -95,10 +96,11 @@
         </main>
 
         <footer class="public-footer">
-            <div>BEAN · Internal company social media workspace · Mexico<br>BEAN by ITHOS &middot; basado en BrightBean Studio (AGPL-3.0) &middot; <a class="public-link" href="https://github.com/TenDanOne/bean" rel="noopener">C&oacute;digo fuente</a></div>
+            <div>BEAN &middot; Gesti&oacute;n de redes sociales de ITHOS &middot; M&eacute;xico<br>BEAN by ITHOS &middot; basado en BrightBean Studio (AGPL-3.0) &middot; <a class="public-link" href="https://github.com/TenDanOne/bean" rel="noopener">C&oacute;digo fuente</a></div>
             <nav aria-label="Legal navigation">
-                <a class="public-link" href="{% url 'public_privacy' %}">Privacy Policy</a>
-                <a class="public-link" href="{% url 'public_terms' %}">Terms of Service</a>
+                <a class="public-link" href="{% url 'public_privacy' %}">Privacidad / Privacy Policy</a>
+                <a class="public-link" href="{% url 'public_terms' %}">T&eacute;rminos / Terms of Service</a>
+                <a class="public-link" href="{% url 'public_data_deletion' %}">Borrado de datos / Data deletion</a>
                 <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
             </nav>
         </footer>

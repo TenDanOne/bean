@@ -1,6 +1,6 @@
 {% load static common_extras %}
 <!DOCTYPE html>
-<html lang="en" style="{% block html_style %}{% endblock %}">
+<html lang="es" style="{% block html_style %}{% endblock %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -232,7 +232,7 @@
              style="background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B;">
             {% icon "circle-exclamation" css_class="w-5 h-5 flex-shrink-0 mt-0.5" %}
             <p class="text-sm flex-1" x-text="message"></p>
-            <button type="button" @click="show = false" class="flex-shrink-0 cursor-pointer" style="color: #DC2626;" aria-label="Dismiss">
+            <button type="button" @click="show = false" class="flex-shrink-0 cursor-pointer" style="color: #DC2626;" aria-label="Cerrar aviso">
                 {% icon "xmark" css_class="w-4 h-4" %}
             </button>
         </div>
@@ -245,7 +245,7 @@
             // Extract plain text from the response without executing or loading it.
             var responseText = (event.detail.xhr && event.detail.xhr.responseText) || '';
             var body = new DOMParser().parseFromString(responseText, 'text/html').body;
-            var message = (body.textContent || '').trim() || 'Something went wrong. Please try again.';
+            var message = (body.textContent || '').trim() || 'Algo salió mal. Inténtalo de nuevo.';
             // Inline opt-in: write into the form's declared container instead of the toast.
             var inline = elt && elt.closest('[data-inline-error]');
             if (inline) {
@@ -338,7 +338,7 @@
                         {% endif %}
                     </a>
                     {% empty %}
-                    <p class="px-3 py-2 text-sm text-app-ghost">No workspaces</p>
+                    <p class="px-3 py-2 text-sm text-app-ghost">Sin espacios de trabajo</p>
                     {% endfor %}
                     {% if can_create_workspace %}
                     <div class="border-t border-app-subtle mt-1 pt-1">
@@ -347,7 +347,7 @@
                             <div class="w-7 h-7 rounded-md flex items-center justify-center border border-dashed border-app-hover flex-shrink-0">
                                 {% icon "plus" css_class="w-3.5 h-3.5 text-app-ghost" %}
                             </div>
-                            <span>Create workspace</span>
+                            <span>Crear espacio de trabajo</span>
                         </button>
                     </div>
                     {% endif %}
@@ -358,7 +358,7 @@
                             <div class="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0">
                                 {% icon "gear" css_class="w-4 h-4 text-app-ghost" %}
                             </div>
-                            <span>Workspace settings</span>
+                            <span>Ajustes del espacio de trabajo</span>
                         </a>
                     </div>
                     {% endif %}
@@ -375,7 +375,7 @@
                             class="btn-brand w-full flex items-center justify-center gap-1.5 text-sm py-2 cursor-pointer"
                             :style="sidebarCollapsed ? 'padding-left:1.15rem;padding-right:1.15rem' : ''">
                         {% icon "plus" css_class="w-4 h-4 flex-shrink-0" %}
-                        <span class="sidebar-new-label" x-show="!sidebarCollapsed">New</span>
+                        <span class="sidebar-new-label" x-show="!sidebarCollapsed">Nuevo</span>
                     </button>
 
                     <!-- Dropdown -->
@@ -393,8 +393,8 @@
                                 {% icon "file-lines" css_class="w-5 h-5 text-blue-500" %}
                             </div>
                             <div>
-                                <div class="text-sm font-semibold text-app-strong">Post</div>
-                                <div class="text-xs text-app-tertiary">Publish content to a channel</div>
+                                <div class="text-sm font-semibold text-app-strong">Publicación</div>
+                                <div class="text-xs text-app-tertiary">Publica contenido en un canal</div>
                             </div>
                         </a>
                         <button type="button" @click="openCreateModal()"
@@ -404,7 +404,7 @@
                             </div>
                             <div class="text-left">
                                 <div class="text-sm font-semibold text-app-strong">Idea</div>
-                                <div class="text-xs text-app-tertiary">Capture a content idea</div>
+                                <div class="text-xs text-app-tertiary">Guarda una idea de contenido</div>
                             </div>
                         </button>
                     </div>
@@ -417,7 +417,7 @@
                          @click.self="closeCreateModal()"
                          @keydown.escape.window="closeCreateModal()">
                         <div class="idea-modal" @click.stop>
-                            <button type="button" class="idea-modal-close" @click="closeCreateModal()" title="Close">
+                            <button type="button" class="idea-modal-close" @click="closeCreateModal()" title="Cerrar" aria-label="Cerrar">
                                 {% icon "xmark" css_class="w-[16px] h-[16px]" %}
                             </button>
                             <form action="{% url 'composer:idea_create' workspace_id=request.workspace.id %}"
@@ -432,7 +432,7 @@
 
                                 <!-- Header -->
                                 <div class="idea-modal-header">
-                                    <h2 class="text-lg font-semibold" style="color: var(--text-primary);">Create Idea</h2>
+                                    <h2 class="text-lg font-semibold" style="color: var(--text-primary);">Crear idea</h2>
                                     <div class="flex items-center gap-2">
                                         <!-- Column selector dropdown -->
                                         <div class="relative" @click.away="createGroupDropdownOpen = false">
@@ -457,7 +457,7 @@
                                         <div class="relative" @click.away="createTagDropdownOpen = false">
                                             <button type="button" class="idea-pill-btn" @click="createTagDropdownOpen = !createTagDropdownOpen; createGroupDropdownOpen = false; if(createTagDropdownOpen) $nextTick(() => $refs.sidebarCreateTagSearchInput.focus())">
                                                 {% icon "tag" css_class="w-[14px] h-[14px]" %}
-                                                <span>Tags</span>
+                                                <span>Etiquetas</span>
                                                 <span x-show="createSelectedTags.length" class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold text-app-on-primary" style="background: var(--primary);" x-text="createSelectedTags.length"></span>
                                                 {% icon "chevron-down" css_class="w-[12px] h-[12px]" %}
                                             </button>
@@ -467,7 +467,7 @@
                                                            @keydown.enter.prevent="if (createTagSearch.trim() && !filteredCreateTags.includes(createTagSearch.trim())) { persistAndToggleCreateTag(createTagSearch.trim()); } else if (filteredCreateTags.length === 1) { toggleCreateTag(filteredCreateTags[0]); createTagSearch = ''; }"
                                                            class="w-full text-xs px-2 py-1.5 rounded outline-none"
                                                            style="border-color: var(--border);"
-                                                           placeholder="Search or create tag...">
+                                                           placeholder="Buscar o crear etiqueta...">
                                                 </div>
                                                 <template x-for="tag in filteredCreateTags" :key="tag">
                                                     <label>
@@ -478,14 +478,14 @@
                                                     </label>
                                                 </template>
                                                 <template x-if="!createTagSearch.trim() && !allTags.length">
-                                                    <div class="px-3 py-2 text-xs" style="color: var(--text-tertiary);">No tags yet. Type to create one.</div>
+                                                    <div class="px-3 py-2 text-xs" style="color: var(--text-tertiary);">Aún no hay etiquetas. Escribe para crear una.</div>
                                                 </template>
                                                 <template x-if="createTagSearch.trim() && !filteredCreateTags.includes(createTagSearch.trim())">
                                                     <div class="border-t" style="border-color: var(--border); margin-top: 2px; padding-top: 2px;">
                                                         <button type="button" @click="persistAndToggleCreateTag(createTagSearch.trim())"
                                                                 style="color: var(--primary);">
                                                             {% icon "plus" css_class="w-[12px] h-[12px]" %}
-                                                            Create "<span x-text="createTagSearch.trim()"></span>"
+                                                            Crear "<span x-text="createTagSearch.trim()"></span>"
                                                         </button>
                                                     </div>
                                                 </template>
@@ -493,7 +493,7 @@
                                                     <button type="button" @click="createTagDropdownOpen = false; showCreateTagModal = true; newTagName = createTagSearch; createTagSearch = ''; $nextTick(() => $refs.sidebarNewTagNameInput.focus())"
                                                             class="flex items-center gap-2 w-full px-2.5 py-1.5 text-sm text-app-secondary hover:bg-app-1 rounded-md cursor-pointer transition-colors">
                                                         {% icon "plus" css_class="w-3.5 h-3.5 text-orange-500" %}
-                                                        Create new tag
+                                                        Crear etiqueta nueva
                                                     </button>
                                                 </div>
                                             </div>
@@ -517,8 +517,8 @@
 
                                 <!-- Body -->
                                 <div class="idea-modal-body" @click="createGroupDropdownOpen = false; createTagDropdownOpen = false">
-                                    <input type="text" name="title" required class="idea-title-input" placeholder="Give your idea a title">
-                                    <textarea name="description" class="idea-desc-input" placeholder="Let it flow... or"></textarea>
+                                    <input type="text" name="title" required class="idea-title-input" placeholder="Ponle un título a tu idea">
+                                    <textarea name="description" class="idea-desc-input" placeholder="Deja fluir tus ideas... o"></textarea>
                                     <input type="file" name="media" x-ref="sidebarIdeaFileInput" accept="image/*,video/*,.gif" style="display:none" multiple
                                            @change="_handleFileSelect($event)">
 
@@ -529,9 +529,9 @@
                                                     <video :src="media.url" muted playsinline preload="metadata"></video>
                                                 </template>
                                                 <template x-if="media.media_type !== 'video'">
-                                                    <img :src="media.url" alt="Preview">
+                                                    <img :src="media.url" alt="Vista previa">
                                                 </template>
-                                                <button type="button" class="remove-btn" @click="_removeCreateMedia(index)" title="Remove">
+                                                <button type="button" class="remove-btn" @click="_removeCreateMedia(index)" title="Quitar" aria-label="Quitar">
                                                     {% icon "xmark" css_class="w-[18px] h-[18px]" %}
                                                 </button>
                                             </div>
@@ -543,9 +543,9 @@
                                              @dragleave.prevent="_mediaDragOver = false"
                                              @drop.prevent="_mediaDragOver = false; _handleMediaDrop($event)">
                                             {% icon "image" css_class="w-[24px] h-[24px]" %}
-                                            <span x-show="!createMediaAssets.length">Drag &amp; drop</span>
-                                            <span x-show="createMediaAssets.length">Add another file</span>
-                                            <span>or <strong style="color: var(--primary); cursor: pointer;">select a file</strong></span>
+                                            <span x-show="!createMediaAssets.length">Arrastra y suelta</span>
+                                            <span x-show="createMediaAssets.length">Agrega otro archivo</span>
+                                            <span>o <strong style="color: var(--primary); cursor: pointer;">selecciona un archivo</strong></span>
                                         </div>
                                     </div>
                                 </div>
@@ -564,7 +564,7 @@
                                                  x-transition:enter-end="opacity-100 scale-100"
                                                  class="emoji-picker-popup">
                                                 <div class="emoji-picker-search">
-                                                    <input type="text" placeholder="Search emoji..." x-model="_emojiSearch"
+                                                    <input type="text" placeholder="Buscar emoji..." x-model="_emojiSearch"
                                                            class="w-full px-2 py-1.5 text-xs rounded outline-none"
                                                            style="border-color: var(--border);"
                                                            @click.stop>
@@ -586,14 +586,14 @@
                                     <button type="button" @click="closeCreateModal()"
                                             class="btn-neutral px-5 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer"
                                             style="background: var(--neutral-100); color: var(--text-primary);">
-                                        Cancel
+                                        Cancelar
                                     </button>
                                     <button type="submit"
                                             :disabled="createMediaUploadCount > 0 || isCreateSaving"
                                             :class="(createMediaUploadCount > 0 || isCreateSaving) && 'opacity-50 cursor-not-allowed'"
                                             class="btn-neutral px-5 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer"
                                             style="background: var(--neutral-100); color: var(--text-primary);">
-                                        Save Idea
+                                        Guardar idea
                                     </button>
                                 </div>
                             </form>
@@ -602,22 +602,22 @@
                     <div x-show="showCreateTagModal" x-cloak class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeCreateTagModal()">
                         <div class="fixed inset-0 bg-black/30" @click="closeCreateTagModal()"></div>
                         <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
-                            <h3 class="text-base font-semibold text-app-strong mb-4">Create new tag</h3>
+                            <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>
                             <input type="text" x-ref="sidebarNewTagNameInput" x-model="newTagName"
                                    @keydown.enter.prevent="createTagFromModal()"
                                    class="w-full text-sm px-3 py-2.5 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-                                   placeholder="Tag name...">
+                                   placeholder="Nombre de la etiqueta...">
                             <div class="flex justify-end gap-2 mt-4">
                                 <button type="button" @click="closeCreateTagModal()"
                                         class="px-4 py-2 text-sm font-medium text-app-secondary hover:bg-app-2 rounded-lg cursor-pointer transition-colors">
-                                    Cancel
+                                    Cancelar
                                 </button>
                                 <button type="button"
                                         @click="createTagFromModal()"
                                         class="px-4 py-2 text-sm font-semibold text-app-inverse rounded-lg transition-colors"
                                         style="background: var(--primary);"
                                         :class="newTagName.trim() ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'">
-                                    Create
+                                    Crear
                                 </button>
                             </div>
                         </div>
@@ -632,29 +632,29 @@
                 {% if request.workspace %}
                 <a href="{% url 'calendar:calendar' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}">
                     {% icon "calendar-days" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-                    <span class="sidebar-nav-label">Publish</span>
+                    <span class="sidebar-nav-label">Publicar</span>
                 </a>
                 <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'create_landing' or request.resolver_match.url_name == 'compose' %}active{% endif %}">
                     {% icon "lightbulb" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-                    <span class="sidebar-nav-label">Create Idea</span>
+                    <span class="sidebar-nav-label">Crear idea</span>
                 </a>                
                 <a href="{% url 'inbox:feed' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'inbox' %}active{% endif %}">
                     {% icon "comments" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-                    <span class="sidebar-nav-label">Social Inbox</span>
+                    <span class="sidebar-nav-label">Bandeja social</span>
                     {% if sidebar_unread_inbox_count %}<span class="sidebar-badge">{{ sidebar_unread_inbox_count }}</span>{% endif %}
                 </a>
                 {% endif %}
 
                 <a href="{% url 'notifications:list' %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'notifications' %}active{% endif %}">
                     {% icon "bell" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-                    <span class="sidebar-nav-label">Notifications</span>
+                    <span class="sidebar-nav-label">Notificaciones</span>
                 </a>
 
                 {% if request.workspace %}
                 {% if analytics_enabled_platforms %}
                 <a href="{% url 'analytics:index' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'analytics' %}active{% endif %}">
                     {% icon "chart-line" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-                    <span class="sidebar-nav-label">Analytics</span>
+                    <span class="sidebar-nav-label">Analíticas</span>
                 </a>
                 {% endif %}
                 {% endif %}
@@ -663,7 +663,7 @@
                 {% if sidebar_channels or sidebar_unhealthy_channels %}
                 <!-- Channels -->
                 <div class="group flex items-center justify-between mt-3.5 sidebar-section-label-wrap">
-                    <div class="sidebar-section-label" style="padding-top:0">Channels</div>
+                    <div class="sidebar-section-label" style="padding-top:0">Canales</div>
                     {% comment %}
                     Only for whoever may connect one. This "+" pointed everybody
                     at a page that requires `manage_social_accounts`, so for an
@@ -672,8 +672,8 @@
                     {% if request|can:"manage_social_accounts" %}
                     <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}"
                        class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-app-ghost hover:text-app-secondary transition-all mr-2 sidebar-nav-label"
-                       title="Connect a channel">
-                        {% icon "plus" css_class="w-3.5 h-3.5" label="Connect a channel" %}
+                       title="Conectar un canal">
+                        {% icon "plus" css_class="w-3.5 h-3.5" label="Conectar un canal" %}
                     </a>
                     {% endif %}
                 </div>
@@ -686,11 +686,11 @@
                 {% endcomment %}
                 {% for channel in sidebar_channels %}
                 {% if request|can:"manage_social_accounts" %}
-                <a href="{% url 'social_accounts:list' workspace_id=request.workspace.id %}" class="sidebar-nav-item" title="{{ channel.queued_post_count|default:0 }} upcoming post{{ channel.queued_post_count|default:0|pluralize }} in the queue for {{ channel.account_name|default:channel.account_handle }}">
+                <a href="{% url 'social_accounts:list' workspace_id=request.workspace.id %}" class="sidebar-nav-item" title="{{ channel.queued_post_count|default:0 }} publicaci{{ channel.queued_post_count|default:0|pluralize:"ón próxima,ones próximas" }} en la cola de {{ channel.account_name|default:channel.account_handle }}">
                     {% include "partials/_sidebar_channel_body.html" with channel=channel %}
                 </a>
                 {% else %}
-                <div class="sidebar-nav-item" title="{{ channel.queued_post_count|default:0 }} upcoming post{{ channel.queued_post_count|default:0|pluralize }} in the queue for {{ channel.account_name|default:channel.account_handle }}">
+                <div class="sidebar-nav-item" title="{{ channel.queued_post_count|default:0 }} publicaci{{ channel.queued_post_count|default:0|pluralize:"ón próxima,ones próximas" }} en la cola de {{ channel.account_name|default:channel.account_handle }}">
                     {% include "partials/_sidebar_channel_body.html" with channel=channel %}
                 </div>
                 {% endif %}
@@ -713,8 +713,8 @@
                     <span class="sidebar-nav-label truncate flex-1 text-app-ghost opacity-60">{{ channel.account_name|default:channel.account_handle }}</span>
                     <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=request.workspace.id account_id=channel.id %}" class="sidebar-nav-label">
                         {% csrf_token %}
-                        <button type="submit" class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold text-orange-700 bg-orange-50 rounded-full hover:bg-orange-100 transition-colors cursor-pointer" title="Reconnect {{ channel.account_name|default:channel.account_handle }}">
-                            Reconnect
+                        <button type="submit" class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold text-orange-700 bg-orange-50 rounded-full hover:bg-orange-100 transition-colors cursor-pointer" title="Reconectar {{ channel.account_name|default:channel.account_handle }}">
+                            Reconectar
                         </button>
                     </form>
                 </div>
@@ -723,7 +723,7 @@
                 <!-- Connect channels (hidden when collapsed) -->
                 {% if sidebar_connectable_platforms %}
                 <div class="sidebar-connect-channels" x-show="!sidebarCollapsed">
-                <div class="sidebar-section-label">Connect channels</div>
+                <div class="sidebar-section-label">Conectar canales</div>
                 {% for platform_key, platform_label in sidebar_connectable_platforms|slice:":3" %}
                 <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}" class="sidebar-nav-item">
                     <div class="relative flex-shrink-0">
@@ -741,7 +741,7 @@
                     <div class="w-4 h-4 flex items-center justify-center flex-shrink-0 rounded-lg bg-app-2">
                         {% icon "plus" css_class="w-[14px] h-[14px]" %}
                     </div>
-                    <span class="sidebar-nav-label">More channels</span>
+                    <span class="sidebar-nav-label">Más canales</span>
                 </a>
                 </div>
                 {% endif %}
@@ -764,13 +764,13 @@
                         </div>
                         {% endif %}
                         <div class="flex-1 min-w-0 text-left">
-                            <p class="text-sm font-semibold text-app-strong truncate">{{ request.org.name|default:"My Organization" }}</p>
+                            <p class="text-sm font-semibold text-app-strong truncate">{{ request.org.name|default:"Mi organización" }}</p>
                             <p class="text-[11px] text-app-ghost truncate">{% if user.name %}{{ user.name }}{% else %}{{ user.email }}{% endif %}</p>
                         </div>
                     </button>
                     <button @click="sidebarCollapsed = true"
                             class="hidden lg:flex w-7 h-7 items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer flex-shrink-0"
-                            title="Collapse sidebar">
+                            title="Contraer barra lateral" aria-label="Contraer barra lateral">
                         {% icon "table-columns" css_class="w-[16px] h-[16px]" %}
                     </button>
                 </div>
@@ -778,7 +778,7 @@
                 <div class="sidebar-org-collapsed flex flex-col items-center gap-2" x-show="sidebarCollapsed" x-cloak style="display:none">
                     <button @click="sidebarCollapsed = false"
                             class="w-7 h-7 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors cursor-pointer"
-                            title="Expand sidebar">
+                            title="Expandir barra lateral" aria-label="Expandir barra lateral">
                         {% icon "table-columns" css_class="w-[16px] h-[16px] scale-x-[-1]" %}
                     </button>
                     <button @click="orgMenuOpen = !orgMenuOpen"
@@ -804,7 +804,7 @@
                     <!-- User info -->
                     <div class="px-4 pt-4 pb-3">
                         <p class="text-sm text-app-tertiary truncate">{{ user.email }}</p>
-                        <p class="text-sm font-semibold text-app mt-1">{{ request.org.name|default:"My Organization" }}</p>
+                        <p class="text-sm font-semibold text-app mt-1">{{ request.org.name|default:"Mi organización" }}</p>
                     </div>
 
                     <!-- Manage Team button -->
@@ -812,7 +812,7 @@
                         <a href="{% url 'members:list' %}"
                            class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-app-body bg-app border border-app rounded-lg hover:bg-black/[0.04] transition-colors">
                             {% icon "user-group" css_class="w-4 h-4 text-app-tertiary" %}
-                            Manage Team
+                            Administrar equipo
                         </a>
                     </div>
 
@@ -821,7 +821,7 @@
                         <a href="{% url 'accounts:settings' %}"
                            class="flex items-center gap-3 px-4 py-2.5 text-sm text-app-body hover:bg-black/[0.04] transition-colors">
                             {% icon "gear" css_class="w-4 h-4 text-app-ghost" %}
-                            Settings
+                            Ajustes
                         </a>
                     </div>
 
@@ -830,7 +830,7 @@
                         <a href="{% url 'accounts:logout' %}"
                            class="flex items-center gap-3 px-4 py-2.5 text-sm text-app-body hover:bg-black/[0.04] transition-colors">
                             {% icon "right-from-bracket" css_class="w-4 h-4 text-app-ghost" %}
-                            Log out
+                            Cerrar sesión
                         </a>
                     </div>
                 </div>
@@ -843,7 +843,7 @@
             <div class="flex lg:hidden items-center justify-between px-4 py-3 border-b border-app bg-app flex-shrink-0">
                 <button @click="mobileMenuOpen = !mobileMenuOpen"
                         class="w-9 h-9 flex items-center justify-center rounded-lg text-app-secondary hover:bg-app-2 transition-colors cursor-pointer -ml-1"
-                        title="Toggle menu">
+                        title="Alternar menú" aria-label="Alternar menú">
                     {% icon "bars" css_class="w-[20px] h-[20px]" %}
                 </button>
                 <div class="flex items-center gap-2">
@@ -1081,7 +1081,7 @@
                     minDate: 'today',
                     disableMobile: true,
                 });
-                fp.altInput.placeholder = el.getAttribute('data-placeholder') || 'Select date…';
+                fp.altInput.placeholder = el.getAttribute('data-placeholder') || 'Selecciona una fecha…';
             });
             document.querySelectorAll('.form-datetime[type="time"]').forEach(function(el) {
                 var fp = flatpickr(el, {
@@ -1093,7 +1093,7 @@
                     time_24hr: false,
                     disableMobile: true,
                 });
-                fp.altInput.placeholder = el.getAttribute('data-placeholder') || 'Select time…';
+                fp.altInput.placeholder = el.getAttribute('data-placeholder') || 'Selecciona una hora…';
             });
         });
     </script>
@@ -1133,7 +1133,7 @@
                 if (!url) return Promise.resolve(false);
                 var csrfToken = this.getCsrfToken();
                 if (!csrfToken) {
-                    window.alert('Security token missing. Please reload the page.');
+                    window.alert('Falta el token de seguridad. Recarga la página.');
                     return Promise.resolve(false);
                 }
                 var formData = new FormData(formEl);
@@ -1151,7 +1151,7 @@
                         return true;
                     })
                     .catch(() => {
-                        window.alert('Could not save the idea. Please try again.');
+                        window.alert('No se pudo guardar la idea. Inténtalo de nuevo.');
                         return false;
                     });
             },
@@ -1238,7 +1238,7 @@
                 },
 
                 createGroupLabel() {
-                    return this._columnMap[this.createSelectedGroup] || 'Unassigned';
+                    return this._columnMap[this.createSelectedGroup] || 'Sin asignar';
                 },
 
                 toggleCreateTag(tag) {
@@ -1387,7 +1387,7 @@
                             }
                         )
                         .catch(() => {
-                            window.alert('One of the files failed to upload. Please try again.');
+                            window.alert('No se pudo subir uno de los archivos. Inténtalo de nuevo.');
                         })
                         .finally(() => {
                             this.createMediaUploadCount = Math.max(0, this.createMediaUploadCount - 1);
@@ -1413,19 +1413,19 @@
                  x-transition:leave-start="opacity-100 scale-100"
                  x-transition:leave-end="opacity-0 scale-95"
                  @keydown.escape.window="createWsOpen = false">
-                <h3 class="text-base font-semibold text-app mb-4">Create workspace</h3>
+                <h3 class="text-base font-semibold text-app mb-4">Crear espacio de trabajo</h3>
                 <form method="post" action="{% url 'workspaces:create' %}">
                     {% csrf_token %}
-                    <input type="text" name="name" x-ref="newWsName" required placeholder="Workspace name"
+                    <input type="text" name="name" x-ref="newWsName" required placeholder="Nombre del espacio de trabajo"
                            class="form-input-styled w-full mb-4">
                     <div class="flex justify-end gap-2">
                         <button type="button" @click="createWsOpen = false"
                                 class="px-4 py-2 text-sm font-medium text-app-secondary bg-app border border-app rounded-lg hover:bg-app-1 transition-colors cursor-pointer">
-                            Cancel
+                            Cancelar
                         </button>
                         <button type="submit"
                                 class="btn-brand px-4 py-2 text-sm cursor-pointer">
-                            Create
+                            Crear
                         </button>
                     </div>
                 </form>

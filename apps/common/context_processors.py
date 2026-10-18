@@ -17,6 +17,7 @@ def sidebar_context(request):
 
     from apps.members.models import WorkspaceMembership
     from apps.social_accounts.models import AnalyticsPlatformConfig, PlatformVisibility, SocialAccount
+    from apps.social_accounts.platforms import enabled_platform_keys
 
     analytics_enabled_platforms = AnalyticsPlatformConfig.enabled_platforms()
 
@@ -107,7 +108,7 @@ def sidebar_context(request):
             sidebar_connectable_platforms = [
                 (p, label)
                 for p, label in _platform_display_names()
-                if p not in connected_platforms and p not in hidden_platforms
+                if p not in connected_platforms and p not in hidden_platforms and p in enabled_platform_keys()
             ]
 
     # Unread inbox count for sidebar badge

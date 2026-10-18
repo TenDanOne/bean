@@ -1,50 +1,50 @@
 {% extends "base.html" %}
-{% block page_title %}Connect Mastodon{% endblock %}
+{% block page_title %}Conectar Mastodon{% endblock %}
 {% block content %}
 <div class="max-w-lg">
     <!-- Header -->
     <div class="mb-8">
         <a href="{% url 'social_accounts:connect' workspace_id=workspace_id %}" class="inline-flex items-center gap-1.5 text-sm text-app-tertiary hover:text-app-body transition-colors mb-4">
             {% icon "chevron-left" css_class="w-4 h-4" %}
-            Back
+            Volver
         </a>
         <div class="flex items-center gap-3 mb-2">
             <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                 {% include "social_accounts/partials/_platform_icon.html" with platform="mastodon" size="5" %}
             </div>
-            <h2 class="text-xl font-semibold text-app">Connect Mastodon</h2>
+            <h2 class="text-xl font-semibold text-app">Conectar Mastodon</h2>
         </div>
-        <p class="text-sm text-app-tertiary">Mastodon is federated, enter your profile URL to begin the connection process.</p>
+        <p class="text-sm text-app-tertiary">Mastodon es federado: escribe la URL de tu perfil para iniciar la conexión.</p>
     </div>
 
     <form method="post" action="{% url 'social_accounts:connect_mastodon' workspace_id=workspace_id %}" class="space-y-5">
         {% csrf_token %}
 
         <div>
-            <label for="instance_url" class="block text-sm font-semibold text-app-body mb-1.5">Profile URL</label>
+            <label for="instance_url" class="block text-sm font-semibold text-app-body mb-1.5">URL del perfil</label>
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <span class="text-sm text-app-ghost">https://</span>
                 </div>
-                <input type="text" id="instance_url" name="instance_url" placeholder="mastodon.social@yourusername" required
+                <input type="text" id="instance_url" name="instance_url" placeholder="mastodon.social@tuusuario" required
                        class="w-full pl-[4rem] pr-4 py-2.5 text-sm text-app placeholder-app-ghost focus:border-orange-500 focus:ring-0 focus:outline-none transition-colors">
             </div>
-            <p class="text-xs text-app-ghost mt-1.5">The Mastodon instance where your account lives</p>
+            <p class="text-xs text-app-ghost mt-1.5">La instancia de Mastodon donde vive tu cuenta</p>
         </div>
 
         <div class="p-3.5 bg-indigo-50 rounded-xl border border-indigo-100">
             <div class="flex gap-2.5">
                 {% icon "circle-info" css_class="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" %}
-                <p class="text-xs text-indigo-700">After entering your instance URL, you'll be redirected to your Mastodon instance to authorize access. We request <strong>read</strong>, <strong>write</strong>, and <strong>follow</strong> permissions.</p>
+                <p class="text-xs text-indigo-700">Al escribir la URL de tu instancia, te redirigiremos a ella para autorizar el acceso. Pedimos permisos de <strong>lectura</strong>, <strong>escritura</strong> y <strong>seguir</strong>.</p>
             </div>
         </div>
 
         <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-app-inverse bg-orange-500 rounded-full shadow-[0_4px_14px_rgba(249,115,22,0.28)] hover:bg-orange-600 transition-all duration-200 cursor-pointer">
-                Continue to Mastodon
+                Continuar a Mastodon
                 {% icon "arrow-right" css_class="w-4 h-4" %}
             </button>
-            <a href="{% url 'social_accounts:connect' workspace_id=workspace_id %}" class="px-4 py-2.5 text-sm font-semibold text-app-secondary hover:text-app-strong transition-colors">Cancel</a>
+            <a href="{% url 'social_accounts:connect' workspace_id=workspace_id %}" class="px-4 py-2.5 text-sm font-semibold text-app-secondary hover:text-app-strong transition-colors">Cancelar</a>
         </div>
     </form>
 </div>

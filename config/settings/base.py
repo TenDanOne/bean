@@ -21,6 +21,7 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 APP_URL = env("APP_URL")
+PUBLIC_CONTACT_EMAIL = env("BEAN_CONTACT_EMAIL", default="dario.curiel@unx.mx")
 
 # Application definition
 
@@ -174,7 +175,7 @@ PASSWORD_HASHERS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "es-mx"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True

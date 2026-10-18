@@ -83,7 +83,7 @@ class TestAccountListView:
     def test_shows_empty_state(self, authenticated_client, workspace):
         url = reverse("social_accounts:list", kwargs={"workspace_id": workspace.id})
         response = authenticated_client.get(url)
-        assert b"No accounts connected yet" in response.content
+        assert "Aún no hay cuentas conectadas" in response.content.decode()
 
 
 @pytest.mark.django_db
@@ -92,8 +92,13 @@ class TestConnectPlatformView:
         url = reverse("social_accounts:connect", kwargs={"workspace_id": workspace.id})
         response = authenticated_client.get(url)
         assert response.status_code == 200
-        assert b"Connect a Platform" in response.content
+        assert b"Conectar una plataforma" in response.content
         assert b"TikTok Business" in response.content
+
+    def test_get_grid_only_lists_enabled_platforms(self, authenticated_client, workspace):
+        url = reverse("social_accounts:connect", kwargs={"workspace_id": workspace.id})
+        platforms = [value for value, _ in authenticated_client.get(url).context["platform_choices"]]
+        assert sorted(platforms) == ["facebook", "instagram", "tiktok", "youtube"]
 
     def test_post_invalid_platform(self, authenticated_client, workspace):
         url = reverse("social_accounts:connect", kwargs={"workspace_id": workspace.id})
@@ -423,7 +428,7 @@ class TestBlueskyConnectView:
         )
         response = authenticated_client.get(url)
         assert response.status_code == 200
-        assert b"Connect Bluesky" in response.content
+        assert b"Conectar Bluesky" in response.content
 
     def test_post_requires_handle_and_password(self, authenticated_client, workspace):
         url = reverse(
@@ -443,4 +448,4 @@ class TestMastodonConnectView:
         )
         response = authenticated_client.get(url)
         assert response.status_code == 200
-        assert b"Connect Mastodon" in response.content
+        assert b"Conectar Mastodon" in response.content

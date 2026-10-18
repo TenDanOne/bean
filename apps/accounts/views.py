@@ -1,11 +1,24 @@
+import base64
+import hashlib
+import hmac
+import json
+import uuid
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.core import signing
+from django.core.exceptions import ImproperlyConfigured
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from PIL import Image
+
+from apps.social_accounts.models import SocialAccount
 
 
 def health_check(request):
@@ -13,34 +26,115 @@ def health_check(request):
     return JsonResponse({"status": "ok"})
 
 
-PUBLIC_CONTACT_EMAIL = "dario.curiel@unx.mx"
 TIKTOK_VERIFICATION_CONTENT = "tiktok-developers-site-verification=bTJ2ph9pXHrSfpXBB779Umzy76k70vQY\n"
+DELETION_SALT = "bean.data-deletion"
+
+
+def _public(request, template, **extra):
+    return render(request, template, {"contact_email": settings.PUBLIC_CONTACT_EMAIL, **extra})
 
 
 def public_review(request):
     """Public overview for platform reviewers and authorized company users."""
-    return render(request, "public/review.html", {"contact_email": PUBLIC_CONTACT_EMAIL})
+    return _public(request, "public/review.html")
 
 
 def public_privacy(request):
-    """Public privacy policy for the internal BrightBean deployment."""
-    return render(request, "public/privacy.html", {"contact_email": PUBLIC_CONTACT_EMAIL})
+    """Public privacy policy for the BEAN deployment."""
+    return _public(request, "public/privacy.html")
 
 
 def public_terms(request):
-    """Public terms of use for the internal BrightBean deployment."""
-    return render(request, "public/terms.html", {"contact_email": PUBLIC_CONTACT_EMAIL})
+    """Public terms of use for the BEAN deployment."""
+    return _public(request, "public/terms.html")
 
 
 def public_support(request):
     """Public support contact for platform reviewers."""
-    return render(request, "public/support.html", {"contact_email": PUBLIC_CONTACT_EMAIL})
+    return _public(request, "public/support.html")
+
+
+def public_data_deletion(request):
+    """Instructions for revoking BEAN's access and requesting data deletion."""
+    return _public(request, "public/data_deletion.html")
+
+
+def _parse_signed_request(signed_request):
+    """Return the payload of a Meta signed_request, or None if malformed or badly signed."""
+    secret = (settings.PLATFORM_CREDENTIALS_FROM_ENV.get("facebook") or {}).get("app_secret", "")
+    if not secret:
+        raise ImproperlyConfigured("Meta app secret is not configured")
+    try:
+        encoded_sig, payload = signed_request.split(".", 1)
+        pad = lambda v: v + "=" * (-len(v) % 4)  # noqa: E731
+        sig = base64.urlsafe_b64decode(pad(encoded_sig))
+        data = json.loads(base64.urlsafe_b64decode(pad(payload)))
+    except (ValueError, TypeError):
+        return None
+    if not isinstance(data, dict) or str(data.get("algorithm", "")).upper() != "HMAC-SHA256":
+        return None
+    expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).digest()
+    return data if hmac.compare_digest(sig, expected) else None
+
+
+def _meta_callback(request):
+    """Shared by both Meta callbacks: returns (user_id, None) or (None, error response)."""
+    try:
+        data = _parse_signed_request(request.POST.get("signed_request", ""))
+    except ImproperlyConfigured:
+        return None, HttpResponse(status=503)
+    if not data or not data.get("user_id"):
+        return None, HttpResponse(status=400)
+    user_id = str(data["user_id"])
+    # shortcut: Meta sends the app-scoped user id, but SocialAccount stores the page / IG business id,
+    # so matches are rare; upgrade by saving the user id at connect time and matching on it.
+    for account in SocialAccount.objects.filter(
+        platform__in=("facebook", "instagram"), account_platform_id=user_id
+    ).exclude(connection_status=SocialAccount.ConnectionStatus.ARCHIVED):
+        account.archive()
+    return user_id, None
+
+
+@csrf_exempt
+@require_POST
+def meta_data_deletion_callback(request):
+    """Meta data-deletion callback: archive matching accounts (clears tokens) and return a status URL."""
+    _, error = _meta_callback(request)
+    if error:
+        return error
+    code = signing.dumps({"id": uuid.uuid4().hex}, salt=DELETION_SALT)  # opaque: no Meta user id
+    url = request.build_absolute_uri(reverse("public_data_deletion_status", args=[code]))
+    return JsonResponse({"url": url, "confirmation_code": code})
+
+
+@csrf_exempt
+@require_POST
+def meta_deauthorize_callback(request):
+    """Meta deauthorize callback: same effect as deletion, no status page."""
+    _, error = _meta_callback(request)
+    return error or HttpResponse(status=200)
+
+
+def public_data_deletion_status(request, code):
+    """Validate a confirmation code issued by the deletion callback."""
+    try:
+        signing.loads(code, salt=DELETION_SALT)
+    except signing.BadSignature:
+        raise Http404 from None
+    return _public(request, "public/data_deletion_status.html")
 
 
 @require_GET
 def tiktok_site_verification(request):
     """Serve TikTok's verification token at the domain root."""
     return HttpResponse(TIKTOK_VERIFICATION_CONTENT, content_type="text/plain; charset=utf-8")
+
+
+def home(request):
+    """Public landing for anonymous visitors; the dashboard for signed-in users."""
+    if request.user.is_authenticated:
+        return dashboard(request)
+    return _public(request, "public/landing.html")
 
 
 @login_required
