@@ -1,6 +1,6 @@
 # BEAN on Railway: ONE web service built from the Dockerfile (no worker; see HANDOFF).
 # Background tasks run from the "Procesar pendientes" button, "publish now" and POST /cron/run.
-# Migrate runs
+# Migrate runs in the Dockerfile CMD (Railway did not apply preDeployCommand) and also
 # here as a pre-deploy step; it also fires the post_migrate hooks that register recurring jobs.
 
 [build]
@@ -8,8 +8,6 @@ builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Explicit + sh -c: Railway otherwise runs the Procfile `web:` line without a shell, so $PORT stays literal.
-startCommand = "sh -c 'gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --threads 2 --timeout 120'"
 preDeployCommand = "python manage.py migrate"
 healthcheckPath = "/health/"
 restartPolicyType = "on_failure"
