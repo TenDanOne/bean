@@ -15,7 +15,6 @@ DEFAULT_ENABLED_PLATFORMS = (
     "youtube",
     "tiktok",
     "instagram",
-    "instagram_login",
     "facebook",
 )
 

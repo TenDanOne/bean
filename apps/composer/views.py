@@ -3,6 +3,7 @@
 import base64
 import contextlib
 import json
+import logging
 import re
 import uuid
 from datetime import datetime
@@ -18,6 +19,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.common.background import drain_pending_tasks
 from apps.common.validators import (
     parse_and_truncate_tag_string,
     parse_and_truncate_youtube_tag_string,
@@ -42,6 +44,8 @@ from .models import (
     PostVersion,
     Tag,
 )
+
+logger = logging.getLogger(__name__)
 
 MAX_CSV_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB cap on CSV planner imports
 
@@ -1087,6 +1091,13 @@ def save_post(request, workspace_id, post_id=None):
 
     # Save version
     _save_version(post, request.user)
+
+    # BEAN runs without a 24/7 worker: publish-now would wait for one, so run due tasks here.
+    if action == "publish_now":
+        try:
+            drain_pending_tasks(max_seconds=20)
+        except Exception:
+            logger.exception("publish_now: draining pending tasks failed")
 
     # Return appropriate response
     if request.htmx:

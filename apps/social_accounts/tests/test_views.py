@@ -118,6 +118,25 @@ class TestConnectPlatformView:
         assert response.status_code == 302
         assert "bluesky" not in response.url
 
+    def test_instagram_login_is_hidden_from_connect_flow(self, authenticated_client, workspace):
+        """BEAN offers four platforms; instagram_login stays registered (existing
+        accounts keep working) but cannot be newly connected."""
+        from apps.credentials.models import PlatformCredential
+        from apps.social_accounts.platforms import enabled_platform_keys
+
+        assert "instagram_login" not in enabled_platform_keys()
+        PlatformCredential.objects.create(
+            organization=workspace.organization,
+            platform="instagram_login",
+            credentials={"app_id": "x", "app_secret": "y"},
+            is_configured=True,
+        )
+        url = reverse("social_accounts:connect", kwargs={"workspace_id": workspace.id})
+        response = authenticated_client.post(url, {"platform": "instagram_login"})
+        assert response.status_code == 302
+        assert "instagram.com" not in response.url
+        assert "instagram_login" not in response.url
+
     def test_enabling_a_platform_makes_it_connectable_again(self, authenticated_client, workspace, settings):
         """Turning one back on is a settings change, not a code change."""
         from apps.credentials.models import PlatformCredential

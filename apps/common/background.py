@@ -5,6 +5,7 @@ calls one function instead of copy-pasting the exists-check + error handling.
 """
 
 import logging
+import time
 from datetime import timedelta
 
 from django.db import OperationalError, ProgrammingError
@@ -57,3 +58,27 @@ def register_recurring_task(task_func, *, repeat, verbose_name):
         logger.debug("Skipping %s registration (database not ready)", verbose_name)
     except Exception:
         logger.exception("Failed to register recurring task %s", verbose_name)
+
+
+def drain_pending_tasks(max_seconds: float = 25.0) -> int:
+    """Run due background tasks in-process until none are left or ``max_seconds`` pass.
+
+    For deployments without a 24/7 ``process_tasks`` worker. Uses the library's
+    own runner, so its task locking prevents two callers running the same task.
+    Returns how many tasks ran.
+    """
+    from background_task.tasks import autodiscover, tasks
+
+    autodiscover()  # registers @background functions, as process_tasks does
+    deadline = time.monotonic() + max_seconds
+    ran = 0
+    while time.monotonic() < deadline and tasks.run_next_task():
+        ran += 1
+    return ran
+
+
+def count_pending_tasks() -> int:
+    """Tasks due right now and not locked by another runner."""
+    from background_task.models import Task
+
+    return Task.objects.find_available().count()

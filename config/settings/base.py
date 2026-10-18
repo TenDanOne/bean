@@ -154,6 +154,12 @@ AUTH_USER_MODEL = "accounts.User"
 # trusted proxy in front. Set ``BB_TRUSTED_PROXIES`` in the environment
 # (comma-separated) when you run the app behind Cloudflare, an ALB,
 # nginx, etc.
+# Comma-separated platform keys that override DEFAULT_ENABLED_PLATFORMS (empty = defaults).
+BBS_ENABLED_PLATFORMS = tuple(p.strip() for p in env.list("BBS_ENABLED_PLATFORMS", default=[]) if p.strip())
+
+# Bearer secret for POST /cron/run (external scheduler). Empty disables the endpoint.
+CRON_SECRET = env("CRON_SECRET", default="")
+
 BB_TRUSTED_PROXIES = tuple(p.strip() for p in env.list("BB_TRUSTED_PROXIES", default=[]) if p.strip())
 
 # Password validation

@@ -5,11 +5,14 @@ from django.urls import include, path
 
 from apps.accounts.views import health_check
 from apps.api.api import api as agent_api
+from apps.common import views as common_views
 from apps.oauth_server import views as oauth_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", health_check, name="health_check"),
+    path("tasks/process/", common_views.process_pending, name="process_pending"),
+    path("cron/run", common_views.cron_run, name="cron_run"),
     path("accounts/", include("apps.accounts.urls")),
     path("accounts/", include("allauth.urls")),
     path("organizations/", include("apps.organizations.urls")),
