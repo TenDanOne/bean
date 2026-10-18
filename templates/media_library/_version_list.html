@@ -37,7 +37,7 @@
 
     {% if asset.current_version_id != version.id and not asset.is_shared %}
     <button class="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ml-version-restore"
-            style="color: var(--primary, #F97316);"
+            style="color: var(--primary, #657329);"
             hx-post="{% url 'media_library:version_restore' workspace_id=workspace.id asset_id=asset.id version_id=version.id %}"
             hx-target="#version-list-{{ asset.id }}"
             hx-confirm="Restore version {{ version.version_number }}? This will create a new version.">

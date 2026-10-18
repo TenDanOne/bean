@@ -25,3 +25,23 @@
 git status --short
 pytest && ruff check . && ruff format --check . && mypy apps/ config/ providers/ tests/ --ignore-missing-imports
 ```
+
+---
+
+## RETOMAR AQUÍ — 2026-10-17 (corte por límite de uso)
+
+**Commits:** `6585f53` original BrightBean · `4d121bf` fase 1 (forma de trabajo, línea base, propuestas de marca). Juez Fase 1: PASA.
+
+**Decisiones cerradas:** paleta **A · Oliva y petróleo** (hex en `docs/marca/propuestas-paleta.html` §A) · logo `static/marca/bean-by-ithos.svg` (+ `-oscuro`) · Instagram = `instagram.py` (vía Facebook) · plataformas por `DEFAULT_ENABLED_PLATFORMS` en `apps/social_accounts/platforms.py` (+ env `BBS_ENABLED_PLATFORMS`) · modo manual + `/cron/run` dormido.
+
+**En curso SIN commit al cortar (2 implementadores en paralelo):**
+- Fases 2+3: `platforms.py` (quitar instagram_login), `config/settings/base.py` (BBS_ENABLED_PLATFORMS, CRON_SECRET), `apps/common/background.py` (`drain_pending_tasks`), vista "Procesar pendientes" + `/cron/run`, publicar-ahora sin worker, `railway.toml`/`Procfile`/`.env.example`.
+- Fase 4.3: paleta A en `theme/static_src/src/styles.css`, Figtree local en `static/fonts/figtree/`, logo/favicon, "BrightBean"→"BEAN" en templates, atribución AGPL en pies + `NOTICE` + README.
+
+**Siguiente paso:**
+1. `git status` / `git diff --stat` para ver qué quedó a medias de esos dos agentes.
+2. Correr suite completa (credenciales PG: DATABASE_URL de `simu/.env` vía env DB_USER/DB_PASSWORD, no escribirlas): `pytest -q -p no:cacheprovider` → esperado solo los 2 fallos preexistentes; `ruff check .`; `mypy ...` (≤4 errores preexistentes).
+3. Juez (Opus) sobre fases 2, 3 y 4.3 → commit por fase.
+4. Luego Fase 5 (legal + `/legal/data-deletion/` + `docs/APP-REVIEW.md`) y Fase 6 (Sentry, MailerSend SMTP, Supabase, R2, Railway, GitHub público — push solo con confirmación).
+
+**Ojo:** no correr dos pytest en paralelo (comparten `test_brightbean_test`). El original sigue en `OneDrive\Escritorio\bbs_unxio-main` hasta confirmación del usuario.

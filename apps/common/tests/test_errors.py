@@ -32,7 +32,7 @@ class TestErrorPages:
 
         assert response.status_code == 403
         body = response.content.decode()
-        assert "Brightbean" in body
+        assert "BEAN" in body
         # The specific reason is the whole point — a generic page is no better
         # than Django's.
         assert "reply_from_inbox" in body
@@ -49,7 +49,7 @@ def test_500_template_renders_without_any_context():
     depend on context processors — they may be exactly what broke."""
     html = render_to_string("500.html", {})
 
-    assert "Brightbean" in html
+    assert "BEAN" in html
     assert "500" in html
 
 

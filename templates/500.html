@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Something went wrong - Brightbean</title>
+    <title>Something went wrong - BEAN</title>
     {% comment %} No template variables below this line: Django renders 500.html with an
        empty context, so anything dynamic would silently come out blank. {% endcomment %}
     {% include "errors/_style.html" %}
 </head>
 <body>
     <div class="card">
-        <div class="logo">Brightbean</div>
+        <div class="logo"><img src="/static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS" style="height:56px;width:auto"></div>
         <div class="icon">
             {% icon "triangle-exclamation" css_class="w-[48px] h-[48px]" %}
         </div>
@@ -20,7 +20,7 @@
             This one is a bug, not something you did. The details were written to the
             server log. If it keeps happening, that log is what a maintainer needs.
         </p>
-        <a href="/" class="link">Back to Brightbean</a>
+        <a href="/" class="link">Back to BEAN</a>
     </div>
 </body>
 </html>

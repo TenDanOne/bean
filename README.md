@@ -1,8 +1,13 @@
 <p align="center">
-  <a href="https://github.com/brightbeanxyz/brightbean-studio">
-    <img src=".github/assets/brightbean-studio-logo.webp" alt="BrightBean Studio" width="280">
-  </a>
+  <img src="static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS" width="280">
 </p>
+
+<p align="center">
+  <strong>BEAN by ITHOS: gestión de redes sociales para creadores y agencias.</strong>
+</p>
+
+> BEAN by ITHOS es una obra derivada de [BrightBean Studio](https://github.com/brightbeanxyz/brightbean-studio) (AGPL-3.0). Cambios © 2026 Dario Curiel / ITHOS, bajo la misma licencia AGPL-3.0. Código fuente: <https://github.com/TenDanOne/bean>. Ver [NOTICE](NOTICE) y [LICENSE](LICENSE).
+
 
 <p align="center">
   <strong>Open-source social media management for creators, agencies, and SMBs.</strong>
@@ -21,7 +26,7 @@
 
 ---
 
-## About BrightBean Studio
+## About BEAN (based on BrightBean Studio)
 
 BrightBean Studio is an open-source, self-hostable social media management platform built for creators, agencies and SMBs. It does what Sendible, SocialPilot, or ContentStudio do, but free and without per-seat, per-channel, or per-workspace limits. Plan, compose, schedule, approve, publish, and monitor content across Facebook, Instagram, LinkedIn, TikTok, YouTube, Pinterest, Threads, Bluesky, Google Business Profile, Mastodon, and DEV.to from a single multi-workspace dashboard.
 

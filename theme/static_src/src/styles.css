@@ -12,18 +12,37 @@
    To rebrand: change ONLY the brand token values below.
    ═══════════════════════════════════════════════════════════════ */
 
+@theme {
+  /* Las plantillas usan orange-*; se remapea a la escala oliva de la marca */
+  --color-orange-50: var(--brand-50);
+  --color-orange-100: var(--brand-100);
+  --color-orange-200: var(--brand-200);
+  --color-orange-300: var(--brand-300);
+  --color-orange-400: var(--brand-400);
+  --color-orange-500: var(--brand-500);
+  --color-orange-600: var(--brand-600);
+  --color-orange-700: var(--brand-700);
+  --color-orange-800: var(--brand-800);
+  --color-orange-900: var(--brand-900);
+}
+
+@font-face { font-family: 'Figtree'; font-weight: 100 500; font-style: normal; font-display: swap; src: url("/static/fonts/figtree/Figtree-Regular.ttf") format("truetype"); }
+@font-face { font-family: 'Figtree'; font-weight: 600 900; font-style: normal; font-display: swap; src: url("/static/fonts/figtree/Figtree-ExtraBold.ttf") format("truetype"); }
+
+::selection { background: #0E4A56; color: #FFFFFF; }
+
 :root {
-  /* Brand Tokens - BrightBean Orange */
-  --brand-50:  #FFF7ED;
-  --brand-100: #FFEDD5;
-  --brand-200: #FED7AA;
-  --brand-300: #FDBA74;
-  --brand-400: #FB923C;
-  --brand-500: #F97316;
-  --brand-600: #EA580C;
-  --brand-700: #C2410C;
-  --brand-800: #9A3412;
-  --brand-900: #7C2D12;
+  /* Brand Tokens - BEAN: paleta A, oliva y petróleo (docs/marca/propuestas-paleta.html) */
+  --brand-50:  #F3F6E3;
+  --brand-100: #E6EBCC;
+  --brand-200: #D0D9A3;
+  --brand-300: #B4C06F;
+  --brand-400: #94A43F;
+  --brand-500: #657329;
+  --brand-600: #525F20;
+  --brand-700: #424C1A;
+  --brand-800: #343C15;
+  --brand-900: #272D10;
 
   /* Brand Tokens - BrightBean Green (the bean in the logo) — used for
      selection controls (checkboxes, toggle switches) */
@@ -32,14 +51,14 @@
   --brand-green-500: #94A43F;
   --brand-green-600: #7B8A33;
 
-  --brand-font-display: Georgia, 'Times New Roman', serif;
-  --brand-font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --brand-font-display: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --brand-font-body: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --brand-font-mono: ui-monospace, SFMono-Regular, 'Cascadia Code', 'Consolas', monospace;
 
   /* Semantic Tokens */
-  --primary:       var(--brand-500);
+  --primary:       var(--brand-500);   /* #657329, 5.2:1 con blanco */
   --primary-hover: var(--brand-600);
-  --primary-soft:  var(--brand-50);
+  --primary-soft:  #E6EBCC;
   --primary-muted: var(--brand-100);
   --primary-ring:  var(--brand-200);
 
@@ -64,14 +83,14 @@
      feel warm without any of them looking like a warning state. Text keeps the
      stone scale above: contrast is what makes an inbox readable at hour eight,
      and tinting the text is where warm palettes usually go wrong. */
-  --warm-50:  #FDFAF6;
-  --warm-100: #FAF4EC;
-  --warm-200: #F3E9DC;
-  --warm-300: #E8D8C4;
-  --warm-400: #D9C3A9;
+  --warm-50:  #F9F6EF;
+  --warm-100: #F4F1EA;
+  --warm-200: #EBE6DA;
+  --warm-300: #D9D3C3;
+  --warm-400: #C4BDAA;
 
   /* Surfaces */
-  --surface-0: #FFFFFF;      /* cards stay paper-white: they hold the reading */
+  --surface-0: #FDFBF7;      /* cards stay paper-white: they hold the reading */
   --surface-page: var(--warm-100);
   --surface-1: var(--warm-50);
   --surface-2: var(--warm-100);
@@ -86,24 +105,24 @@
      which is right for a divider and not enough for "where does this field
      end". Neumorphism makes this worse than usual: soft shadow plus soft
      border is exactly how a form becomes a guessing game. */
-  --border-control: #B28A62;
+  --border-control: #6D7F7C;
 
   /* Text */
-  --text-primary:   var(--neutral-900);
-  --text-secondary: var(--neutral-600);
+  --text-primary:   #0F2A30;
+  --text-secondary: #465B60;
   /* Not neutral-500 exactly: that clears AA on white but lands at 4.4:1 on the
      warm panels, and this app puts secondary text on those constantly. Every
      text token here is measured against --surface-2, the darkest surface words
      actually sit on, not against white. */
-  --text-tertiary:  #766F6A;
-  --text-body:      var(--neutral-700);
-  --text-strong:    var(--neutral-800);
+  --text-tertiary:  #566A6E;
+  --text-body:      #2E464B;
+  --text-strong:    #0F2A30;
   /* Not neutral-400 (#A8A29E). That measures 2.5:1 on white — below the 3:1
      floor even for large text — and it carried 257 of this app's colour
      classes, so it was never only decorative: timestamps, counts, helper text
      and placeholders all used it. This is the lightest warm grey that still
      clears 4.5:1, so words set in it are readable wherever they turn up. */
-  --text-ghost:     #776E69;
+  --text-ghost:     #566A6E;
   /* Genuinely decorative only — separators drawn as text, disabled glyphs.
      Never put words a person needs to read in this. */
   --text-faint:     var(--neutral-300);
@@ -117,11 +136,11 @@
      instead: this reads 6.2:1 on the same background. Bright oranges and
      yellows nearly always need dark text; white only ever looked right on
      them because nobody measured it. */
-  --on-primary:     var(--neutral-900);
+  --on-primary:     #FFFFFF;   /* blanco sobre oliva #657329 = 5.2:1 */
 
   /* Illustrations */
   --color-illustration-border: var(--neutral-200);
-  --color-illustration-card: #FFFFFF;
+  --color-illustration-card: #FDFBF7;
   --color-illustration-element: var(--neutral-200);
   --color-illustration-secondary-element: var(--neutral-100);
   --color-illustration-accent: var(--brand-500);
@@ -136,18 +155,19 @@
   --accent-teal:    #14B8A6; --accent-teal-soft:    #F0FDFA;
   --accent-sky:     #0EA5E9; --accent-sky-soft:     #F0F9FF;
   --accent-rose:    #F43F5E; --accent-rose-soft:    #FFF1F2;
+  --accent-gold:    #E3A537; /* solo relleno, con texto petróleo #0F2A30 */
   --accent-amber:   #F59E0B; --accent-amber-soft:   #FFFBEB;
   --accent-indigo:  #6366F1; --accent-indigo-soft:  #EEF2FF;
   --accent-emerald: #10B981; --accent-emerald-soft: #ECFDF5;
 
   /* Shadows — tinted with the brand, for the reason spelled out on the relief
      tokens further down: a neutral shadow on a warm surface reads as grime. */
-  --shadow-xs:  0 1px 2px rgba(124,45,18,0.06);
-  --shadow-sm:  0 1px 3px rgba(124,45,18,0.09), 0 1px 2px rgba(124,45,18,0.05);
-  --shadow-md:  0 4px 6px rgba(124,45,18,0.07), 0 2px 4px rgba(124,45,18,0.05);
-  --shadow-lg:  0 10px 15px rgba(124,45,18,0.09), 0 4px 6px rgba(124,45,18,0.05);
-  --shadow-xl:  0 20px 25px rgba(124,45,18,0.09), 0 8px 10px rgba(124,45,18,0.05);
-  --shadow-primary: 0 4px 14px rgba(249,115,22,0.28);
+  --shadow-xs:  0 1px 2px rgba(15,42,48,0.06);
+  --shadow-sm:  0 1px 3px rgba(15,42,48,0.09), 0 1px 2px rgba(15,42,48,0.05);
+  --shadow-md:  0 4px 6px rgba(15,42,48,0.07), 0 2px 4px rgba(15,42,48,0.05);
+  --shadow-lg:  0 10px 15px rgba(15,42,48,0.09), 0 4px 6px rgba(15,42,48,0.05);
+  --shadow-xl:  0 20px 25px rgba(15,42,48,0.09), 0 8px 10px rgba(15,42,48,0.05);
+  --shadow-primary: 0 4px 14px rgba(101,115,41,0.28);
 
   /* Radii */
   --radius-sm:   0.25rem;
@@ -180,7 +200,7 @@ body {
 .auth-bg {
   background-color: var(--surface-1);
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(249,115,22,0.08), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(101,115,41,0.08), transparent),
     radial-gradient(ellipse 60% 40% at 100% 100%, rgba(20,184,166,0.04), transparent);
 }
 
@@ -320,7 +340,7 @@ img.sidebar-logo-mark {
 .btn-primary-lift:hover {
   background: var(--primary-hover) !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(249,115,22,0.35);
+  box-shadow: 0 6px 20px rgba(101,115,41,0.35);
 }
 
 .card-hover-lift {
@@ -476,7 +496,7 @@ img.sidebar-logo-mark {
 .btn-brand:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(249,115,22,0.35);
+  box-shadow: 0 6px 20px rgba(101,115,41,0.35);
 }
 .btn-brand:active {
   transform: translateY(0);
@@ -877,8 +897,8 @@ span.flatpickr-weekday {
      material instead of grey boxes on a beige page. The highlight is warmed to
      match, otherwise the top edge looks blue against it. */
   --relief-light: rgba(255, 252, 248, 0.95);
-  --relief-dark: rgba(124, 45, 18, 0.10);
-  --relief-dark-strong: rgba(124, 45, 18, 0.18);
+  --relief-dark: rgba(15, 42, 48, 0.10);
+  --relief-dark-strong: rgba(15, 42, 48, 0.18);
 
   /* Resting: barely lifted off the page. */
   --relief-flat:

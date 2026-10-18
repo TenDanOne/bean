@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Authorize · BrightBean Studio{% endblock title %}</title>
+    <title>{% block title %}Authorize · BEAN{% endblock title %}</title>
     <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon/favicon.svg' %}">
 
@@ -21,8 +21,8 @@
                can't extend the app shell (which needs workspace context the OAuth
                view doesn't supply), so it can't read the app's brand token. Mirrors
                login.html's inline override — keep in sync if the brand palette changes. */
-            --bb-primary: #93a240;
-            --bb-primary-hover: #849139;
+            --bb-primary: #657329;
+            --bb-primary-hover: #525f20;
             --bb-text: #1f2421;
             --bb-text-muted: #6b7280;
             --bb-border: #e5e7eb;
@@ -44,7 +44,7 @@
         }
         .bb-wrap { width: 100%; max-width: 420px; }
         .bb-head { text-align: center; margin-bottom: 28px; }
-        .bb-logo { width: 48px; height: 48px; object-fit: contain; }
+        .bb-logo { height: 48px; width: auto; object-fit: contain; }
         .bb-eyebrow {
             display: block;
             margin-top: 12px;
@@ -90,10 +90,10 @@
         .bb-btn-primary {
             background-color: var(--bb-primary);
             color: var(--surface-0);
-            box-shadow: 0 4px 14px rgba(147,162,64,.28);
+            box-shadow: 0 4px 14px rgba(101,115,41,.28);
         }
-        .bb-btn-primary:hover { background-color: var(--bb-primary-hover); box-shadow: 0 6px 20px rgba(147,162,64,.35); }
-        .bb-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(147,162,64,.4); }
+        .bb-btn-primary:hover { background-color: var(--bb-primary-hover); box-shadow: 0 6px 20px rgba(101,115,41,.35); }
+        .bb-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(101,115,41,.4); }
         .bb-btn-ghost {
             background: var(--surface-0);
             color: var(--bb-text);

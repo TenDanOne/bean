@@ -1,7 +1,7 @@
 {
-  "name": "Brightbean",
+  "name": "BEAN by ITHOS",
   "description": "Open-source social media management platform",
-  "repository": "https://github.com/brightbeanxyz/brightbean-studio",
+  "repository": "https://github.com/TenDanOne/bean",
   "keywords": ["django", "social-media", "management"],
   "formation": {
     "web": {

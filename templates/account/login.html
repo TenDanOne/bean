@@ -1,34 +1,31 @@
 {% extends "base.html" %}
 {% load static i18n allauth account socialaccount %}
 
-{% block title %}Sign in · BrightBean Studio{% endblock %}
+{% block title %}Sign in · BEAN{% endblock %}
 
 {% block auth_content %}
 <style>
   .auth-card .btn-brand {
-    background-color: #93a240;
-    box-shadow: 0 4px 14px rgba(147, 162, 64, 0.28);
+    background-color: var(--primary);
+    box-shadow: 0 4px 14px rgba(101, 115, 41, 0.28);
   }
   .auth-card .btn-brand:hover {
-    background-color: #849139;
-    box-shadow: 0 6px 20px rgba(147, 162, 64, 0.35);
+    background-color: var(--primary-hover);
+    box-shadow: 0 6px 20px rgba(101, 115, 41, 0.35);
   }
   .auth-card .btn-brand:focus {
-    box-shadow: 0 0 0 3px rgba(147, 162, 64, 0.35);
+    box-shadow: 0 0 0 3px rgba(101, 115, 41, 0.35);
   }
 </style>
 <div class="w-full max-w-md px-4">
     <!-- Logo & Header -->
     <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-12 h-12 mb-4">
-            <img src="{% static 'img/unx-logo.png' %}" alt="BrightBean Studio logo" class="w-12 h-12 object-contain">
-        </div>
-        <span class="block text-[11px] font-semibold uppercase tracking-widest mb-2" style="color: #93a240;">BrightBean · Studio</span>
+        <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-14 w-auto mx-auto mb-5">
         <h1 class="text-2xl font-bold tracking-tight" style="color: var(--text-primary);">
             Welcome back
         </h1>
         <p class="text-sm mt-1" style="color: var(--text-secondary);">
-            Sign in to BrightBean Studio | Social media scheduling &amp; approvals.
+            Sign in to BEAN | Social media scheduling &amp; approvals.
         </p>
     </div>
 

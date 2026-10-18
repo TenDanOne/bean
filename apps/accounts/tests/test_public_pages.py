@@ -5,7 +5,7 @@ def test_public_review_page_is_available_without_authentication(client):
     response = client.get(reverse("public_review"))
 
     assert response.status_code == 200
-    assert b"BrightBean Studio" in response.content
+    assert b"BEAN" in response.content
     assert b"TikTok integration" in response.content
 
 

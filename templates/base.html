@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Brightbean{% endblock %}</title>
+    <title>{% block title %}BEAN{% endblock %}</title>
     <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon/favicon.svg' %}">
     <link rel="icon" type="image/png" sizes="96x96" href="{% static 'favicon/favicon-96x96.png' %}">
@@ -306,8 +306,7 @@
                     {% endif %}
                     <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" x-show="!sidebarCollapsed" x-cloak>{{ sidebar_workspaces.0.name }}</span>
                     {% else %}
-                    <div class="sidebar-logo-mark flex-shrink-0">P</div>
-                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" x-show="!sidebarCollapsed" x-cloak>Brightbean</span>
+                    <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-8 w-auto flex-shrink-0">
                     {% endif %}
                     {% endwith %}
                     <svg class="w-4 h-4 text-app-ghost flex-shrink-0 transition-transform" :class="wsOpen && 'rotate-180'" x-show="!sidebarCollapsed" x-cloak fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -857,8 +856,7 @@
                     {% endif %}
                     <span class="text-sm font-semibold text-app-strong truncate max-w-[160px]">{{ current_ws.name }}</span>
                     {% else %}
-                    <div class="w-7 h-7 rounded-md flex items-center justify-center text-app-on-primary text-[11px] font-bold" style="background: var(--primary);">P</div>
-                    <span class="text-sm font-semibold text-app-strong">Brightbean</span>
+                    <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-7 w-auto">
                     {% endif %}
                     {% endwith %}
                 </div>
@@ -886,6 +884,10 @@
                 <div class="flex-1 min-h-0 flex flex-col overflow-y-auto overflow-x-hidden">
                 {% block content %}{% endblock %}
                 </div>
+                <footer class="mt-auto pt-6 text-center text-[0.6875rem]" style="color: var(--text-tertiary);">
+                    BEAN by ITHOS &middot; basado en BrightBean Studio (AGPL-3.0) &middot;
+                    <a href="https://github.com/TenDanOne/bean" class="underline" rel="noopener" target="_blank">C&oacute;digo fuente</a>
+                </footer>
             </main>
         </div>
     </div>
@@ -1017,7 +1019,7 @@
                 data = JSON.parse(canvas.dataset.series || '[]');
                 labels = JSON.parse(canvas.dataset.labels || '[]');
             } catch (e) { return; }
-            var color = '#F97316';
+            var color = '#657329';
             if (window._bbHeroChart) { window._bbHeroChart.destroy(); }
             var ctx = canvas.getContext('2d');
             var gradient = ctx.createLinearGradient(0, 0, 0, 260);

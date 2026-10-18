@@ -1,6 +1,6 @@
 {
-  "name": "BrightBean Studio",
-  "short_name": "Bean",
+  "name": "BEAN by ITHOS",
+  "short_name": "BEAN",
   "icons": [
     {
       "src": "web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#ffda99",
-  "background_color": "#ffffff",
+  "theme_color": "#0f2a30",
+  "background_color": "#f4f1ea",
   "display": "standalone"
 }
