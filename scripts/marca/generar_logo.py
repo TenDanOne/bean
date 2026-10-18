@@ -2,6 +2,7 @@
 (isotipo + bloque "by ITHOS ™" intactos) y los glifos BEAN de Figtree ExtraBold.
 Uso: python scripts/marca/generar_logo.py
 """
+
 import re
 from pathlib import Path
 
@@ -34,14 +35,26 @@ for ch in "BEAN":
     gs[g].draw(TransformPen(bp, (k, 0, 0, -k, x - lsb0 * k, 562)))
     xmax = bp.bounds[2]
     x += hmtx[g][0] * k
-texto = f'<g transform="translate({X_TEXTO} {Y_TOP}) scale({ESCALA}) translate(0 -461)" fill="#0f2a30">\n' + "\n".join(paths) + "\n</g>"
+texto = (
+    f'<g transform="translate({X_TEXTO} {Y_TOP}) scale({ESCALA}) translate(0 -461)" fill="#0f2a30">\n'
+    + "\n".join(paths)
+    + "\n</g>"
+)
 
 # reemplaza el primer grupo de tinta (glifos SIMU)
-svg, n = re.subn(r'<g transform="translate\(134\.78 5\) scale\(0\.565\) translate\(0 -461\)" fill="#0f2a30">.*?</g>', lambda _m: texto, svg, count=1, flags=re.S)
+svg, n = re.subn(
+    r'<g transform="translate\(134\.78 5\) scale\(0\.565\) translate\(0 -461\)" fill="#0f2a30">.*?</g>',
+    lambda _m: texto,
+    svg,
+    count=1,
+    flags=re.S,
+)
 assert n == 1, "no se encontro el bloque SIMU"
 # el bloque "by ITHOS ™" termina en ~309.2; el viewBox cubre lo mayor entre eso y BEAN
 ancho = max(309.2, X_TEXTO + xmax * ESCALA) + 1.0
-svg = svg.replace('viewBox="0 0 310.2 114.3"', f'viewBox="0 0 {ancho:.1f} {VB_H}"').replace("SIMU by ITHOS", "BEAN by ITHOS")
+svg = svg.replace('viewBox="0 0 310.2 114.3"', f'viewBox="0 0 {ancho:.1f} {VB_H}"').replace(
+    "SIMU by ITHOS", "BEAN by ITHOS"
+)
 assert "SIMU" not in svg
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "bean-by-ithos.svg").write_text(svg, encoding="utf-8")

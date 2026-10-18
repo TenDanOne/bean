@@ -115,9 +115,7 @@ class TestReadingAThread:
         channel away has to take the thread with it.
         """
         user, membership = member(django_user_model, workspace, "editor", "e@example.com")
-        assignment = ChannelAssignment.objects.create(
-            membership=membership, social_account=channel_a, can_reply=True
-        )
+        assignment = ChannelAssignment.objects.create(membership=membership, social_account=channel_a, can_reply=True)
         message = comment(workspace, channel_a)
         client.force_login(user)
         assert client.get(url("message_detail", workspace, message)).status_code == 200
@@ -140,9 +138,7 @@ class TestReadingAThread:
 @pytest.mark.django_db
 class TestWritingToAThread:
     @pytest.mark.parametrize("route,payload", WRITE_ROUTES)
-    def test_an_assigned_channel_is_allowed(
-        self, client, django_user_model, workspace, channel_a, route, payload
-    ):
+    def test_an_assigned_channel_is_allowed(self, client, django_user_model, workspace, channel_a, route, payload):
         user, membership = member(django_user_model, workspace, "editor", "e@example.com")
         ChannelAssignment.objects.create(membership=membership, social_account=channel_a, can_reply=True)
         message = comment(workspace, channel_a)
@@ -230,9 +226,7 @@ class TestAssignment:
         user, membership = member(django_user_model, workspace, "editor", "e@example.com")
         ChannelAssignment.objects.create(membership=membership, social_account=channel_a, can_reply=True)
         colleague, colleague_membership = member(django_user_model, workspace, "editor", "c@example.com")
-        ChannelAssignment.objects.create(
-            membership=colleague_membership, social_account=channel_a, can_reply=True
-        )
+        ChannelAssignment.objects.create(membership=colleague_membership, social_account=channel_a, can_reply=True)
         message = comment(workspace, channel_a)
         client.force_login(user)
 
@@ -251,16 +245,14 @@ class TestBulkAssignment:
         """A bulk selection spans channels; the assignee may not hold them all."""
         owner, _ = member(django_user_model, workspace, "owner", "o@example.com")
         colleague, colleague_membership = member(django_user_model, workspace, "editor", "c@example.com")
-        ChannelAssignment.objects.create(
-            membership=colleague_membership, social_account=channel_a, can_reply=True
-        )
+        ChannelAssignment.objects.create(membership=colleague_membership, social_account=channel_a, can_reply=True)
         on_a = comment(workspace, channel_a, platform_id="a1")
         on_b = comment(workspace, channel_b, platform_id="b1")
         client.force_login(owner)
 
         client.post(
             reverse("inbox:bulk_action", kwargs={"workspace_id": workspace.id}),
-            {"message_ids": [str(on_a.id), str(on_b.id)], "action": "assign", "value": str(colleague.id)},
+            {"message_ids": f"{on_a.id},{on_b.id}", "action": "assign", "value": str(colleague.id)},
         )
 
         on_a.refresh_from_db()

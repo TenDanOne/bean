@@ -96,7 +96,7 @@ def analytics_index(request: HttpRequest, workspace_id) -> HttpResponse:
     workspace = _get_workspace(request, workspace_id)
     if not AnalyticsPlatformConfig.enabled_platforms():
         raise Http404("Analytics is disabled.")
-    accounts = _enabled_accounts(workspace, request.workspace_membership)
+    accounts = _enabled_accounts(workspace, request.workspace_membership)  # type: ignore[attr-defined]
     if not accounts:
         return render(
             request,
@@ -116,7 +116,7 @@ def analytics_account(request: HttpRequest, workspace_id, account_id) -> HttpRes
     if not AnalyticsPlatformConfig.enabled_platforms():
         raise Http404("Analytics is disabled.")
 
-    accounts = _enabled_accounts(workspace, request.workspace_membership)
+    accounts = _enabled_accounts(workspace, request.workspace_membership)  # type: ignore[attr-defined]
     if not accounts:
         return render(request, "analytics/no_accounts.html", {"workspace": workspace})
 
@@ -240,7 +240,7 @@ def post_detail(request: HttpRequest, workspace_id, post_id) -> HttpResponse:
         ),
         id=post_id,
         social_account__in=visible_accounts(
-            request.workspace_membership,
+            request.workspace_membership,  # type: ignore[attr-defined]
             SocialAccount.objects.for_workspace(workspace.id),
             capability="can_view_metrics",
         ),

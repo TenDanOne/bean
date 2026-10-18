@@ -174,10 +174,11 @@ def can_manage_member(viewer_user, org, target_user) -> bool:
     if viewer_org.org_role in (OrgMembership.OrgRole.OWNER, OrgMembership.OrgRole.ADMIN):
         return True
 
-    target_roles = WorkspaceMembership.objects.filter(user=target_user, workspace__organization=org).values_list(
-        "workspace_id", "workspace_role"
+    target_roles = list(
+        WorkspaceMembership.objects.filter(user=target_user, workspace__organization=org).values_list(
+            "workspace_id", "workspace_role"
+        )
     )
-    target_roles = list(target_roles)
     if not target_roles:
         # Nobody to outrank yet. Adding them to a brand is a different action,
         # gated where that happens.

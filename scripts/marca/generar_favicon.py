@@ -24,13 +24,22 @@ PNGS = {
 def render(size: int, out: Path) -> None:
     html = Path(tempfile.mkdtemp()) / "i.html"
     html.write_text(
-        f'<style>html,body{{margin:0;background:transparent}}</style>'
+        f"<style>html,body{{margin:0;background:transparent}}</style>"
         f'<img src="{SVG.as_uri()}" width="{size}" height="{size}" style="display:block">'
     )
     subprocess.run(
-        [EDGE, "--headless", "--disable-gpu", "--hide-scrollbars", "--default-background-color=00000000",
-         f"--window-size={size},{size}", f"--screenshot={out}", html.as_uri()],
-        check=True, capture_output=True,
+        [
+            EDGE,
+            "--headless",
+            "--disable-gpu",
+            "--hide-scrollbars",
+            "--default-background-color=00000000",
+            f"--window-size={size},{size}",
+            f"--screenshot={out}",
+            html.as_uri(),
+        ],
+        check=True,
+        capture_output=True,
     )
 
 

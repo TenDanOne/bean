@@ -245,9 +245,7 @@ class TestDeleting:
         assert response.status_code == 200
         assert provider.delete_calls == ["c1"]
 
-    def test_a_platform_refusal_names_the_reversible_alternative(
-        self, client, django_user_model, workspace, channel
-    ):
+    def test_a_platform_refusal_names_the_reversible_alternative(self, client, django_user_model, workspace, channel):
         """If a platform really will not delete someone else's comment, the
         answer is "hide it instead", not a raw API error."""
         user, membership = member(django_user_model, workspace, "manager", "m@example.com")
