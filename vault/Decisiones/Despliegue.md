@@ -1,7 +1,7 @@
 # Decisión · Despliegue
 
-- Railway, un solo servicio web desde el `Dockerfile` (`railway.toml`). Autodeploy por push a `main` con «Wait for CI».
-- `migrate` corre en el CMD del `Dockerfile` antes de gunicorn (Railway no aplicó el `preDeployCommand`; se deja también en `railway.toml`). No hay `Procfile`: Railway lo leía sin shell y `$PORT` no se expandía. Healthcheck en `/health/`.
+- Railway, un solo servicio web desde el `Dockerfile` (autodetectado). Sin `railway.toml`: Config as Code está deprecado y no se puede activar en servicios nuevos; healthcheck y reinicios se configuran en la UI. Autodeploy por push a `main` con «Wait for CI».
+- `migrate` corre en el CMD del `Dockerfile` antes de gunicorn. No hay `Procfile`: Railway lo leía sin shell y `$PORT` no se expandía. Healthcheck `/health/` puesto en la UI de Railway.
 - Gunicorn `--timeout 120`: «Publicar ahora» publica dentro de la petición (subidas de video).
 - BD: Supabase por **session pooler** (host del pooler, puerto 5432) para la app y para migrate. El transaction pooler (6543) pediría `DISABLE_SERVER_SIDE_CURSORS`/`CONN_MAX_AGE=0`; la conexión directa es solo IPv6.
 - En Railway definir `DJANGO_SETTINGS_MODULE=config.settings.production` (si no, el `migrate` del pre-deploy usa development, que es el default de `manage.py`).
