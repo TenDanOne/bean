@@ -8,6 +8,8 @@ builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
 [deploy]
+# Explicit + sh -c: Railway otherwise runs the Procfile `web:` line without a shell, so $PORT stays literal.
+startCommand = "sh -c 'gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --threads 2 --timeout 120'"
 preDeployCommand = "python manage.py migrate"
 healthcheckPath = "/health/"
 restartPolicyType = "on_failure"
