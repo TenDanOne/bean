@@ -9,9 +9,9 @@ the two cases is how the two drift apart.
     {% if channel.avatar_url %}
     <img src="{{ channel.avatar_url }}" alt="" class="w-7 h-7 rounded-full object-cover">
     {% else %}
-    <div class="w-7 h-7 rounded-full bg-app-3 flex items-center justify-center text-[11px] font-semibold text-app-tertiary">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
+    <div class="sidebar-av">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
     {% endif %}
-    <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-app rounded-full flex items-center justify-center">
+    <div class="sidebar-av-badge">
         {% include "partials/_platform_icon.html" with platform=channel.platform size="sm" %}
     </div>
 </div>

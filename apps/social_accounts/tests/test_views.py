@@ -95,6 +95,17 @@ class TestConnectPlatformView:
         assert b"Conectar una plataforma" in response.content
         assert b"TikTok Business" in response.content
 
+    def test_get_marks_platform_with_account_as_connected(self, authenticated_client, workspace):
+        from apps.social_accounts.models import SocialAccount
+
+        SocialAccount.objects.create(
+            workspace=workspace, platform="youtube", account_platform_id="yt1", account_name="Café Bean"
+        )
+        url = reverse("social_accounts:connect", kwargs={"workspace_id": workspace.id})
+        html = authenticated_client.get(url).content.decode()
+        assert "Conectada · Café Bean" in html
+        assert "No configurada" in html
+
     def test_get_grid_only_lists_enabled_platforms(self, authenticated_client, workspace):
         url = reverse("social_accounts:connect", kwargs={"workspace_id": workspace.id})
         platforms = [value for value, _ in authenticated_client.get(url).context["platform_choices"]]

@@ -15,13 +15,16 @@ Contexto para el revisor: BEAN es una aplicación interna de ITHOS para publicar
 
 ## 0. URLs comunes
 
+Las URLs viejas `/legal/privacy/`, `/legal/terms/`, `/legal/data-deletion/` y `/legal/support/` redirigen (301) a la página única `/legal/`; los callbacks de Meta no cambian. Si algún formulario rechaza el `#ancla`, usar `https://bean.ithos.mx/legal/`.
+
 | Campo | Valor |
 |---|---|
 | App / sitio web | `https://bean.ithos.mx/` |
-| Política de privacidad | `https://bean.ithos.mx/legal/privacy/` |
-| Términos de servicio | `https://bean.ithos.mx/legal/terms/` |
-| Soporte | `https://bean.ithos.mx/legal/support/` |
-| Instrucciones de borrado de datos | `https://bean.ithos.mx/legal/data-deletion/` |
+| Política de privacidad (Meta "Privacy Policy URL", TikTok "Privacy Policy URL", Google "Privacy policy link") | `https://bean.ithos.mx/legal/#privacidad` |
+| Términos de servicio (Meta "Terms of Service URL", TikTok "Terms of Service URL", Google "Terms of service link") | `https://bean.ithos.mx/legal/#terminos` |
+| Soporte / contacto | `https://bean.ithos.mx/legal/#contacto` |
+| Instrucciones de borrado de datos (Meta "User Data Deletion" -> instrucciones) | `https://bean.ithos.mx/legal/#borrado-de-datos` |
+| Página legal base (si un formulario no admite `#ancla`) | `https://bean.ithos.mx/legal/` |
 | Callback de solicitud de borrado (Meta) | `https://bean.ithos.mx/legal/data-deletion/callback/` |
 | Callback de desautorización (Meta) | `https://bean.ithos.mx/legal/meta/deauthorize/` |
 | Página para revisores | `https://bean.ithos.mx/review/` |
@@ -49,7 +52,7 @@ Una sola app de Meta (`PLATFORM_FACEBOOK_APP_ID` / `_APP_SECRET`) sirve a Facebo
 
 Meta documenta como mínimo para publicar en Instagram: `instagram_basic`, `instagram_content_publish`, `pages_read_engagement` (+ `pages_show_list`), con token de Página. Para publicar en una Página: `pages_manage_posts` (+ `pages_read_engagement`, `pages_show_list`).
 
-**Recomendación (ver brecha M1):** para la primera revisión pedir solo el conjunto de publicación y dejar inbox/analytics para una segunda ronda.
+**Decisión (brecha M1):** se declaran TODOS los permisos de arriba y se mantiene la bandeja social; cada uno necesita justificación y screencast propios (publicación, métricas, comentarios y mensajes). La política en `/legal/#privacidad` los describe uno a uno.
 
 | Permiso | Mantener en 1.ª revisión | Motivo |
 |---|---|---|
@@ -82,7 +85,7 @@ Meta documenta como mínimo para publicar en Instagram: `instagram_basic`, `inst
 
 - App de tipo Business con el caso de uso de gestionar/publicar en Páginas e Instagram.
 - Facebook Login (idealmente **Facebook Login for Business** con configuración; ver brecha M2). Registrar los dos redirect URIs de la tabla (el `redirect_uri` del canje de código debe ser idéntico al del diálogo).
-- Ajustes básicos: URL de política de privacidad, términos, **Data Deletion Request URL** (`/legal/data-deletion/callback/`) o URL de instrucciones, categoría, ícono 1024×1024, dominio de la app.
+- Ajustes básicos: URL de política de privacidad, términos, **Data Deletion Request URL** (`/legal/data-deletion/callback/`) o URL de instrucciones (`/legal/#borrado-de-datos`), categoría, ícono 1024×1024, dominio de la app.
 - **Deauthorize Callback URL** = `/legal/meta/deauthorize/`.
 - Borrado: Meta hace POST con `signed_request` (HMAC-SHA256 con el app secret) y espera JSON `{"url": "<estado>", "confirmation_code": "<código>"}` por HTTPS. Debe borrarse lo obtenido de Facebook y la política debe explicar cómo pedir el borrado.
 - **Business Verification:** obligatoria para Advanced Access (vincular la app a un Business Portfolio verificado de ITHOS: documentos legales, dominio verificado, contacto). Sin Advanced Access la app solo funciona con usuarios con rol en ella (Admin/Developer/Tester), lo que **basta para uso interno de una persona**. Decidir si de verdad hace falta App Review (brecha M7).
@@ -111,7 +114,7 @@ Grabar en 1080p, narrado o con subtítulos, navegador con la URL visible, una to
 8. Open the Facebook Page in another tab and show the post live; open Instagram and show the post on the profile. (0:30)
 9. If analytics/inbox permissions are requested: open Analytics for the Page and show the metrics; open Inbox and show a comment with a reply sent from BEAN. (0:40)
 10. Disconnect: Social accounts -> Disconnect on the Page. Show it disappears. (0:15)
-11. Show `https://bean.ithos.mx/legal/data-deletion/`, explain the deletion request and show the status page. In Facebook (Settings -> Apps and Websites) show the Remove app action that triggers the deauthorize callback. (0:30)
+11. Show `https://bean.ithos.mx/legal/#borrado-de-datos`, explain the deletion request and show the status page. In Facebook (Settings -> Apps and Websites) show the Remove app action that triggers the deauthorize callback. (0:30)
 
 ---
 
@@ -187,7 +190,7 @@ Pantalla completa del navegador con la URL visible, UI real de BEAN, flujo compl
 10. If scheduling is demonstrated: schedule for later, then Organization settings -> **Process pending** and show the post goes out. (0:30)
 11. Open TikTok and show the video on the profile with the chosen settings. (0:30)
 12. If `video.list` is requested: open Analytics for the TikTok account and show the video metrics. (0:20)
-13. Disconnect the account in BEAN, then open `/legal/data-deletion/` and explain how to request deletion. (0:30)
+13. Disconnect the account in BEAN, then open `/legal/#borrado-de-datos` and explain how to request deletion. (0:30)
 
 ---
 
@@ -209,10 +212,10 @@ YouTube/Google tiene su propio proceso (verificación de OAuth para scopes sensi
 
 | # | Brecha | Archivo a tocar |
 |---|---|---|
-| M1 | Se piden más permisos de los necesarios para publicar (`business_management`, `pages_manage_metadata`, `pages_messaging`, `pages_read_user_content`, `pages_manage_engagement`; en Instagram `instagram_manage_comments` e `instagram_manage_insights`). Cada uno exige justificación y screencast propios. Recortar a §1.1 o hacerlo configurable por env | `providers/facebook.py::required_scopes`, `providers/instagram.py::required_scopes` |
+| M1 | DECIDIDO: se declaran todos los scopes (`business_management`, `pages_manage_metadata`, `pages_messaging`, `pages_read_user_content`, `pages_manage_engagement`, `instagram_manage_comments`, `instagram_manage_insights`, `video.list`, `youtube.force-ssl`) y se mantiene la bandeja social. Pendiente por scope: justificación y screencast en cada App Review; la política (`/legal/#privacidad`) ya declara datos propios, de terceros (nombre público y texto de quien comenta o escribe), encargados y Limited Use de Google | `providers/*::required_scopes`, `templates/public/legal.html` |
 | M2 | OAuth con Facebook Login clásico (`scope=`) en vez de Facebook Login for Business (`config_id`); la guía actual de Instagram lo menciona. Evaluar si aplica | `providers/facebook.py::get_auth_url`, `providers/instagram.py::get_auth_url` |
 | M3 | Confirmar que el redirect URI sale con `https` tras el proxy y coincide exacto con el registrado | `apps/social_accounts/views.py::_build_redirect_uri`, `config/settings/base.py` |
-| M4 | `/legal/privacy/` ya cubre Meta y TikTok (datos, retención y borrado). Pendiente: `/review/` no menciona Meta/Instagram (solo TikTok); añadirlo | `templates/public/review.html` |
+| M4 | `/legal/#privacidad` ya cubre Meta y TikTok (datos, retención y borrado). Pendiente: `/review/` no menciona Meta/Instagram (solo TikTok); añadirlo | `templates/public/review.html` |
 | M5 | Callbacks de borrado/desautorización ya implementados (`signed_request` verificado con HMAC-SHA256, responden `{url, confirmation_code}`). Limitación: comparan con `account_platform_id` (id de Página / IG business), no con el app-scoped user id de Meta, por lo que rara vez coinciden. Pendiente: guardar ese user id al conectar y comparar con él | `apps/accounts/views.py`, `apps/social_accounts/views.py` |
 | M6 | El screencast de `instagram_basic` debe mostrar la selección de cuenta; confirmar que `select_account` lista Página + Instagram | `templates/social_accounts/account_select.html` |
 | M7 | Decidir si hace falta App Review: con un solo usuario con rol en la app no se exige. Si se opta por Advanced Access, hace falta Business Verification | (decisión; sin archivo) |

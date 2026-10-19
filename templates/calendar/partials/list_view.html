@@ -21,7 +21,6 @@ Context: posts, workspace.
                 @click="window.location='{% url 'composer:compose_edit' workspace_id=workspace.id post_id=post.id %}'">
                 <td class="px-4 py-3">
                     <span class="post-chip status-{{ post.status }} inline-flex">
-                        <span class="chip-dot"></span>
                         {{ post.get_status_display }}
                     </span>
                 </td>

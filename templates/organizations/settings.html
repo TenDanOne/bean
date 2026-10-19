@@ -230,7 +230,7 @@
     <div class="mt-10">
         <h3 class="text-sm font-semibold mb-1" style="color: var(--text-primary);">Procesar pendientes</h3>
         <p class="text-xs mb-3" style="color: var(--text-tertiary);">Ejecuta ahora las tareas en cola (publicaciones vencidas, sincronizaciones, recordatorios).</p>
-        <button type="button" hx-post="{% url 'process_pending' %}" hx-swap="none" hx-disabled-elt="this"
+        <button type="button" data-tour="procesar" hx-post="{% url 'process_pending' %}" hx-swap="none" hx-disabled-elt="this"
                 class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap"
                 style="background: var(--neutral-100); color: var(--text-primary);">
             Procesar pendientes

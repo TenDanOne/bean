@@ -62,7 +62,7 @@ class TestLoadingBar:
 
 class TestConnectGrid:
     def test_the_grid_reaches_four_columns(self):
-        assert "xl:grid-cols-4" in read(CONNECT)
+        assert "lg:grid-cols-4" in read(CONNECT)
 
     def test_the_container_is_wide_enough_for_four(self):
         """max-w-4xl is 896px; four cards there would be 212px each, too narrow

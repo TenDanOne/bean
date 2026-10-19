@@ -15,7 +15,7 @@
 | `/legal/privacy/` | Política de privacidad |
 | `/legal/terms/` | Términos de servicio |
 | `/legal/support/` | Soporte y contacto |
-| `/legal/data-deletion/` | Instrucciones de borrado de datos |
+| `/legal/#borrado-de-datos` | Instrucciones de borrado de datos |
 | `/legal/data-deletion/status/<code>/` | Estado de una solicitud de borrado |
 | `/legal/data-deletion/callback/` | Callback de Meta (POST `signed_request`); responde `{url, confirmation_code}` |
 | `/legal/meta/deauthorize/` | Callback de Meta cuando alguien quita la app (POST `signed_request`) |

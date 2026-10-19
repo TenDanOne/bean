@@ -1,53 +1,20 @@
-{% comment %} Shared chrome for the error pages. Deliberately self-contained: Django's
-   server_error view renders 500.html with an EMPTY context — no context
-   processors, no request — so an error page that leaned on base.html would
-   itself fail exactly when it is needed most. Inline CSS also survives a
-   collectstatic or storage failure. {% endcomment %}
+{% comment %} Chrome compartido de las páginas de error. Autocontenido: Django renderiza 500.html con contexto
+   VACÍO (sin request ni context processors), as&iacute; que solo se usa el CSS compilado por ruta fija y estilos inline. {% endcomment %}
+<link rel="stylesheet" href="/static/css/dist/styles.css">
 <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-        font-family: 'Figtree', system-ui, -apple-system, sans-serif;
-        background: var(--surface-1);
-        color: var(--text-primary);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-    }
-    .card {
-        background: var(--surface-0);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 40px;
-        max-width: 480px;
-        width: 100%;
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    .logo { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 24px; letter-spacing: -0.02em; }
-    .icon { margin-bottom: 16px; color: var(--text-ghost); }
-    .code { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--text-ghost); text-transform: uppercase; margin-bottom: 8px; }
-    h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
-    .message { font-size: 15px; color: var(--text-tertiary); line-height: 1.6; margin-bottom: 20px; }
-    .reason {
-        background: var(--surface-1);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 12px 14px;
-        font-size: 13px;
-        color: var(--text-secondary);
-        text-align: left;
-        margin-bottom: 20px;
-        word-break: break-word;
-    }
-    .reason strong { color: var(--text-primary); display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .link {
-        display: inline-block;
-        font-size: 14px;
-        color: var(--primary);
-        text-decoration: none;
-        font-weight: 600;
-    }
-    .link:hover { text-decoration: underline; }
+    body { font-family: 'Figtree', system-ui, -apple-system, sans-serif; background: var(--surface-page, #f4f1ea); color: var(--text-primary, #14262b); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: var(--surface-0, #fff); border: 1px solid var(--border, #d9d3c3); border-radius: 20px; padding: 36px 32px 28px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 18px 36px -22px rgba(15, 42, 48, .4); }
+    .logo img { height: 44px; width: auto; margin-bottom: 22px; }
+    .big { font-size: 84px; line-height: 1; font-weight: 800; letter-spacing: -.05em; color: var(--brand-500, #657329); }
+    .big.e5 { color: var(--st-failed-dot, #b42318); }
+    h1 { font-size: 24px; font-weight: 700; margin: 16px 0 8px; }
+    .message { color: var(--text-secondary, #465B60); line-height: 1.6; margin: 0 auto 18px; max-width: 42ch; }
+    .reason { background: var(--warm-50, #f9f6ef); border: 1px solid var(--border, #d9d3c3); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--text-secondary, #465B60); text-align: left; margin-bottom: 20px; word-break: break-all; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .reason strong { display: block; font-family: 'Figtree', system-ui, sans-serif; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--text-tertiary, #566a6e); margin-bottom: 2px; }
+    .acts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid var(--border, #d9d3c3); background: var(--surface-0, #fff); color: var(--text-primary, #14262b); font-weight: 650; font-size: 14px; text-decoration: none; }
+    .btn.primary { background: var(--brand-500, #657329); border-color: var(--brand-500, #657329); color: var(--on-primary, #fff); }
+    .btn:hover { filter: brightness(.96); }
+    .btn:focus-visible { outline: 2px solid var(--text-primary, #14262b); outline-offset: 2px; }
 </style>

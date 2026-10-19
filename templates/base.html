@@ -29,7 +29,8 @@
         html.sidebar-is-collapsed .sidebar-initial .sidebar-section-label-wrap,
         html.sidebar-is-collapsed .sidebar-initial .sidebar-badge { display: none; }
         html.sidebar-is-collapsed .sidebar-initial .sidebar-new-label,
-        html.sidebar-is-collapsed .sidebar-initial .sidebar-connect-channels { display: none; }
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-connect-channels,
+        html.sidebar-is-collapsed .sidebar-initial .sidebar-onboarding { display: none; }
         /* Collapsed child overrides before Alpine */
         html.sidebar-is-collapsed .sidebar-initial .sidebar-ws-btn { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
         html.sidebar-is-collapsed .sidebar-initial .sidebar-new-wrap { padding-left: 0.5rem; padding-right: 0.5rem; }
@@ -59,7 +60,7 @@
             z-index: 200;
         }
         .idea-modal {
-            background: white; border-radius: 16px; width: 100%; max-width: 640px;
+            background: var(--surface-0); border-radius: 16px; width: 100%; max-width: 640px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             display: flex; flex-direction: column; max-height: calc(100vh - 80px); position: relative;
             margin: 0 1rem;
@@ -105,7 +106,7 @@
         }
         .idea-pill-btn:hover { background: var(--neutral-50); }
         .idea-pill-dropdown {
-            position: absolute; top: calc(100% + 6px); right: 0; background: white;
+            position: absolute; top: calc(100% + 6px); right: 0; background: var(--surface-0);
             border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); border: 1px solid var(--border);
             min-width: 180px; max-height: 240px; overflow-y: auto; z-index: 210; padding: 4px;
         }
@@ -122,7 +123,7 @@
             cursor: pointer;
             transition: border-color 150ms, background 150ms;
         }
-        .idea-media-zone.drag-over { border-color: var(--primary); background: rgba(var(--primary-rgb, 249, 115, 22), 0.05); }
+        .idea-media-zone.drag-over { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 5%, transparent); }
         .idea-media-strip-layout {
             margin-top: 16px;
             display: flex;
@@ -188,7 +189,7 @@
             width: 12px; height: 12px; border: none; background: none; cursor: pointer; color: inherit; padding: 0;
         }
         .emoji-picker-popup {
-            position: absolute; bottom: calc(100% + 8px); left: 0; background: white;
+            position: absolute; bottom: calc(100% + 8px); left: 0; background: var(--surface-0);
             border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid var(--border);
             width: 280px; z-index: 220; overflow: hidden;
         }
@@ -229,10 +230,10 @@
          class="fixed top-4 right-4 z-[100] max-w-sm"
          role="alert" aria-live="assertive">
         <div class="flex items-start gap-3 rounded-lg px-4 py-3 shadow-lg"
-             style="background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B;">
+             style="background: var(--al-err-bg); border: 1px solid var(--al-err-bd); color: var(--al-err-fg);">
             {% icon "circle-exclamation" css_class="w-5 h-5 flex-shrink-0 mt-0.5" %}
             <p class="text-sm flex-1" x-text="message"></p>
-            <button type="button" @click="show = false" class="flex-shrink-0 cursor-pointer" style="color: #DC2626;" aria-label="Cerrar aviso">
+            <button type="button" @click="show = false" class="flex-shrink-0 cursor-pointer" style="color: var(--al-err-fg);" aria-label="Cerrar aviso">
                 {% icon "xmark" css_class="w-4 h-4" %}
             </button>
         </div>
@@ -277,7 +278,7 @@
         <aside class="flex flex-col flex-shrink-0 sidebar-initial
                       fixed inset-y-0 left-0 z-40 w-60 bg-app
                       transition-transform duration-200
-                      lg:relative lg:z-auto lg:translate-x-0 lg:bg-transparent"
+                      lg:relative lg:z-auto lg:translate-x-0 lg:bg-transparent sidebar-shell"
                :class="[
                    sidebarCollapsed ? 'lg:w-[60px] sidebar-collapsed' : 'lg:w-60',
                    mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -371,7 +372,7 @@
             <div class="sidebar-new-wrap px-3 pt-2 pb-1" :class="sidebarCollapsed && 'px-2'"
                  x-data="sidebarNewMenu()">
                 <div class="relative">
-                    <button @click="newMenuOpen = !newMenuOpen"
+                    <button @click="newMenuOpen = !newMenuOpen" data-tour="nuevo"
                             class="btn-brand w-full flex items-center justify-center gap-1.5 text-sm py-2 cursor-pointer"
                             :style="sidebarCollapsed ? 'padding-left:1.15rem;padding-right:1.15rem' : ''">
                         {% icon "plus" css_class="w-4 h-4 flex-shrink-0" %}
@@ -630,29 +631,29 @@
             <nav class="sidebar-nav flex-1 overflow-y-auto py-2 px-3" :class="sidebarCollapsed ? 'px-2' : 'px-3'">
                 {% block sidebar_nav %}
                 {% if request.workspace %}
-                <a href="{% url 'calendar:calendar' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}">
+                <a href="{% url 'calendar:calendar' workspace_id=request.workspace.id %}" data-tour="publicar" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}" {% if request.resolver_match.url_name == 'calendar' %}aria-current="page"{% endif %}>
                     {% icon "calendar-days" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Publicar</span>
                 </a>
-                <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'create_landing' or request.resolver_match.url_name == 'compose' %}active{% endif %}">
+                <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'create_landing' or request.resolver_match.url_name == 'compose' %}active{% endif %}" {% if request.resolver_match.url_name == 'create_landing' or request.resolver_match.url_name == 'compose' %}aria-current="page"{% endif %}>
                     {% icon "lightbulb" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Crear idea</span>
                 </a>                
-                <a href="{% url 'inbox:feed' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'inbox' %}active{% endif %}">
+                <a href="{% url 'inbox:feed' workspace_id=request.workspace.id %}" data-tour="bandeja" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'inbox' %}active{% endif %}" {% if request.resolver_match.app_name == 'inbox' %}aria-current="page"{% endif %}>
                     {% icon "comments" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Bandeja social</span>
-                    {% if sidebar_unread_inbox_count %}<span class="sidebar-badge">{{ sidebar_unread_inbox_count }}</span>{% endif %}
+                    {% if sidebar_unread_inbox_count %}<span class="sidebar-badge sidebar-badge-alert">{{ sidebar_unread_inbox_count }}</span>{% endif %}
                 </a>
                 {% endif %}
 
-                <a href="{% url 'notifications:list' %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'notifications' %}active{% endif %}">
+                <a href="{% url 'notifications:list' %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'notifications' %}active{% endif %}" {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'notifications' %}aria-current="page"{% endif %}>
                     {% icon "bell" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Notificaciones</span>
                 </a>
 
                 {% if request.workspace %}
                 {% if analytics_enabled_platforms %}
-                <a href="{% url 'analytics:index' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'analytics' %}active{% endif %}">
+                <a href="{% url 'analytics:index' workspace_id=request.workspace.id %}" data-tour="analiticas" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'analytics' %}active{% endif %}" {% if request.resolver_match.app_name == 'analytics' %}aria-current="page"{% endif %}>
                     {% icon "chart-line" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Analíticas</span>
                 </a>
@@ -660,6 +661,7 @@
                 {% endif %}
 
                 {% if request.workspace %}
+                <div data-tour="canales">
                 {% if sidebar_channels or sidebar_unhealthy_channels %}
                 <!-- Channels -->
                 <div class="group flex items-center justify-between mt-3.5 sidebar-section-label-wrap">
@@ -671,9 +673,9 @@
                     {% endcomment %}
                     {% if request|can:"manage_social_accounts" %}
                     <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}"
-                       class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-app-ghost hover:text-app-secondary transition-all mr-2 sidebar-nav-label"
-                       title="Conectar un canal">
-                        {% icon "plus" css_class="w-3.5 h-3.5" label="Conectar un canal" %}
+                       class="sidebar-nav-label mr-2 text-xs font-semibold hover:underline" style="color: var(--brand-700);"
+                       title="Conectar un canal" aria-label="Conectar un canal">
+                        + Conectar
                     </a>
                     {% endif %}
                 </div>
@@ -702,52 +704,44 @@
                     <div class="relative flex-shrink-0 opacity-60">
                         {% if channel.avatar_url %}
                         <img src="{{ channel.avatar_url }}" alt="" class="w-7 h-7 rounded-full object-cover grayscale" x-data @error="$el.style.display='none';$el.nextElementSibling.style.display='flex'">
-                        <div class="w-7 h-7 rounded-full bg-app-3 items-center justify-center text-[11px] font-semibold text-app-tertiary" style="display:none">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
+                        <div class="sidebar-av" style="display:none">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
                         {% else %}
-                        <div class="w-7 h-7 rounded-full bg-app-3 flex items-center justify-center text-[11px] font-semibold text-app-tertiary">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
+                        <div class="sidebar-av">{{ channel.account_name|default:channel.account_handle|make_list|first|upper }}</div>
                         {% endif %}
-                        <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-app rounded-full flex items-center justify-center">
+                        <div class="sidebar-av-badge">
                             {% include "partials/_platform_icon.html" with platform=channel.platform size="sm" %}
                         </div>
                     </div>
-                    <span class="sidebar-nav-label truncate flex-1 text-app-ghost opacity-60">{{ channel.account_name|default:channel.account_handle }}</span>
+                    <span class="sidebar-nav-label truncate flex-1 text-app-ghost">{{ channel.account_name|default:channel.account_handle }}</span>
                     <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=request.workspace.id account_id=channel.id %}" class="sidebar-nav-label">
                         {% csrf_token %}
-                        <button type="submit" class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold text-orange-700 bg-orange-50 rounded-full hover:bg-orange-100 transition-colors cursor-pointer" title="Reconectar {{ channel.account_name|default:channel.account_handle }}">
+                        <button type="submit" class="sidebar-tag-warn" title="Reconectar {{ channel.account_name|default:channel.account_handle }}">
                             Reconectar
                         </button>
                     </form>
                 </div>
                 {% endfor %}
+                </div>
 
                 <!-- Connect channels (hidden when collapsed) -->
                 {% if sidebar_connectable_platforms %}
-                <div class="sidebar-connect-channels" x-show="!sidebarCollapsed">
-                <div class="sidebar-section-label">Conectar canales</div>
-                {% for platform_key, platform_label in sidebar_connectable_platforms|slice:":3" %}
-                <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}" class="sidebar-nav-item">
-                    <div class="relative flex-shrink-0">
-                        <div class="w-4 h-4 flex items-center justify-center rounded-lg bg-app-2">
-                            {% include "partials/_platform_icon.html" with platform=platform_key size="sm" %}
-                        </div>
-                        <div class="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full bg-orange-500 flex items-center justify-center ring-1 ring-white">
-                            {% icon "plus" css_class="w-[6px] h-[6px]" %}
-                        </div>
+                <div class="sidebar-connect-channels sidebar-conn" x-show="!sidebarCollapsed">
+                    <div>Aún puedes conectar:</div>
+                    <div class="sidebar-conn-mini">
+                        {% for platform_key, platform_label in sidebar_connectable_platforms %}
+                        <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}" title="Conectar {{ platform_label }}" aria-label="Conectar {{ platform_label }}">
+                            {% platform_icon platform_key size="4" %}
+                        </a>
+                        {% endfor %}
                     </div>
-                    <span class="sidebar-nav-label">{{ platform_label }}</span>
-                </a>
-                {% endfor %}
-                <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}" class="sidebar-nav-item">
-                    <div class="w-4 h-4 flex items-center justify-center flex-shrink-0 rounded-lg bg-app-2">
-                        {% icon "plus" css_class="w-[14px] h-[14px]" %}
-                    </div>
-                    <span class="sidebar-nav-label">Más canales</span>
-                </a>
                 </div>
                 {% endif %}
                 {% endif %}
                 {% endblock %}
             </nav>
+
+            <!-- Onboarding checklist: pastilla colapsada en el pie del sidebar -->
+            {% include "onboarding/partials/_checklist.html" %}
 
             <!-- Organization footer -->
             <div class="sidebar-org-footer border-t border-app-subtle relative px-3 py-3" x-data="{ orgMenuOpen: false }"
@@ -843,7 +837,7 @@
             <div class="flex lg:hidden items-center justify-between px-4 py-3 border-b border-app bg-app flex-shrink-0">
                 <button @click="mobileMenuOpen = !mobileMenuOpen"
                         class="w-9 h-9 flex items-center justify-center rounded-lg text-app-secondary hover:bg-app-2 transition-colors cursor-pointer -ml-1"
-                        title="Alternar menú" aria-label="Alternar menú">
+                        title="Abrir menú" aria-label="Abrir menú" data-tour-menu>
                     {% icon "bars" css_class="w-[20px] h-[20px]" %}
                 </button>
                 <div class="flex items-center gap-2">
@@ -891,9 +885,6 @@
             </main>
         </div>
     </div>
-
-    <!-- Onboarding checklist popup (fixed bottom-right) -->
-    {% include "onboarding/partials/_checklist.html" %}
 
     {% else %}
     <main class="auth-bg min-h-screen flex items-center justify-center py-12 px-4" style="font-family: var(--font-body);">
@@ -996,6 +987,7 @@
         });
     </script>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
+    {% if user.is_authenticated and request.workspace %}<script src="{% static 'js/tour.js' %}" defer></script>{% endif %}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script nonce="{{ request.csp_nonce }}">

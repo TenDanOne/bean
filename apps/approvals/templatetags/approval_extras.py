@@ -4,45 +4,26 @@ from django import template
 
 register = template.Library()
 
-# Presentation metadata per editorial status — mirrors the approved design's
-# ``STATUS_META`` (dot / background / foreground / border + label). Kept here so
-# every approval surface (publish tab, composer panel, client portal) renders an
-# identical badge from one source.
+# Presentation metadata per editorial status: label + the ``st-*`` class that
+# sets the colour tokens (--st-*) in styles.css. Kept here so every approval
+# surface (publish tab, composer panel, client portal) renders an identical badge.
 STATUS_META = {
-    "draft": {"label": "Borrador", "dot": "#A8A29E", "bg": "#F5F5F4", "fg": "#57534E", "bd": "#E7E5E4"},
-    "pending_review": {"label": "En revisión", "dot": "#F97316", "bg": "#FFF7ED", "fg": "#C2410C", "bd": "#FED7AA"},
-    "pending_client": {
-        "label": "Pendiente del cliente",
-        "dot": "#F97316",
-        "bg": "#FFF7ED",
-        "fg": "#C2410C",
-        "bd": "#FED7AA",
-    },
-    "approved": {"label": "Aprobado", "dot": "#14B8A6", "bg": "#F0FDFA", "fg": "#0F766E", "bd": "#99F6E4"},
-    "changes_requested": {
-        "label": "Cambios solicitados",
-        "dot": "#F97316",
-        "bg": "#FFF7ED",
-        "fg": "#C2410C",
-        "bd": "#FED7AA",
-    },
-    "rejected": {"label": "Rechazado", "dot": "#EF4444", "bg": "#FEF2F2", "fg": "#B91C1C", "bd": "#FECACA"},
-    "scheduled": {"label": "Programado", "dot": "#3B82F6", "bg": "#EFF6FF", "fg": "#1D4ED8", "bd": "#BFDBFE"},
-    "publishing": {"label": "Publicando", "dot": "#6366F1", "bg": "#EEF2FF", "fg": "#4338CA", "bd": "#C7D2FE"},
-    "published": {"label": "Publicado", "dot": "#22C55E", "bg": "#F0FDF4", "fg": "#15803D", "bd": "#BBF7D0"},
-    "partially_published": {
-        "label": "Parcialmente publicado",
-        "dot": "#F59E0B",
-        "bg": "#FFFBEB",
-        "fg": "#B45309",
-        "bd": "#FDE68A",
-    },
-    "failed": {"label": "Falló", "dot": "#EF4444", "bg": "#FEF2F2", "fg": "#B91C1C", "bd": "#FECACA"},
-    "on_hold": {"label": "En pausa", "dot": "#7C3AED", "bg": "#F5F3FF", "fg": "#6D28D9", "bd": "#DDD6FE"},
+    "draft": {"label": "Borrador", "css": "draft"},
+    "pending_review": {"label": "En revisión", "css": "review"},
+    "pending_client": {"label": "Pendiente del cliente", "css": "review"},
+    "approved": {"label": "Aprobado", "css": "approved"},
+    "changes_requested": {"label": "Cambios solicitados", "css": "review"},
+    "rejected": {"label": "Rechazado", "css": "failed"},
+    "scheduled": {"label": "Programado", "css": "scheduled"},
+    "publishing": {"label": "Publicando", "css": "publishing"},
+    "published": {"label": "Publicado", "css": "published"},
+    "partially_published": {"label": "Parcialmente publicado", "css": "review"},
+    "failed": {"label": "Falló", "css": "failed"},
+    "on_hold": {"label": "En pausa", "css": "paused"},
 }
 
 
 @register.inclusion_tag("approvals/partials/_status_badge.html")
 def status_badge(status):
-    """Render the editorial-status pill (dot + label) for *status*."""
+    """Render the editorial-status pill (label) for *status*."""
     return {"meta": STATUS_META.get(status, STATUS_META["draft"])}

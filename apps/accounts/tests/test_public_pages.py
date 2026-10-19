@@ -19,17 +19,57 @@ def test_public_review_page_is_available_without_authentication(client):
     assert b"TikTok integration" in response.content
 
 
-def test_public_legal_pages_are_available_without_authentication(client):
-    for name, marker in (
-        ("public_privacy", b"Privacy Policy"),
-        ("public_terms", b"Terms of Service"),
-        ("public_support", b"Support"),
-    ):
-        response = client.get(reverse(name))
+def test_legal_page_is_public_with_both_languages_and_anchors(client):
+    response = client.get(reverse("public_legal"))
+    html = response.content.decode()
 
-        assert response.status_code == 200
-        assert marker in response.content
-        assert b"dario.curiel@unx.mx" in response.content
+    assert response.status_code == 200
+    for anchor in (
+        "privacidad",
+        "terminos",
+        "borrado-de-datos",
+        "contacto",
+        "privacy",
+        "terms",
+        "data-deletion",
+        "contact",
+    ):
+        assert f'id="{anchor}"' in html
+    assert "Privacy Policy" in html and "Pol&iacute;tica de privacidad" in html
+    assert "CUND000714T89" in html and "Calle Diego Rivera 100" in html
+    assert "dario.curiel@unx.mx" in html
+    assert "<script>" not in html  # CSP: el JS vive en static/js/legal.js
+    assert "js/legal.js" in html
+
+
+@pytest.mark.parametrize(
+    ("name", "anchor"),
+    [
+        ("public_privacy", "privacidad"),
+        ("public_terms", "terminos"),
+        ("public_data_deletion", "borrado-de-datos"),
+        ("public_support", "contacto"),
+    ],
+)
+def test_old_legal_urls_redirect_permanently(client, name, anchor):
+    response = client.get(reverse(name))
+
+    assert response.status_code == 301
+    assert response["Location"] == f"/legal/#{anchor}"
+
+
+def test_landing_links_to_legal_and_shows_disclaimer(client):
+    html = client.get("/").content.decode()
+
+    assert "/legal/#privacidad" in html and "/legal/#borrado-de-datos" in html
+    assert "no est&aacute; afiliado ni avalado por Meta, TikTok ni Google" in html
+
+
+def test_404_renders_branded_page(client):
+    response = client.get("/no-existe-xyz/")
+
+    assert response.status_code == 404
+    assert b"Volver al inicio" in response.content and b"Ir a Publicar" in response.content
 
 
 def test_tiktok_verification_file_is_served_at_domain_root(client):
@@ -71,9 +111,9 @@ def test_review_keeps_noindex(client):
 
 
 def test_data_deletion_page_is_public(client):
-    response = client.get(reverse("public_data_deletion"))
+    response = client.get(reverse("public_data_deletion"), follow=True)
     assert response.status_code == 200
-    assert b'id="es"' in response.content and b'id="en"' in response.content
+    assert b'id="borrado-de-datos"' in response.content and b'id="data-deletion"' in response.content
 
 
 @pytest.fixture

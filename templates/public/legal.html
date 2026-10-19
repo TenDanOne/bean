@@ -1,0 +1,297 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block title %}Legal | BEAN by ITHOS{% endblock %}
+
+{% block head_extra %}
+<style>
+    [data-l][hidden] { display: none !important; }
+    .lg-head { padding: 8px 0 4px; }
+    .lg-head h1 { margin: 0; font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -.03em; }
+    .lg-head p { margin: 4px 0 0; color: var(--text-tertiary); font-size: .875rem; }
+    .lg-lay { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px; align-items: start; padding: 18px 0 40px; }
+    .lg-aside { position: sticky; top: 12px; background: var(--surface-0); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
+    .lg-aside summary { display: none; font-weight: 600; cursor: pointer; }
+    .lg-aside nav { display: grid; gap: 2px; }
+    .lg-aside nav a { display: block; padding: 8px 10px; border-radius: 6px; color: var(--text-secondary); font-weight: 600; text-decoration: none; }
+    .lg-aside nav a:hover { background: var(--warm-100); color: var(--text-primary); }
+    .lg-aside nav a[aria-current="true"] { background: var(--brand-100); color: var(--brand-800); font-weight: 750; }
+    .lg-aside a:focus-visible, .lg-doc a:focus-visible, .lg-sw button:focus-visible, .lg-doc summary:focus-visible, .lg-aside summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+    .lg-sw { display: inline-flex; margin-top: 12px; background: var(--warm-100); border: 1px solid var(--warm-300); border-radius: 10px; padding: 2px; }
+    .lg-sw button { min-width: 44px; min-height: 36px; border: 0; background: transparent; border-radius: 8px; font: inherit; font-size: .8125rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; }
+    .lg-sw button[aria-pressed="true"] { background: var(--brand-100); color: var(--brand-800); font-weight: 750; }
+    .lg-sec { padding: 6px 0 30px; border-bottom: 1px solid var(--border); margin-bottom: 26px; }
+    .lg-sec h2 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.75rem; scroll-margin-top: 12px; }
+    .lg-sec h3 { margin: 22px 0 6px; font-size: 1.0625rem; font-weight: 700; scroll-margin-top: 12px; }
+    .lg-sec p, .lg-sec li { max-width: 75ch; color: var(--text-secondary); line-height: 1.7; }
+    .lg-sec ul { padding-left: 20px; margin: 6px 0; }
+    .lg-sec a { color: var(--brand-700); font-weight: 600; }
+    .toc { background: var(--surface-0); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; margin: 8px 0 4px; }
+    .toc summary { cursor: pointer; font-size: .75rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-tertiary); padding: 4px 0; }
+    .toc nav { display: grid; gap: 0; padding-bottom: 4px; }
+    .toc nav a { padding: 4px 6px; font-size: .875rem; text-decoration: none; }
+    .toc nav a:hover { text-decoration: underline; }
+    @media (max-width: 960px) {
+        .lg-lay { grid-template-columns: 1fr; gap: 16px; }
+        .lg-aside { position: static; }
+        .lg-aside summary { display: block; }
+        .lg-aside[open] summary { margin-bottom: 8px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lg-head">
+    <h1>Legal &middot; BEAN by ITHOS</h1>
+    <p><span data-l="es">&Uacute;ltima actualizaci&oacute;n: octubre 2026</span><span data-l="en">Last updated: October 2026</span></p>
+</div>
+
+<div class="lg-lay">
+    <details class="lg-aside" id="lg-aside" open>
+        <summary><span data-l="es">Documento legal:</span><span data-l="en">Legal document:</span> <b id="lg-cur">Privacidad</b></summary>
+        <nav aria-label="Documentos legales / Legal documents">
+            <a href="#privacidad" data-es="#privacidad" data-en="#privacy"><span data-l="es">Privacidad</span><span data-l="en">Privacy</span></a>
+            <a href="#terminos" data-es="#terminos" data-en="#terms"><span data-l="es">T&eacute;rminos</span><span data-l="en">Terms</span></a>
+            <a href="#borrado-de-datos" data-es="#borrado-de-datos" data-en="#data-deletion"><span data-l="es">Borrado de datos</span><span data-l="en">Data deletion</span></a>
+            <a href="#contacto" data-es="#contacto" data-en="#contact"><span data-l="es">Contacto</span><span data-l="en">Contact</span></a>
+        </nav>
+        <div class="lg-sw" role="group" aria-label="Idioma / Language">
+            <button type="button" data-lang="es" lang="es" aria-pressed="true">ES</button>
+            <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
+        </div>
+    </details>
+
+    <div class="lg-doc">
+    <div data-l="es" lang="es">
+        <article class="lg-sec" id="privacidad">
+            <h2>Pol&iacute;tica de privacidad</h2>
+            <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+                <a href="#priv-quien">Qui&eacute;n opera BEAN</a><a href="#priv-datos">Datos que obtenemos</a><a href="#priv-terceros">Datos de terceros</a><a href="#priv-uso">Para qu&eacute; los usamos</a><a href="#priv-comparte">Con qui&eacute;n se comparten</a><a href="#priv-guardan">D&oacute;nde se guardan</a><a href="#priv-retencion">Retenci&oacute;n</a><a href="#priv-google">Servicios de API de Google (YouTube)</a><a href="#priv-arco">Derechos ARCO</a><a href="#priv-cambios">Cambios a esta pol&iacute;tica</a><a href="#priv-afiliacion">Sin afiliaci&oacute;n</a>
+            </nav></details>
+            <h3 id="priv-quien">Qui&eacute;n opera BEAN</h3>
+            <p>BEAN es una aplicaci&oacute;n de gesti&oacute;n de redes sociales operada por ITHOS en M&eacute;xico para sus propias cuentas. Responsable del tratamiento: {{ responsable.es }}, con domicilio en {{ domicilio }}. Contacto de privacidad: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+            <h3 id="priv-datos">Datos que obtenemos</h3>
+            <ul>
+                <li>Cuenta de BEAN: correo y nombre del usuario autorizado.</li>
+                <li>Facebook e Instagram (Meta): tu perfil; las P&aacute;ginas y el negocio vinculado a los que das acceso; el contenido publicado desde BEAN; sus m&eacute;tricas; los comentarios en tus publicaciones y su moderaci&oacute;n; y los mensajes de Messenger de la P&aacute;gina. Permisos que solicitamos y su finalidad: <code>pages_show_list</code> (listar tus P&aacute;ginas), <code>pages_manage_posts</code> (publicar en la P&aacute;gina), <code>pages_read_engagement</code> (leer interacciones), <code>pages_read_user_content</code> (leer comentarios de usuarios), <code>pages_manage_engagement</code> (responder y moderar comentarios), <code>pages_manage_metadata</code> (gestionar la configuraci&oacute;n de la P&aacute;gina), <code>pages_messaging</code> (mensajes de Messenger), <code>business_management</code> (negocio vinculado), <code>read_insights</code> (m&eacute;tricas de la P&aacute;gina, si las anal&iacute;ticas est&aacute;n activas), <code>instagram_basic</code> (perfil de Instagram), <code>instagram_content_publish</code> (publicar en Instagram), <code>instagram_manage_comments</code> (comentarios de Instagram) e <code>instagram_manage_insights</code> (m&eacute;tricas de Instagram).</li>
+                <li>YouTube (Google): tu canal, los videos publicados desde BEAN, las m&eacute;tricas del canal y los comentarios. Permisos y finalidad: <code>youtube.upload</code> (subir videos), <code>youtube.readonly</code> (leer tu canal y videos), <code>youtube.force-ssl</code> (leer y moderar comentarios) y <code>yt-analytics.readonly</code> (m&eacute;tricas de YouTube Analytics, si las anal&iacute;ticas est&aacute;n activas).</li>
+                <li>TikTok: tu perfil b&aacute;sico (identificador, nombre, avatar), los videos publicados desde BEAN y su estado de publicaci&oacute;n. Permisos y finalidad: <code>user.info.basic</code> (perfil b&aacute;sico), <code>video.publish</code> (publicar videos) y <code>video.list</code> (m&eacute;tricas por video, si las anal&iacute;ticas est&aacute;n activas).</li>
+                <li>Tokens OAuth de acceso y renovaci&oacute;n, necesarios para mantener la conexi&oacute;n; se guardan cifrados con AES-256-GCM.</li>
+            </ul>
+            <h3 id="priv-terceros">Datos de terceros</h3>
+            <p>Al leer comentarios y mensajes, BEAN recibe el nombre p&uacute;blico y el texto de las personas que comentan o escriben a tus cuentas. Los usamos &uacute;nicamente para mostrarlos en la bandeja social, de modo que puedas responder y moderar. No los usamos para ninguna otra finalidad.</p>
+            <h3 id="priv-uso">Para qu&eacute; los usamos</h3>
+            <p>Solo para autenticar al usuario autorizado, mantener las cuentas conectadas, programar y publicar el contenido que el propio usuario solicita, mostrarle m&eacute;tricas y permitirle responder y moderar comentarios y mensajes. No vendemos los datos, no los usamos para publicidad ni para crear perfiles publicitarios, y no los usamos para entrenar modelos de inteligencia artificial.</p>
+            <h3 id="priv-comparte">Con qui&eacute;n se comparten</h3>
+            <p>Los datos solo se comparten con encargados que prestan la infraestructura, y con las plataformas como destinatarias de lo que publicas:</p>
+            <ul>
+                <li>Railway (hospedaje de la aplicaci&oacute;n), Supabase (base de datos), Cloudflare R2 (archivos multimedia) y MailerSend (correo transaccional).</li>
+                <li>Sentry (registro de errores), solo cuando est&aacute; activo.</li>
+                <li>Meta, TikTok y Google, como destinatarias de las publicaciones y respuestas que env&iacute;as desde BEAN.</li>
+            </ul>
+            <p>No los compartimos con terceros para sus propios fines.</p>
+            <h3 id="priv-guardan">D&oacute;nde se guardan</h3>
+            <p>Base de datos PostgreSQL en Supabase y archivos multimedia en Cloudflare R2; la aplicaci&oacute;n corre en Railway. Los encargados solo procesan los datos para prestar la infraestructura.</p>
+            <h3 id="priv-retencion">Retenci&oacute;n</h3>
+            <ul>
+                <li>Tokens: se eliminan al desconectar la cuenta o cuando Meta nos notifica la revocaci&oacute;n.</li>
+                <li>Publicaciones, m&eacute;tricas y mensajes: se conservan mientras la cuenta exista en BEAN y se borran cuando lo solicitas por correo, en los plazos de los derechos ARCO (respuesta en 20 d&iacute;as h&aacute;biles; ejecuci&oacute;n en los 15 siguientes), salvo obligaci&oacute;n legal de conservarlos.</li>
+            </ul>
+            <h3 id="priv-google">Servicios de API de Google (YouTube)</h3>
+            <p>El uso y la transferencia a cualquier otra app de la informaci&oacute;n recibida de las APIs de Google se ajustar&aacute;n a la <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Pol&iacute;tica de Datos de Usuario de los Servicios de API de Google</a>, incluidos los requisitos de Uso Limitado (Limited Use).</p>
+            <ul>
+                <li><b>Acceso:</b> BEAN accede a tu canal de YouTube, tus videos, m&eacute;tricas y comentarios solo despu&eacute;s de que autorizas la conexi&oacute;n con tu cuenta de Google.</li>
+                <li><b>Uso:</b> usamos esos datos solo para publicar videos, mostrar m&eacute;tricas del canal y permitirte leer y moderar comentarios, es decir, para ofrecerte las funciones visibles en BEAN. No los usamos para publicidad ni para entrenar modelos de IA.</li>
+                <li><b>Almacenamiento:</b> se guardan en la base de datos de BEAN (Supabase); los tokens, cifrados con AES-256-GCM.</li>
+                <li><b>Intercambio:</b> no transferimos ni vendemos estos datos a terceros, salvo a los encargados listados arriba para prestar el servicio, para cumplir la ley, o como parte de una fusi&oacute;n o adquisici&oacute;n con tu consentimiento.</li>
+                <li><b>Acceso humano restringido:</b> nadie lee tus datos de Google, salvo con tu consentimiento expreso, por razones de seguridad (p. ej. investigar un abuso) o por requerimiento legal.</li>
+                <li><b>Borrado:</b> al desconectar la cuenta se eliminan los tokens; el resto de los datos se borra cuando lo solicitas por correo (secci&oacute;n Retenci&oacute;n). Tambi&eacute;n puedes revocar el acceso desde tu cuenta de Google; consulta <a href="#borrado-de-datos">Borrado de datos</a>.</li>
+            </ul>
+            <h3 id="priv-arco">Derechos ARCO</h3>
+            <p>Conforme a la Ley Federal de Protecci&oacute;n de Datos Personales en Posesi&oacute;n de los Particulares (LFPDPPP) vigente (2025), tienes derecho a Acceder, Rectificar, Cancelar u Oponerte al tratamiento de tus datos personales. Para ejercerlos, escribe a <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> indicando tu nombre, la cuenta conectada y el derecho que ejerces. Respondemos en un m&aacute;ximo de 20 d&iacute;as h&aacute;biles y, si procede, lo hacemos efectivo en los 15 d&iacute;as h&aacute;biles siguientes.</p>
+            <h3 id="priv-cambios">Cambios a esta pol&iacute;tica</h3>
+            <p>Si cambiamos esta pol&iacute;tica, publicaremos la nueva versi&oacute;n en esta p&aacute;gina con su fecha de actualizaci&oacute;n y, si el cambio es relevante, te avisaremos por correo.</p>
+            <h3 id="priv-afiliacion">Sin afiliaci&oacute;n</h3>
+            <p>BEAN no est&aacute; afiliado ni avalado por Meta, TikTok ni Google. Los nombres de las plataformas se usan solo para identificar las cuentas con las que se integra.</p>
+        </article>
+
+        <article class="lg-sec" id="terminos">
+            <h2>T&eacute;rminos de uso</h2>
+            <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+                <a href="#ter-servicio">Servicio</a><a href="#ter-uso">Uso aceptable</a><a href="#ter-contenido">Contenido y cuentas</a><a href="#ter-plataformas">T&eacute;rminos de las plataformas</a><a href="#ter-disp">Disponibilidad y responsabilidad</a><a href="#ter-ley">Ley aplicable</a><a href="#ter-codigo">C&oacute;digo abierto</a>
+            </nav></details>
+            <h3 id="ter-servicio">Servicio</h3>
+            <p>BEAN es una herramienta de ITHOS para gestionar y publicar contenido en sus propias cuentas de redes sociales. El acceso es solo por invitaci&oacute;n a usuarios autorizados; no se ofrece al p&uacute;blico ni se vende.</p>
+            <h3 id="ter-uso">Uso aceptable</h3>
+            <ul>
+                <li>Conecta &uacute;nicamente cuentas que administras o para las que tienes autorizaci&oacute;n.</li>
+                <li>No publiques contenido ilegal, enga&ntilde;oso o que infrinja derechos de terceros.</li>
+                <li>No uses BEAN para spam, automatizaci&oacute;n abusiva ni para eludir los l&iacute;mites de las plataformas.</li>
+            </ul>
+            <h3 id="ter-contenido">Contenido y cuentas</h3>
+            <p>Eres responsable del contenido que publicas y de las cuentas que conectas. Puedes desconectarlas en cualquier momento; consulta <a href="#borrado-de-datos">Borrado de datos</a>.</p>
+            <h3 id="ter-plataformas">T&eacute;rminos de las plataformas</h3>
+            <p>Al usar BEAN aceptas cumplir los t&eacute;rminos de cada plataforma que conectas:</p>
+            <ul>
+                <li><a href="https://developers.facebook.com/terms/" rel="noopener">Meta Platform Terms</a> (Facebook e Instagram).</li>
+                <li><a href="https://www.tiktok.com/legal/page/global/terms-of-service/es" rel="noopener">T&eacute;rminos de servicio de TikTok</a> y los <a href="https://www.tiktok.com/legal/page/global/tik-tok-developer-terms-of-service/es" rel="noopener">T&eacute;rminos de Desarrollador de TikTok</a>.</li>
+                <li><a href="https://www.youtube.com/t/terms" rel="noopener">T&eacute;rminos de servicio de YouTube</a>.</li>
+            </ul>
+            <h3 id="ter-disp">Disponibilidad y responsabilidad</h3>
+            <p>El servicio se ofrece &laquo;tal cual&raquo;, sin garant&iacute;a de disponibilidad continua; las publicaciones programadas salen cuando se procesa la cola. Podemos suspender el acceso ante uso indebido. En la medida que permita la ley, ITHOS no responde por da&ntilde;os indirectos, por interrupciones de las plataformas de terceros ni por contenido publicado por los usuarios, y su responsabilidad total se limita a lo que hayas pagado por el servicio, que a la fecha es cero.</p>
+            <h3 id="ter-ley">Ley aplicable</h3>
+            <p>Estos t&eacute;rminos se rigen por las leyes de M&eacute;xico. Para cualquier controversia, las partes se someten a los tribunales competentes de Jalisco, M&eacute;xico.</p>
+            <h3 id="ter-codigo">C&oacute;digo abierto</h3>
+            <p>BEAN by ITHOS est&aacute; basado en BrightBean Studio (AGPL-3.0). Consulta el <a href="https://github.com/TenDanOne/bean" rel="noopener">c&oacute;digo fuente</a>.</p>
+        </article>
+
+        <article class="lg-sec" id="borrado-de-datos">
+            <h2>Borrado de datos</h2>
+            <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+                <a href="#bor-como">C&oacute;mo revocar el acceso y pedir el borrado</a><a href="#bor-plazo">Qu&eacute; se elimina</a>
+            </nav></details>
+            <h3 id="bor-como">C&oacute;mo revocar el acceso y pedir el borrado</h3>
+            <p>Puedes revocar el acceso de BEAN y pedir que borremos tus datos as&iacute;:</p>
+            <ul>
+                <li>En BEAN: desconecta la cuenta desde Cuentas sociales; sus tokens se eliminan.</li>
+                <li>Facebook / Instagram: Facebook &gt; Configuraci&oacute;n &gt; Apps y sitios web &gt; quita BEAN. Meta nos notifica, BEAN desconecta las cuentas vinculadas a tu usuario y elimina sus tokens.</li>
+                <li>TikTok: TikTok &gt; Configuraci&oacute;n &gt; Gestionar apps (Seguridad y permisos) &gt; quita BEAN.</li>
+                <li>YouTube / Google: Cuenta de Google &gt; Seguridad &gt; Conexiones con apps y servicios de terceros &gt; quita BEAN.</li>
+                <li>Borrado completo del historial: escr&iacute;benos a <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> indicando la cuenta conectada.</li>
+            </ul>
+            <h3 id="bor-plazo">Qu&eacute; se elimina</h3>
+            <p>Al desconectar una cuenta (o al recibir el aviso de Meta) se eliminan sus tokens. El borrado completo del historial de publicaciones, m&eacute;tricas y mensajes se atiende por correo: respondemos en un m&aacute;ximo de 20 d&iacute;as h&aacute;biles y lo hacemos efectivo en los 15 d&iacute;as h&aacute;biles siguientes, salvo obligaci&oacute;n legal de conservarlo.</p>
+        </article>
+
+        <article class="lg-sec" id="contacto">
+            <h2>Contacto</h2>
+            <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+                <a href="#con-correo">Escr&iacute;benos</a><a href="#con-soporte">Soporte de conexi&oacute;n con TikTok</a><a href="#con-resp">Responsable</a>
+            </nav></details>
+            <h3 id="con-correo">Escr&iacute;benos</h3>
+            <p>BEAN es una aplicaci&oacute;n interna de ITHOS. Para dudas sobre acceso, una cuenta de TikTok conectada, privacidad o solicitudes de borrado, escribe a <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+            <h3 id="con-soporte">Soporte de conexi&oacute;n con TikTok</h3>
+            <p>Incluye el nombre del espacio de trabajo de BEAN, la hora aproximada del problema y el nombre visible de la cuenta de TikTok. Nunca incluyas tu client secret, token OAuth, contrase&ntilde;a u otras credenciales.</p>
+            <h3 id="con-resp">Responsable</h3>
+            <p>{{ responsable.es }}. Domicilio: {{ domicilio }}.</p>
+        </article>
+    </div>
+
+    <div data-l="en" lang="en">
+        <article class="lg-sec" id="privacy">
+            <h2>Privacy Policy</h2>
+            <details class="toc"><summary>On this page</summary><nav aria-label="On this page">
+                <a href="#priv-who">Who operates BEAN</a><a href="#priv-data">Data we obtain</a><a href="#priv-third">Third-party data</a><a href="#priv-use">How we use it</a><a href="#priv-share">Who we share it with</a><a href="#priv-stored">Where it is stored</a><a href="#priv-retention">Retention</a><a href="#priv-google-en">Google API Services (YouTube)</a><a href="#priv-arco">ARCO rights</a><a href="#priv-changes">Changes to this policy</a><a href="#priv-affil">No affiliation</a>
+            </nav></details>
+            <h3 id="priv-who">Who operates BEAN</h3>
+            <p>BEAN is a social media management application operated by ITHOS in Mexico for its own accounts. Data controller: {{ responsable.en }}, at {{ domicilio }}. Privacy contact: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+            <h3 id="priv-data">Data we obtain</h3>
+            <ul>
+                <li>BEAN account: email and name of the authorized user.</li>
+                <li>Facebook and Instagram (Meta): your profile; the Pages and linked business you grant access to; content published from BEAN; its metrics; comments on your posts and their moderation; and the Page's Messenger messages. Permissions we request and their purpose: <code>pages_show_list</code> (list your Pages), <code>pages_manage_posts</code> (publish to the Page), <code>pages_read_engagement</code> (read engagement), <code>pages_read_user_content</code> (read user comments), <code>pages_manage_engagement</code> (reply to and moderate comments), <code>pages_manage_metadata</code> (manage Page settings), <code>pages_messaging</code> (Messenger messages), <code>business_management</code> (linked business), <code>read_insights</code> (Page metrics, when analytics is enabled), <code>instagram_basic</code> (Instagram profile), <code>instagram_content_publish</code> (publish to Instagram), <code>instagram_manage_comments</code> (Instagram comments) and <code>instagram_manage_insights</code> (Instagram metrics).</li>
+                <li>YouTube (Google): your channel, videos published from BEAN, channel metrics and comments. Permissions and purpose: <code>youtube.upload</code> (upload videos), <code>youtube.readonly</code> (read your channel and videos), <code>youtube.force-ssl</code> (read and moderate comments) and <code>yt-analytics.readonly</code> (YouTube Analytics metrics, when analytics is enabled).</li>
+                <li>TikTok: your basic profile (identifier, display name, avatar), videos published from BEAN and their publishing status. Permissions and purpose: <code>user.info.basic</code> (basic profile), <code>video.publish</code> (publish videos) and <code>video.list</code> (per-video metrics, when analytics is enabled).</li>
+                <li>OAuth tokens (access and refresh) needed to keep the connection; stored encrypted with AES-256-GCM.</li>
+            </ul>
+            <h3 id="priv-third">Third-party data</h3>
+            <p>When reading comments and messages, BEAN receives the public name and the text of the people who comment on or write to your accounts. We use it solely to display it in the social inbox so you can reply and moderate. We use it for no other purpose.</p>
+            <h3 id="priv-use">How we use it</h3>
+            <p>Only to authenticate the authorized user, keep connected accounts, schedule and publish the content the user requests, show metrics, and let the user reply to and moderate comments and messages. We do not sell data, use it for advertising or advertising profiles, or use it to train artificial intelligence models.</p>
+            <h3 id="priv-share">Who we share it with</h3>
+            <p>Data is shared only with processors that provide infrastructure, and with the platforms as recipients of what you publish:</p>
+            <ul>
+                <li>Railway (application hosting), Supabase (database), Cloudflare R2 (media files) and MailerSend (transactional email).</li>
+                <li>Sentry (error logging), only when enabled.</li>
+                <li>Meta, TikTok and Google, as recipients of the posts and replies you send from BEAN.</li>
+            </ul>
+            <p>We do not share data with third parties for their own purposes.</p>
+            <h3 id="priv-stored">Where it is stored</h3>
+            <p>PostgreSQL database on Supabase and media files on Cloudflare R2; the application runs on Railway. Processors handle data only to provide infrastructure.</p>
+            <h3 id="priv-retention">Retention</h3>
+            <ul>
+                <li>Tokens: deleted when you disconnect the account or when Meta notifies us of the revocation.</li>
+                <li>Posts, metrics and messages: kept while the account exists in BEAN and deleted when you request it by email, within the ARCO rights deadlines (reply within 20 business days; carried out within the following 15), unless a legal obligation requires keeping them.</li>
+            </ul>
+            <h3 id="priv-google-en">Google API Services (YouTube)</h3>
+            <p>BEAN's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+            <ul>
+                <li><b>Access:</b> BEAN accesses your YouTube channel, videos, metrics and comments only after you authorize the connection with your Google account.</li>
+                <li><b>Use:</b> we use that data only to publish videos, show channel metrics and let you read and moderate comments, that is, to provide the features visible in BEAN. We do not use it for advertising or to train AI models.</li>
+                <li><b>Storage:</b> it is stored in BEAN's database (Supabase); tokens are encrypted with AES-256-GCM.</li>
+                <li><b>Sharing:</b> we do not transfer or sell this data to third parties, except to the processors listed above to provide the service, to comply with the law, or as part of a merger or acquisition with your consent.</li>
+                <li><b>Restricted human access:</b> nobody reads your Google data, except with your explicit consent, for security reasons (e.g. investigating abuse) or to comply with legal requirements.</li>
+                <li><b>Deletion:</b> disconnecting the account deletes the tokens; the rest of the data is deleted when you request it by email (Retention section). You can also revoke access from your Google account; see <a href="#data-deletion">Data deletion</a>.</li>
+            </ul>
+            <h3 id="priv-arco">ARCO rights</h3>
+            <p>Under Mexico's Federal Law on Protection of Personal Data Held by Private Parties (LFPDPPP) currently in force (2025), you have the right to Access, Rectify, Cancel or Oppose the processing of your personal data. To exercise them, write to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with your name, the connected account and the right you are exercising. We reply within 20 business days and, where applicable, carry it out within the following 15 business days.</p>
+            <h3 id="priv-changes">Changes to this policy</h3>
+            <p>If we change this policy, we will publish the new version on this page with its update date and, if the change is significant, notify you by email.</p>
+            <h3 id="priv-affil">No affiliation</h3>
+            <p>BEAN is not affiliated with or endorsed by Meta, TikTok or Google. Platform names are used only to identify the accounts BEAN integrates with.</p>
+        </article>
+
+        <article class="lg-sec" id="terms">
+            <h2>Terms of Service</h2>
+            <details class="toc"><summary>On this page</summary><nav aria-label="On this page">
+                <a href="#ter-service">Service</a><a href="#ter-use">Acceptable use</a><a href="#ter-content">Content and accounts</a><a href="#ter-platforms">Platform terms</a><a href="#ter-avail">Availability and liability</a><a href="#ter-law">Governing law</a><a href="#ter-code">Open source</a>
+            </nav></details>
+            <h3 id="ter-service">Service</h3>
+            <p>BEAN is an ITHOS tool to manage and publish content on its own social media accounts. Access is invitation-only for authorized users; it is not offered to the public or sold.</p>
+            <h3 id="ter-use">Acceptable use</h3>
+            <ul>
+                <li>Connect only accounts you manage or are authorized to use.</li>
+                <li>Do not publish illegal or misleading content, or content that infringes third-party rights.</li>
+                <li>Do not use BEAN for spam, abusive automation or to circumvent platform limits.</li>
+            </ul>
+            <h3 id="ter-content">Content and accounts</h3>
+            <p>You are responsible for the content you publish and the accounts you connect. You can disconnect them at any time; see <a href="#data-deletion">Data deletion</a>.</p>
+            <h3 id="ter-platforms">Platform terms</h3>
+            <p>By using BEAN you agree to comply with the terms of each platform you connect:</p>
+            <ul>
+                <li><a href="https://developers.facebook.com/terms/" rel="noopener">Meta Platform Terms</a> (Facebook and Instagram).</li>
+                <li><a href="https://www.tiktok.com/legal/page/global/terms-of-service/en" rel="noopener">TikTok Terms of Service</a> and the <a href="https://www.tiktok.com/legal/page/global/tik-tok-developer-terms-of-service/en" rel="noopener">TikTok Developer Terms of Service</a>.</li>
+                <li><a href="https://www.youtube.com/t/terms" rel="noopener">YouTube Terms of Service</a>.</li>
+            </ul>
+            <h3 id="ter-avail">Availability and liability</h3>
+            <p>The service is provided &ldquo;as is&rdquo; with no guarantee of continuous availability; scheduled posts go out when the queue is processed. We may suspend access in case of misuse. To the extent permitted by law, ITHOS is not liable for indirect damages, for outages of third-party platforms or for content published by users, and its total liability is limited to what you have paid for the service, which to date is zero.</p>
+            <h3 id="ter-law">Governing law</h3>
+            <p>These terms are governed by the laws of Mexico. For any dispute, the parties submit to the competent courts of Jalisco, Mexico.</p>
+            <h3 id="ter-code">Open source</h3>
+            <p>BEAN by ITHOS is based on BrightBean Studio (AGPL-3.0). See the <a href="https://github.com/TenDanOne/bean" rel="noopener">source code</a>.</p>
+        </article>
+
+        <article class="lg-sec" id="data-deletion">
+            <h2>Data deletion</h2>
+            <details class="toc"><summary>On this page</summary><nav aria-label="On this page">
+                <a href="#bor-how">How to revoke access and request deletion</a><a href="#bor-what">What is deleted</a>
+            </nav></details>
+            <h3 id="bor-how">How to revoke access and request deletion</h3>
+            <p>You can revoke BEAN's access and ask us to delete your data as follows:</p>
+            <ul>
+                <li>In BEAN: disconnect the account from Social accounts; its tokens are deleted.</li>
+                <li>Facebook / Instagram: Facebook &gt; Settings &gt; Apps and Websites &gt; remove BEAN. Meta notifies us, BEAN disconnects the accounts linked to your user and deletes their tokens.</li>
+                <li>TikTok: TikTok &gt; Settings &gt; Manage apps (Security and permissions) &gt; remove BEAN.</li>
+                <li>YouTube / Google: Google Account &gt; Security &gt; Third-party apps &amp; services &gt; remove BEAN.</li>
+                <li>Full history deletion: email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> naming the connected account.</li>
+            </ul>
+            <h3 id="bor-what">What is deleted</h3>
+            <p>Disconnecting an account (or receiving Meta's notice) deletes its tokens. Full deletion of the publishing history, metrics and messages is handled by email: we reply within 20 business days and carry it out within the following 15 business days, unless a legal obligation requires keeping it.</p>
+        </article>
+
+        <article class="lg-sec" id="contact">
+            <h2>Contact</h2>
+            <details class="toc"><summary>On this page</summary><nav aria-label="On this page">
+                <a href="#con-mail">Write to us</a><a href="#con-support">TikTok connection support</a><a href="#con-owner">Responsible party</a>
+            </nav></details>
+            <h3 id="con-mail">Write to us</h3>
+            <p>BEAN is an internal company application. For questions about access, a connected TikTok account, privacy, or deletion requests, contact us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+            <h3 id="con-support">TikTok connection support</h3>
+            <p>Include the BEAN workspace name, the approximate time of the issue, and the TikTok account display name. Never include your client secret, OAuth token, password, or other credentials in a support request.</p>
+            <h3 id="con-owner">Responsible party</h3>
+            <p>{{ responsable.en }}. Address: {{ domicilio }}.</p>
+        </article>
+    </div>
+    </div>
+</div>
+<script src="{% static 'js/legal.js' %}" defer></script>
+{% endblock %}

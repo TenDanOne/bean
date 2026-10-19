@@ -107,3 +107,18 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - Juez: PASA. pytest 1511 passed / 1 preexistente; ruff y mypy limpios.
 - Railway: el Custom Start Command de la UI tiene prioridad sobre el CMD del Dockerfile, así que no hay garantía de que corra migrate. Tras el deploy, revisar en Deploy Logs que aparezca «Applying ...»; si no, aplicar las migraciones a mano (ver sesión bean-a9).
 - Siguiente: paso 3 (pulido visual), M1/M5 de Meta y T5.
+
+### 2026-10-18 (cont.) — Pulido visual aprobado por mockup + página legal única
+- Regla nueva: todo cambio visual pasa primero por un mockup aprobado (`.claude/rules/ui-mockup-first.md`; mockups en `mockups/`, ignorado por git). Agente nuevo `legal-mx`.
+- Hecho:
+  - Tokens `--st-*`/`--al-*`, Figtree variable, pastillas de estado punteadas.
+  - Sidebar, Primeros pasos como pastilla y mini tutorial (`static/js/tour.js`, que guarda en localStorage si ya se vio).
+  - Conectar con estado por plataforma; landing y páginas 403/404/500.
+  - Página legal única `/legal/` (ES/EN, aside corto como SIMU, `static/js/legal.js`). Responsable y domicilio iguales a los de SIMU. Las URLs viejas redirigen 301 a su ancla. La privacidad declara todos los scopes (se conserva la bandeja social).
+- Revisiones: juez PASA (1518 passed, 1 fallo preexistente); design-system-bean y legal-mx con huecos ya corregidos.
+- Railway: el Custom Start Command ya incluye migrate y aplicó solo las 6 migraciones de 30d253c. Si hay que migrar a mano: `.venv/Scripts/python.exe C:\Users\ultra\bean-prod-manage.py migrate --noinput` (toca producción: pedir OK al usuario antes).
+- Pendientes:
+  - **Login con Google:** falla con «Unauthorized» en el callback. Hay que reintentar y leer «Social login failed …» en Deploy Logs.
+  - **Google OAuth en Testing:** los tokens de YouTube caducan cada 7 días; hay que verificar la marca.
+  - **Sombras naranjas** `rgba(249,115,22)` que vienen de BrightBean en composer, media, notificaciones y social_accounts.
+  - **TikTok T5 y Meta M5:** pendientes.

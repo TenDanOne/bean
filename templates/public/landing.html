@@ -1,64 +1,111 @@
 {% extends "public/base.html" %}
+{% load static %}
 
 {% block title %}BEAN by ITHOS | Gesti&oacute;n de redes sociales{% endblock %}
 
+{% block head_extra %}
+<style>
+    .ld-hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; padding: 20px 0 48px; }
+    .ld-kick { display: inline-flex; background: var(--brand-100); color: var(--brand-800); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-radius: 99px; padding: 4px 12px; }
+    .ld-hero h1 { margin: 16px 0; font-family: var(--font-display); font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.08; letter-spacing: -.03em; font-weight: 800; }
+    .ld-hero h1 em { font-style: normal; color: var(--brand-600); }
+    .ld-card { background: var(--surface-0); border: 1px solid var(--border); border-radius: 20px; padding: 26px; box-shadow: 0 14px 30px -18px rgba(15, 42, 48, .35); display: grid; gap: 18px; justify-items: center; }
+    .ld-card img { width: min(260px, 80%); height: auto; }
+    .ld-facts { display: grid; gap: 10px; width: 100%; margin: 0; padding: 0; list-style: none; font-size: .875rem; color: var(--text-secondary); }
+    .ld-facts li { display: flex; gap: 9px; align-items: flex-start; }
+    .ld-facts svg, .ld-dl svg { flex: none; color: var(--brand-600); }
+    .ld-sec { padding: 40px 0; border-top: 1px solid var(--border); }
+    .ld-sec h2 { margin: 0 0 6px; font-family: var(--font-display); font-size: 1.625rem; font-weight: 800; letter-spacing: -.02em; }
+    .ld-sec > p.s { max-width: 70ch; margin: 0 0 20px; color: var(--text-secondary); }
+    .ld-g3, .ld-g4 { display: grid; gap: 14px; }
+    .ld-g3 { grid-template-columns: repeat(3, 1fr); }
+    .ld-g4 { grid-template-columns: repeat(4, 1fr); }
+    .ld-pc { background: var(--surface-0); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .ld-pc h3 { display: flex; gap: 10px; align-items: center; margin: 0 0 6px; font-size: 1rem; font-weight: 700; }
+    .ld-pc h3 .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--warm-100); border: 1px solid var(--border-subtle); display: grid; place-items: center; }
+    .ld-pc p { margin: 0; font-size: .84rem; color: var(--text-secondary); line-height: 1.6; }
+    .ld-pc small { display: block; margin-top: 8px; font-size: .75rem; color: var(--text-tertiary); }
+    .ld-dl { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; }
+    .ld-dl > div { display: flex; gap: 12px; }
+    .ld-dl b { display: block; color: var(--text-primary); }
+    .ld-dl p { margin: 0; font-size: .875rem; color: var(--text-secondary); line-height: 1.6; }
+    .ld-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .ld-en { background: var(--surface-0); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; font-size: .875rem; color: var(--text-secondary); line-height: 1.65; }
+    .ld-en b { color: var(--text-primary); }
+    .ld-notice { margin-top: 14px; font-size: .8125rem; color: var(--text-tertiary); }
+    @media (max-width: 960px) { .ld-g4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 720px) {
+        .ld-hero, .ld-dl, .ld-g3, .ld-g4 { grid-template-columns: 1fr; }
+        .ld-hero { gap: 24px; padding-top: 4px; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="public-hero" aria-labelledby="landing-title">
-    <div class="public-kicker">BEAN by ITHOS</div>
-    <h1 id="landing-title" class="public-title">Un lugar tranquilo para publicar en nuestras redes.</h1>
-    <p class="public-lede">
-        BEAN es una aplicaci&oacute;n web de uso personal y de negocio de ITHOS para gestionar sus propias cuentas
-        de redes sociales: conectar cuentas autorizadas, preparar contenido, programarlo y publicarlo.
-        No es un producto en venta ni un servicio p&uacute;blico.
-    </p>
-    <div class="public-actions">
-        <a class="public-button primary" href="{% url 'account_login' %}">Entrar</a>
-        <a class="public-button" href="{% url 'public_privacy' %}">Privacidad</a>
-        <a class="public-button" href="{% url 'public_terms' %}">T&eacute;rminos</a>
-        <a class="public-button" href="{% url 'public_data_deletion' %}">Borrado de datos</a>
-        <a class="public-button" href="{% url 'public_support' %}">Soporte</a>
+{% url 'public_legal' as legal %}
+<section class="ld-hero" aria-labelledby="landing-title">
+    <div>
+        <span class="ld-kick">Herramienta interna de ITHOS</span>
+        <h1 id="landing-title">Un lugar tranquilo para <em>publicar en redes sociales</em>.</h1>
+        <p class="public-lede">
+            BEAN es la aplicaci&oacute;n con la que ITHOS conecta sus propias cuentas de YouTube, Facebook, Instagram y TikTok,
+            prepara el contenido, lo programa y lo publica. No es un producto en venta ni un servicio p&uacute;blico.
+        </p>
+        <div class="public-actions">
+            <a class="public-button primary" href="{% url 'account_login' %}">Entrar</a>
+        </div>
+    </div>
+    <div class="ld-card">
+        <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS">
+        <ul class="ld-facts">
+            <li>{% icon "users" css_class="w-5 h-5" %}<span>Uso propio de ITHOS, un equipo reducido.</span></li>
+            <li>{% icon "lock" css_class="w-5 h-5" %}<span>Tokens cifrados; solo publica lo que ITHOS programa.</span></li>
+            <li>{% icon "code-branch" css_class="w-5 h-5" %}<span>C&oacute;digo abierto bajo AGPL-3.0.</span></li>
+        </ul>
     </div>
 </section>
 
-<section class="public-section" aria-labelledby="plat-es">
-    <h2 id="plat-es">Plataformas</h2>
-    <div class="public-grid">
-        <article class="public-card"><h3>YouTube</h3><p>Publicaci&oacute;n de videos y lectura de m&eacute;tricas del canal conectado.</p></article>
-        <article class="public-card"><h3>Facebook e Instagram</h3><p>Publicaci&oacute;n en p&aacute;ginas y cuentas profesionales conectadas mediante Meta (Graph API), con m&eacute;tricas.</p></article>
-        <article class="public-card"><h3>TikTok</h3><p>Inicio de sesi&oacute;n con TikTok y publicaci&oacute;n de videos creados por el usuario autorizado en su propia cuenta.</p></article>
+<section class="ld-sec" id="que" aria-labelledby="que-h">
+    <h2 id="que-h">Qu&eacute; es BEAN</h2>
+    <p class="s">Una sola herramienta para el ciclo completo de una publicaci&oacute;n, sin pasar por cuatro paneles distintos.</p>
+    <div class="ld-g3">
+        <div class="ld-pc"><h3>Conectar</h3><p>Se enlazan las cuentas autorizadas de ITHOS mediante el inicio de sesi&oacute;n oficial de cada plataforma.</p></div>
+        <div class="ld-pc"><h3>Preparar y programar</h3><p>Se redacta, se adjuntan medios y se elige la fecha en un calendario.</p></div>
+        <div class="ld-pc"><h3>Publicar y medir</h3><p>BEAN publica en el momento indicado y lee las m&eacute;tricas de las publicaciones de ITHOS.</p></div>
     </div>
 </section>
 
-<section class="public-section public-prose" aria-labelledby="data-es">
-    <h2 id="data-es">Qu&eacute; datos usa y para qu&eacute;</h2>
-    <p>
-        BEAN usa datos b&aacute;sicos del perfil para identificar la cuenta conectada, tokens OAuth (almacenados cifrados)
-        solo para ejecutar las publicaciones solicitadas, y m&eacute;tricas de tus propias publicaciones. No vende los datos,
-        no los usa para publicidad ni los comparte con terceros para sus propios fines. Consulta la
-        <a class="public-link" href="{% url 'public_privacy' %}#es">pol&iacute;tica de privacidad</a> y c&oacute;mo
-        <a class="public-link" href="{% url 'public_data_deletion' %}#es">solicitar el borrado de tus datos</a>.
-    </p>
+<section class="ld-sec" id="plat" aria-labelledby="plat-h">
+    <h2 id="plat-h">Plataformas y permisos</h2>
+    <p class="s">Solo estas cuatro, y solo para las cuentas propias de ITHOS.</p>
+    <div class="ld-g4">
+        <article class="ld-pc"><h3><span class="ic">{% platform_icon "youtube" size="5" %}</span>YouTube</h3><p>Publicar videos, leer m&eacute;tricas y moderar comentarios del canal conectado.</p><small>Datos: canal, videos publicados desde BEAN, m&eacute;tricas y comentarios</small></article>
+        <article class="ld-pc"><h3><span class="ic">{% platform_icon "facebook" size="5" %}</span>Facebook</h3><p>Publicar en las p&aacute;ginas a las que se da acceso, leer m&eacute;tricas y atender comentarios y mensajes.</p><small>Datos: perfil, p&aacute;ginas y negocio, contenido, m&eacute;tricas, comentarios y mensajes (Meta)</small></article>
+        <article class="ld-pc"><h3><span class="ic">{% platform_icon "instagram" size="5" %}</span>Instagram</h3><p>Publicar en cuentas profesionales vinculadas a una p&aacute;gina y moderar sus comentarios.</p><small>Datos: perfil, cuenta profesional, contenido, m&eacute;tricas y comentarios (Meta)</small></article>
+        <article class="ld-pc"><h3><span class="ic">{% platform_icon "tiktok" size="5" %}</span>TikTok</h3><p>Iniciar sesi&oacute;n y publicar videos propios en la cuenta autorizada.</p><small>Datos: identificador, nombre y avatar; videos publicados, su estado y m&eacute;tricas</small></article>
+    </div>
+    <p class="ld-notice">BEAN no est&aacute; afiliado ni avalado por Meta, TikTok ni Google.</p>
 </section>
 
-<section class="public-section public-prose" lang="en" aria-labelledby="landing-en">
-    <h2 id="landing-en">BEAN by ITHOS (English)</h2>
-    <p>
-        BEAN is a web application for ITHOS's personal and business use to manage its own social media accounts:
-        connect authorized accounts, prepare content, schedule it and publish it. It is not for sale and is not a public service.
-    </p>
-    <p>
-        <strong>Platforms:</strong> YouTube (video publishing and channel metrics), Facebook and Instagram (pages and professional
-        accounts through Meta's Graph API), and TikTok (login and publishing of videos created by the authorized user to their own account).
-    </p>
-    <p>
-        <strong>Data and purpose:</strong> basic profile information to identify the connected account, encrypted OAuth tokens used only to
-        perform the requested publishing, and metrics of your own posts. We do not sell data, use it for advertising, or share it with
-        third parties for their own purposes. See the <a class="public-link" href="{% url 'public_privacy' %}#en">privacy policy</a> and how to
-        <a class="public-link" href="{% url 'public_data_deletion' %}#en">request data deletion</a>.
-    </p>
-    <div class="public-actions">
-        <a class="public-button primary" href="{% url 'account_login' %}">Sign in</a>
-        <a class="public-button" href="{% url 'public_support' %}">Support</a>
+<section class="ld-sec" id="datos" aria-labelledby="datos-h">
+    <h2 id="datos-h">Datos y privacidad</h2>
+    <p class="s">Usamos lo m&iacute;nimo necesario para publicar por ti.</p>
+    <div class="ld-dl">
+        <div>{% icon "users" css_class="w-6 h-6" %}<div><b>Qu&eacute; datos usa</b><p>Correo y nombre del usuario autorizado; de cada plataforma, el perfil, lo publicado desde BEAN, sus m&eacute;tricas y, para la bandeja social, comentarios y mensajes (con el nombre p&uacute;blico de quien escribe).</p></div></div>
+        <div>{% icon "lock" css_class="w-6 h-6" %}<div><b>C&oacute;mo y d&oacute;nde se guardan</b><p>Tokens OAuth cifrados con AES-256-GCM. Base de datos en Supabase, medios en Cloudflare R2 y aplicaci&oacute;n en Railway.</p></div></div>
+        <div>{% icon "circle-check" css_class="w-6 h-6" %}<div><b>Qu&eacute; no hace</b><p>No vende los datos, no los usa para publicidad ni para entrenar modelos de IA, y solo los comparte con los proveedores que prestan la infraestructura.</p></div></div>
+        <div>{% icon "trash" css_class="w-6 h-6" %}<div><b>Retenci&oacute;n y borrado</b><p>Los tokens se eliminan al desconectar la cuenta o por el aviso de Meta; publicaciones, m&eacute;tricas y mensajes se conservan mientras la cuenta exista en BEAN y se borran al solicitarlo por correo, en los plazos ARCO. El acceso tambi&eacute;n se revoca desde cada plataforma.</p></div></div>
     </div>
+    <div class="ld-links">
+        <a class="public-button secondary sm" href="{{ legal }}#privacidad">Pol&iacute;tica de privacidad</a>
+        <a class="public-button secondary sm" href="{{ legal }}#terminos">T&eacute;rminos del servicio</a>
+        <a class="public-button secondary sm" href="{{ legal }}#borrado-de-datos">Borrado de datos</a>
+        <a class="public-button secondary sm" href="{{ legal }}#contacto">Contacto</a>
+    </div>
+</section>
+
+<section class="ld-sec" lang="en" aria-labelledby="en-h">
+    <h2 id="en-h">In English</h2>
+    <div class="ld-en"><b>BEAN by ITHOS</b> is a web application for ITHOS's own use to manage its social media accounts (YouTube, Facebook, Instagram, TikTok): connect authorized accounts, schedule and publish content. OAuth tokens are stored encrypted; we do not sell data, use it for advertising or to train AI models, and we share it only with infrastructure processors. See the <a class="public-link" href="{{ legal }}#privacy">privacy policy</a> and <a class="public-link" href="{{ legal }}#data-deletion">data deletion</a> instructions. BEAN is not affiliated with or endorsed by Meta, TikTok or Google.</div>
 </section>
 {% endblock %}

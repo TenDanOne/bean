@@ -7,27 +7,18 @@
     {% include "errors/_style.html" %}
 </head>
 <body>
-    <div class="card">
-        <div class="logo"><img src="/static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS" style="height:56px;width:auto"></div>
-        <div class="icon">
-            {% icon "magnifying-glass" css_class="w-[48px] h-[48px]" %}
-        </div>
-        <div class="code">Error 404</div>
-        <h1>Esta página no existe</h1>
-        <p class="message">
-            Es posible que el enlace esté desactualizado, o que el espacio de trabajo, la publicación
-            o el canal al que apuntaba se haya eliminado. BEAN también muestra esto cuando un elemento
-            existe pero pertenece a otro espacio de trabajo.
-        </p>
-
+    <main class="card">
+        <div class="logo"><img src="/static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS"></div>
+        <div class="big" aria-hidden="true">404</div>
+        <h1>No encontramos esta página</h1>
+        <p class="message">El enlace puede estar desactualizado o pertenecer a otro espacio de trabajo.</p>
         {% if request_path %}
-        <div class="reason">
-            <strong>Ruta solicitada</strong>
-            {{ request_path }}
-        </div>
+        <div class="reason"><strong>Ruta solicitada</strong>{{ request_path }}</div>
         {% endif %}
-
-        <a href="/" class="link">Volver a BEAN</a>
-    </div>
+        <div class="acts">
+            <a class="btn primary" href="/">Volver al inicio</a>
+            <a class="btn" href="{% if request.workspace %}{% url 'calendar:calendar' request.workspace.id %}{% else %}/{% endif %}">Ir a Publicar</a>
+        </div>
+    </main>
 </body>
 </html>

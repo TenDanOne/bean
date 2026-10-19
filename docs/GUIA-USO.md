@@ -66,7 +66,7 @@ Para automatizarlo: un cron externo (p. ej. cron-job.org) con `POST https://bean
 - **Disconnect** (en la lista de cuentas) revoca el acceso de BEAN y conserva el historial.
 - **Delete** borra la cuenta de BEAN; la pantalla avisa cuántos posts quedan afectados.
 - También puedes quitar BEAN desde Facebook (Configuración → Apps y sitios web) o TikTok; BEAN recibe el aviso.
-- Para pedir el borrado de todos tus datos: `https://bean.ithos.mx/legal/data-deletion/`.
+- Para pedir el borrado de todos tus datos: `https://bean.ithos.mx/legal/#borrado-de-datos`.
 
 ## 9. Si algo falla
 

@@ -7,29 +7,19 @@
     {% include "errors/_style.html" %}
 </head>
 <body>
-    <div class="card">
-        <div class="logo"><img src="/static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS" style="height:56px;width:auto"></div>
-        <div class="icon">
-            {% icon "lock" css_class="w-[48px] h-[48px]" %}
-        </div>
-        <div class="code">Error 403</div>
+    <main class="card">
+        <div class="logo"><img src="/static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS"></div>
+        <div class="big" aria-hidden="true">403</div>
         <h1>No tienes acceso a esto</h1>
-        <p class="message">
-            Tu rol en este espacio de trabajo no incluye esta acción. Pídele a un propietario o
-            gestor que te la otorgue, o cambia a un espacio donde la tengas.
-        </p>
-
-        {% comment %} Django's permission_denied view passes the exception through, and every
-           raise PermissionDenied in this codebase carries a specific reason. Showing
-           it turns a dead end into something the user can actually act on. {% endcomment %}
+        <p class="message">Tu rol en este espacio de trabajo no incluye esta acción. Pídele a un propietario o gestor que te la otorgue, o cambia a un espacio donde la tengas.</p>
+        {% comment %} Cada PermissionDenied del código lleva un motivo concreto; mostrarlo da una salida accionable. {% endcomment %}
         {% if exception %}
-        <div class="reason">
-            <strong>Motivo</strong>
-            {{ exception }}
-        </div>
+        <div class="reason"><strong>Motivo</strong>{{ exception }}</div>
         {% endif %}
-
-        <a href="/" class="link">Volver a BEAN</a>
-    </div>
+        <div class="acts">
+            <a class="btn primary" href="/">Volver al inicio</a>
+            <a class="btn" href="{% if request.workspace %}{% url 'calendar:calendar' request.workspace.id %}{% else %}/{% endif %}">Ir a Publicar</a>
+        </div>
+    </main>
 </body>
 </html>

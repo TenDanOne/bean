@@ -233,6 +233,14 @@ def connect_platform(request, workspace_id):
     visible_platform_choices = _get_visible_platform_choices()
 
     if request.method == "GET":
+        connected_accounts = {}
+        for platform, name in (
+            SocialAccount.objects.for_workspace(workspace_id)
+            .exclude(connection_status=SocialAccount.ConnectionStatus.ARCHIVED)
+            .order_by("created_at")
+            .values_list("platform", "account_name")
+        ):
+            connected_accounts[platform] = name
         return render(
             request,
             "social_accounts/connect.html",
@@ -240,6 +248,7 @@ def connect_platform(request, workspace_id):
                 "workspace_id": workspace_id,
                 "platform_choices": visible_platform_choices,
                 "configured_platforms": configured_platforms,
+                "connected_accounts": connected_accounts,
             },
         )
 

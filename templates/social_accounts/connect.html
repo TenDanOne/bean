@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load analytics_extras %}
 {% block page_title %}Conectar cuenta social{% endblock %}
 {% block content %}
 {% comment %}
@@ -18,88 +19,47 @@ showed three columns — 896px simply cannot hold four cards wide enough for
     </div>
 
     <!-- Platform grid -->
-    <div class="overflow-y-auto pr-1">
-    {% comment %}
-    The fourth column only appears at xl, where it genuinely fits. Tailwind
-    compiles grid-cols-N to repeat(N, minmax(0, 1fr)); that minmax(0, …) is what
-    keeps a long platform name from pushing a track wider than its share and
-    scrolling the page sideways. The card's text column carries min-w-0 for the
-    same reason one level down.
-    {% endcomment %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {% for value, label in platform_choices %}
-        {% comment %}
-        Two states, and they should not merely differ in opacity. A platform you
-        can connect is a raised, live surface; one with no credentials set up is
-        pressed into the page and inert. Fading everything to 60% made the whole
-        grid look broken rather than half-available — which is what the page
-        actually looked like before this.
-        {% endcomment %}
-        <div class="relative p-5 {% if value in configured_platforms %}relief relief-interactive{% else %}relief-unavailable{% endif %}">
-            <div class="flex items-start gap-4">
-                <!-- Platform icon -->
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
-                    {% if value == 'facebook' %}bg-blue-50 text-blue-600
-                    {% elif value == 'instagram' %}bg-gradient-to-br from-purple-50 to-pink-50 text-pink-600
-                    {% elif value == 'instagram_login' %}bg-gradient-to-br from-purple-50 to-pink-50 text-pink-600
-                    {% elif value == 'linkedin_personal' %}bg-blue-50 text-blue-700
-                    {% elif value == 'linkedin_company' %}bg-blue-50 text-blue-700
-                    {% elif value == 'tiktok' %}bg-stone-900 text-app-inverse
-                    {% elif value == 'youtube' %}bg-red-50 text-red-600
-                    {% elif value == 'pinterest' %}bg-red-50 text-red-500
-                    {% elif value == 'threads' %}bg-app-2 text-app-strong
-                    {% elif value == 'bluesky' %}bg-sky-50 text-sky-500
-                    {% elif value == 'google_business' %}bg-blue-50 text-blue-500
-                    {% elif value == 'mastodon' %}bg-indigo-50 text-indigo-600
-                    {% elif value == 'devto' %}bg-app-2 text-app
-                    {% endif %}">
-                    {% platform_icon value size="5" brand_color=True %}
+        <div class="grid gap-3 content-start p-4 transition-colors"
+             style="background: {% if value in configured_platforms %}var(--surface-0){% else %}var(--warm-50){% endif %}; border: 1px {% if value in configured_platforms %}solid{% else %}dashed{% endif %} var(--border); border-radius: 14px; box-shadow: var(--shadow-xs);">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center" style="background: var(--warm-100); border: 1px solid var(--border-subtle); border-radius: 10px;">
+                    {% platform_icon value size="5" %}
                 </div>
-
-                <div class="flex-1 min-w-0">
-                    <h3 class="text-sm font-semibold text-app">{{ label }}</h3>
-                    <p class="text-xs text-app-ghost mt-0.5">
-                        {% if value == 'facebook' %}Tus páginas y grupos
-                        {% elif value == 'instagram' %}Para cuentas vinculadas a una página de Facebook
-                        {% elif value == 'instagram_login' %}Inicia sesión con Instagram &middot; sin necesitar Facebook
-                        {% elif value == 'linkedin_personal' %}Perfil personal
-                        {% elif value == 'linkedin_company' %}Páginas de empresa
-                        {% elif value == 'tiktok' %}Cuenta Business o Creator
-                        {% elif value == 'youtube' %}Videos y Shorts
-                        {% elif value == 'pinterest' %}Pines y tableros
-                        {% elif value == 'threads' %}Texto y medios
-                        {% elif value == 'bluesky' %}AT Protocol
-                        {% elif value == 'google_business' %}Publicaciones locales
-                        {% elif value == 'mastodon' %}Red social federada
-                        {% elif value == 'devto' %}Artículos y publicaciones
-                        {% endif %}
-                    </p>
-                </div>
+                <h3 class="text-base font-bold text-app min-w-0 truncate">{{ label }}</h3>
             </div>
-
+            <p class="text-sm text-app-secondary">
+                {% if value == 'facebook' %}Tus páginas de Facebook
+                {% elif value == 'instagram' %}Cuentas profesionales vinculadas a una página de Facebook (vía Meta)
+                {% elif value == 'tiktok' %}Cuenta Business o Creator
+                {% elif value == 'youtube' %}Videos y Shorts
+                {% endif %}
+            </p>
+            {% with account_name=connected_accounts|get_item:value %}
+            <div class="flex items-center gap-2 text-xs font-semibold"
+                 style="color: {% if account_name %}var(--st-published-fg){% elif value in configured_platforms %}var(--brand-700){% else %}var(--st-review-fg){% endif %};">
+                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background: {% if account_name %}var(--st-published-dot){% elif value in configured_platforms %}var(--brand-400){% else %}var(--st-review-dot){% endif %};"></span>
+                {% if account_name %}Conectada · {{ account_name }}{% elif value in configured_platforms %}Lista para conectar{% else %}No configurada{% endif %}
+            </div>
             {% if value in configured_platforms %}
-            <form method="post" action="{% url 'social_accounts:connect' workspace_id=workspace_id %}" class="mt-4">
+            <form method="post" action="{% url 'social_accounts:connect' workspace_id=workspace_id %}">
                 {% csrf_token %}
                 <input type="hidden" name="platform" value="{{ value }}">
-                <button type="submit" class="bbs-btn bbs-btn-primary w-full text-xs py-1.5">
-                    Conectar
+                <button type="submit" class="bbs-btn {% if account_name %}bbs-btn-ghost{% else %}bbs-btn-primary{% endif %} w-full text-xs py-1.5">
+                    {% if account_name %}Conectar otra{% else %}Conectar{% endif %}
                     {% icon "arrow-right" css_class="w-3.5 h-3.5" %}
                 </button>
             </form>
             {% else %}
-            <div class="mt-4">
-                <span class="bbs-btn bbs-btn-ghost bbs-denied w-full text-xs py-1.5" aria-disabled="true">
-                    Faltan credenciales de la plataforma
-                </span>
-            </div>
+            <span class="bbs-btn bbs-btn-ghost bbs-denied w-full text-xs py-1.5" aria-disabled="true"
+                  title="Credenciales de la plataforma sin configurar. Consulta a tu administrador.">
+                Faltan credenciales de la plataforma
+            </span>
             {% endif %}
-
-            {% if value not in configured_platforms %}
-            <div class="absolute inset-0 rounded-xl cursor-not-allowed" title="Credenciales de la plataforma sin configurar. Consulta a tu administrador."></div>
-            {% endif %}
+            {% endwith %}
         </div>
         {% endfor %}
-    </div>
     </div>
 </div>
 {% endblock %}

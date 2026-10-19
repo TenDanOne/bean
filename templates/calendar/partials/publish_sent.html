@@ -53,7 +53,6 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                 </td>
                 <td class="px-4 py-3">
                     <span class="post-chip status-{{ pp.status }} inline-flex">
-                        <span class="chip-dot"></span>
                         {{ pp.get_status_display }}
                     </span>
                     {% if pp.status == "failed" and pp.publish_error %}

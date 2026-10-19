@@ -4,23 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Algo salió mal - BEAN</title>
-    {% comment %} No template variables below this line: Django renders 500.html with an
-       empty context, so anything dynamic would silently come out blank. {% endcomment %}
     {% include "errors/_style.html" %}
 </head>
 <body>
-    <div class="card">
-        <div class="logo"><img src="/static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS" style="height:56px;width:auto"></div>
-        <div class="icon">
-            {% icon "triangle-exclamation" css_class="w-[48px] h-[48px]" %}
-        </div>
-        <div class="code">Error 500</div>
+    <main class="card">
+        <div class="logo"><img src="/static/marca/bean-by-ithos.svg" alt="BEAN by ITHOS"></div>
+        <div class="big e5" aria-hidden="true">500</div>
         <h1>Algo salió mal de nuestro lado</h1>
-        <p class="message">
-            Esto es un error del sistema, no algo que hayas hecho. Los detalles se guardaron en el
-            registro del servidor. Si sigue pasando, ese registro es lo que necesita quien lo mantiene.
-        </p>
-        <a href="/" class="link">Volver a BEAN</a>
-    </div>
+        <p class="message">Ya quedó registrado. Intenta de nuevo en un momento; si sigue pasando, avísanos.</p>
+        {% comment %} Sin variables ni tags de contexto: Django renderiza 500.html con contexto vacío. {% endcomment %}
+        <div class="acts">
+            <a class="btn primary" href="">Reintentar</a>
+            <a class="btn" href="/">Volver al inicio</a>
+        </div>
+    </main>
 </body>
 </html>

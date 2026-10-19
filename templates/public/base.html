@@ -11,8 +11,8 @@
     <style>
         .public-shell {
             min-height: 100vh;
-            background: var(--surface-page, #faf4ec);
-            color: var(--text-primary, #292524);
+            background: var(--surface-page);
+            color: var(--text-primary);
             font-family: var(--font-body, system-ui, sans-serif);
         }
         .public-wrap { width: min(1100px, calc(100% - 32px)); margin: 0 auto; }
@@ -24,46 +24,46 @@
         .public-brand img { height: 40px; width: auto; object-fit: contain; }
         .public-brand strong { font-family: var(--font-display); font-size: 1.2rem; }
         .public-nav { display: flex; flex-wrap: wrap; gap: 16px; font-size: .875rem; }
-        .public-nav a, .public-link { color: var(--primary, #657329); font-weight: 650; text-decoration: none; }
+        .public-nav a, .public-link { color: var(--primary); font-weight: 650; text-decoration: none; }
         .public-nav a:hover, .public-link:hover { text-decoration: underline; }
         .public-main { padding: 54px 0 76px; }
         .public-hero { max-width: 760px; padding: 36px 0 44px; }
         .public-kicker {
-            color: var(--primary, #657329); font-size: .75rem; font-weight: 800;
+            color: var(--primary); font-size: .75rem; font-weight: 800;
             letter-spacing: .12em; text-transform: uppercase;
         }
         .public-title {
-            max-width: 760px; margin: 12px 0 20px; color: var(--text-primary, #292524);
+            max-width: 760px; margin: 12px 0 20px; color: var(--text-primary);
             font-family: var(--font-display); font-size: clamp(2.35rem, 6vw, 4.7rem);
             line-height: 1.02; letter-spacing: -.04em;
         }
-        .public-lede { max-width: 650px; color: var(--text-secondary, #57534e); font-size: 1.08rem; line-height: 1.75; }
+        .public-lede { max-width: 650px; color: var(--text-secondary); font-size: 1.08rem; line-height: 1.75; }
         .public-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
         .public-button {
             display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
-            padding: 0 18px; border-radius: 999px; border: 1px solid var(--border, #e8d8c4);
-            background: var(--surface-0, #fff); color: var(--text-primary, #292524);
+            padding: 0 18px; border-radius: 999px; border: 1px solid var(--border);
+            background: var(--surface-0); color: var(--text-primary);
             font-weight: 750; text-decoration: none;
         }
-        .public-button.primary { border-color: var(--primary, #657329); background: var(--primary, #657329); color: var(--on-primary, #fff); }
+        .public-button.primary { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
         .public-button:hover { transform: translateY(-1px); }
         .public-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
         .public-card {
-            padding: 24px; border: 1px solid var(--border, #e8d8c4); border-radius: 18px;
-            background: var(--surface-0, #fff); box-shadow: var(--relief-flat, 0 1px 2px rgba(124,45,18,.1));
+            padding: 24px; border: 1px solid var(--border); border-radius: 18px;
+            background: var(--surface-0); box-shadow: var(--relief-flat);
         }
         .public-card h2, .public-card h3 { margin: 0 0 10px; font-family: var(--font-display); }
-        .public-card p { margin: 0; color: var(--text-secondary, #57534e); line-height: 1.7; }
+        .public-card p { margin: 0; color: var(--text-secondary); line-height: 1.7; }
         .public-section { margin-top: 48px; }
         .public-section h2 { margin: 0 0 14px; font-family: var(--font-display); font-size: 2rem; }
-        .public-section p, .public-section li { color: var(--text-secondary, #57534e); line-height: 1.75; }
+        .public-section p, .public-section li { color: var(--text-secondary); line-height: 1.75; }
         .public-section ul { padding-left: 1.25rem; }
         .public-prose { max-width: 780px; }
         .public-prose h1 { margin: 0 0 16px; font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.05; }
         .public-prose h2 { margin: 34px 0 10px; font-family: var(--font-display); font-size: 1.55rem; }
-        .public-prose p, .public-prose li { color: var(--text-secondary, #57534e); line-height: 1.8; }
+        .public-prose p, .public-prose li { color: var(--text-secondary); line-height: 1.8; }
         .public-prose ul { padding-left: 1.25rem; }
-        .public-footer { border-top: 1px solid var(--border, #e8d8c4); padding: 24px 0 36px; color: var(--text-tertiary, #78716c); font-size: .875rem; }
+        .public-footer { border-top: 1px solid var(--border); padding: 24px 0 36px; color: var(--text-tertiary); font-size: .875rem; }
         .public-footer nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; }
         @media (max-width: 720px) {
             .public-header { align-items: flex-start; flex-direction: column; }
@@ -75,7 +75,15 @@
             .public-button { transition: none; }
             .public-button:hover { transform: none; }
         }
+        .public-footer { background: var(--warm-200); }
+        .public-footer .public-link { color: var(--brand-700); }
+        .public-agpl { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--warm-300); }
+        .public-footer-brand img { height: 30px; width: auto; margin-bottom: 8px; display: block; }
+        .public-button.sm { min-height: 40px; padding: 0 14px; font-size: .875rem; }
+        .public-button.secondary { background: var(--surface-0); }
+        .public-button:focus-visible, .public-link:focus-visible, .public-nav a:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
     </style>
+    {% block head_extra %}{% endblock %}
 </head>
 <body class="public-shell">
     <div class="public-wrap">
@@ -83,11 +91,11 @@
             <a class="public-brand" href="{% url 'dashboard' %}">
                 <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS">
             </a>
-            <nav class="public-nav" aria-label="Public navigation">
-                <a href="{% url 'public_privacy' %}">Privacidad / Privacy</a>
-                <a href="{% url 'public_terms' %}">T&eacute;rminos / Terms</a>
-                <a href="{% url 'public_data_deletion' %}">Borrado de datos / Data deletion</a>
-                <a href="{% url 'public_support' %}">Soporte / Support</a>
+            <nav class="public-nav" aria-label="Navegaci&oacute;n">
+                <a href="{% url 'public_legal' %}#privacidad">Privacidad / Privacy</a>
+                <a href="{% url 'public_legal' %}#terminos">T&eacute;rminos / Terms</a>
+                <a href="{% url 'public_legal' %}#borrado-de-datos">Borrado de datos / Data deletion</a>
+                <a href="{% url 'public_legal' %}#contacto">Contacto / Contact</a>
             </nav>
         </header>
 
@@ -96,13 +104,17 @@
         </main>
 
         <footer class="public-footer">
-            <div>BEAN &middot; Gesti&oacute;n de redes sociales de ITHOS &middot; M&eacute;xico<br>BEAN by ITHOS &middot; basado en BrightBean Studio (AGPL-3.0) &middot; <a class="public-link" href="https://github.com/TenDanOne/bean" rel="noopener">C&oacute;digo fuente</a></div>
-            <nav aria-label="Legal navigation">
-                <a class="public-link" href="{% url 'public_privacy' %}">Privacidad / Privacy Policy</a>
-                <a class="public-link" href="{% url 'public_terms' %}">T&eacute;rminos / Terms of Service</a>
-                <a class="public-link" href="{% url 'public_data_deletion' %}">Borrado de datos / Data deletion</a>
-                <a class="public-link" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+            <div class="public-footer-brand">
+                <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS">
+                BEAN &middot; Gesti&oacute;n de redes sociales de ITHOS &middot; M&eacute;xico
+            </div>
+            <nav aria-label="Legal">
+                <a class="public-link" href="{% url 'public_legal' %}#privacidad">Privacidad / Privacy</a>
+                <a class="public-link" href="{% url 'public_legal' %}#terminos">T&eacute;rminos / Terms</a>
+                <a class="public-link" href="{% url 'public_legal' %}#borrado-de-datos">Borrado de datos / Data deletion</a>
+                <a class="public-link" href="{% url 'public_legal' %}#contacto">Contacto / Contact</a>
             </nav>
+            <div class="public-agpl">BEAN by ITHOS est&aacute; basado en BrightBean Studio (AGPL-3.0). <a class="public-link" href="https://github.com/TenDanOne/bean" rel="noopener">C&oacute;digo fuente</a></div>
         </footer>
     </div>
 </body>

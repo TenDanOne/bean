@@ -39,24 +39,34 @@ def public_review(request):
     return _public(request, "public/review.html")
 
 
-def public_privacy(request):
-    """Public privacy policy for the BEAN deployment."""
-    return _public(request, "public/privacy.html")
+# Responsable y domicilio de la página legal: una sola fuente para las 4+ menciones del texto.
+LEGAL_RESPONSABLE = {
+    "es": "Darío Abraham Curiel Niño, persona física con actividad y responsable único de ITHOS "
+    "(ITHOS y BEAN by ITHOS son nombres comerciales), RFC CUND000714T89",
+    "en": "Darío Abraham Curiel Niño, an individual with business activity and sole owner of ITHOS "
+    "(ITHOS and BEAN by ITHOS are trade names), RFC CUND000714T89",
+}
+LEGAL_DOMICILIO = (
+    "Calle Diego Rivera 100, Colonia Lomas de Tlaquepaque, C.P. 45559, San Pedro Tlaquepaque, Jalisco, México"
+)
 
 
-def public_terms(request):
-    """Public terms of use for the BEAN deployment."""
-    return _public(request, "public/terms.html")
+def public_legal(request):
+    """Página legal única (ES/EN) con anclas #privacidad #terminos #borrado-de-datos #contacto."""
+    return _public(request, "public/legal.html", responsable=LEGAL_RESPONSABLE, domicilio=LEGAL_DOMICILIO)
 
 
-def public_support(request):
-    """Public support contact for platform reviewers."""
-    return _public(request, "public/support.html")
+def _legal_redirect(anchor):
+    def view(request):
+        return redirect(f"{reverse('public_legal')}#{anchor}", permanent=True)
+
+    return view
 
 
-def public_data_deletion(request):
-    """Instructions for revoking BEAN's access and requesting data deletion."""
-    return _public(request, "public/data_deletion.html")
+public_privacy = _legal_redirect("privacidad")
+public_terms = _legal_redirect("terminos")
+public_support = _legal_redirect("contacto")
+public_data_deletion = _legal_redirect("borrado-de-datos")
 
 
 def _parse_signed_request(signed_request):
