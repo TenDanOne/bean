@@ -531,6 +531,24 @@ def _reply_error(request, message: str):
     )
 
 
+def _reply_extra(message):
+    """What a provider needs to answer ``message``: its stored ``extra`` plus, for a DM, who to write to and when they last wrote."""
+    extra = dict(message.extra or {})
+    if message.message_type != InboxMessage.MessageType.DM:
+        return extra
+    # Rows stored before recipient_id existed: the other party is whoever wrote the message.
+    extra.setdefault("recipient_id", "" if message.is_outbound else message.sender_handle)
+    inbound = InboxMessage.objects.filter(social_account_id=message.social_account_id, is_outbound=False)
+    if message.conversation_id:
+        inbound = inbound.filter(conversation_id=message.conversation_id)
+    else:
+        inbound = inbound.filter(id=message.id)
+    last = inbound.order_by("-received_at").values_list("received_at", flat=True).first()
+    if last:
+        extra["last_inbound_at"] = last.isoformat()
+    return extra
+
+
 def _account_for_message(request, workspace_id, message_id, *args, **kwargs):
     """The channel a message belongs to, for the per-channel capability checks.
 
@@ -564,6 +582,11 @@ def send_reply(request, workspace_id, message_id):
 
     body = form.cleaned_data["body"]
     account = message.social_account
+    reply_extra = _reply_extra(message)
+    if message.message_type == InboxMessage.MessageType.DM and not reply_extra.get("recipient_id"):
+        return _reply_error(
+            request, "No se pudo identificar a quién responder en este chat; espera la próxima sincronización."
+        )
 
     # Only record a reply that actually left the building. This used to swallow
     # every failure and store the reply anyway with an empty platform_reply_id,
@@ -578,7 +601,7 @@ def send_reply(request, workspace_id, message_id):
             access_token=account.get_fresh_access_token(provider),
             message_id=message.platform_message_id,
             text=body,
-            extra=message.extra,
+            extra=reply_extra,
         )
         platform_reply_id = result.platform_message_id
     except NotImplementedError:
@@ -589,6 +612,12 @@ def send_reply(request, workspace_id, message_id):
         return _reply_error(
             request, "No se pudo contactar a la plataforma. Tu respuesta no se envió; inténtalo de nuevo."
         )
+    except APIError as exc:
+        logger.exception("Failed to send reply for message %s", message.id)
+        # A non-retryable error is one we raised ourselves with a readable reason (e.g. the 7-day DM window).
+        if not exc.retryable:
+            return _reply_error(request, f"{exc} No se envió.")
+        return _reply_error(request, "La plataforma rechazó la respuesta. No se envió.")
     except Exception:
         logger.exception("Failed to send reply for message %s", message.id)
         return _reply_error(request, "La plataforma rechazó la respuesta. No se envió.")
@@ -599,6 +628,8 @@ def send_reply(request, workspace_id, message_id):
         body=body,
         platform_reply_id=platform_reply_id,
     )
+
+    message.mark_thread_answered()
 
     # Auto-resolve on reply if configured
     sla_config = InboxSLAConfig.objects.filter(workspace=workspace, is_active=True).first()

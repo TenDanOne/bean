@@ -372,7 +372,7 @@ _VIDEO_REQUIRED_PLATFORMS = {"youtube": "YouTube", "tiktok": "TikTok"}
 _MEDIA_REQUIRED_PLATFORMS = {"instagram": "Instagram", "instagram_login": "Instagram"}
 
 
-def media_error_for_platform(platform: str, media_types) -> str | None:
+def media_error_for_platform(platform: str, media_types, post_type: str | None = None) -> str | None:
     """Mensaje en español si los medios no sirven para *platform*, o ``None``.
 
     ``media_types`` es la lista de ``MediaAsset.media_type`` del post. Se usa al
@@ -380,6 +380,10 @@ def media_error_for_platform(platform: str, media_types) -> str | None:
     falla claro y sin reintentos en lugar de reventar en la API de la plataforma.
     """
     types = list(media_types)
+    if post_type == "reel" and "video" not in types:
+        return "Un Reel requiere un video."
+    if post_type == "carousel" and len(types) < 2:
+        return "Un carrusel requiere 2 o más medios."
     if platform in _VIDEO_REQUIRED_PLATFORMS and "video" not in types:
         name = _VIDEO_REQUIRED_PLATFORMS[platform]
         extra = " (las imágenes no se pueden publicar)" if types else ""

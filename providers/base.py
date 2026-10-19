@@ -229,6 +229,10 @@ class SocialProvider(ABC):
         """
         raise NotImplementedError(f"{self.platform_name} does not support comment moderation")
 
+    def delete_post(self, access_token: str, platform_post_id: str) -> None:
+        """Delete a published post on the platform. Raises ProviderError/APIError on failure."""
+        raise NotImplementedError(f"{self.platform_name} does not support deleting posts")
+
     def get_post_details(self, access_token: str, post_ids: list[str]) -> dict[str, dict]:
         """Display details for posts, keyed by their platform id.
 

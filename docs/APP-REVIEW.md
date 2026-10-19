@@ -45,9 +45,9 @@ Una sola app de Meta (`PLATFORM_FACEBOOK_APP_ID` / `_APP_SECRET`) sirve a Facebo
 
 ### 1.1 Permisos que BEAN pide hoy
 
-**Facebook** (`providers/facebook.py::required_scopes`): `business_management`, `pages_show_list`, `pages_manage_engagement`, `pages_manage_posts`, `pages_read_engagement`, `pages_read_user_content`, `pages_manage_metadata`, `pages_messaging`; y `read_insights` si Analytics está activo para la plataforma.
+**Facebook** (`providers/facebook.py::required_scopes`): `business_management`, `pages_show_list`, `pages_manage_engagement`, `pages_manage_posts`, `pages_read_engagement`, `pages_read_user_content`, `pages_manage_metadata`, `pages_messaging`; y `read_insights` si Analytics está activo para la plataforma. Todos se piden siempre (salvo `read_insights`, que depende de Analytics).
 
-**Instagram** (`providers/instagram.py::required_scopes`): `instagram_basic`, `instagram_content_publish`, `instagram_manage_comments`, `instagram_manage_insights`, `pages_show_list`, `pages_read_engagement`.
+**Instagram** (`providers/instagram.py::required_scopes`): `instagram_basic`, `instagram_content_publish`, `instagram_manage_comments`, `instagram_manage_insights`, `instagram_manage_messages`, `instagram_manage_contents`, `pages_messaging`, `pages_show_list`, `pages_read_engagement`.
 
 Meta documenta como mínimo para publicar en Instagram: `instagram_basic`, `instagram_content_publish`, `pages_read_engagement` (+ `pages_show_list`), con token de Página. Para publicar en una Página: `pages_manage_posts` (+ `pages_read_engagement`, `pages_show_list`).
 
@@ -60,9 +60,11 @@ Meta documenta como mínimo para publicar en Instagram: `instagram_basic`, `inst
 | `pages_read_engagement` | Sí | Dependencia de los anteriores; leer metadatos de la Página |
 | `instagram_basic` | Sí | Identificar la cuenta profesional |
 | `instagram_content_publish` | Sí | Publicar en Instagram |
-| `read_insights`, `instagram_manage_insights` | Opcional (2.ª ronda) | Analytics |
-| `pages_manage_engagement`, `pages_read_user_content`, `instagram_manage_comments` | Opcional (2.ª ronda) | Inbox y comentarios |
-| `pages_manage_metadata`, `pages_messaging`, `business_management` | No pedir | `pages_messaging` exige mostrar mensajes de Messenger en el screencast; `business_management` y `pages_manage_metadata` no los necesita la publicación |
+| `read_insights`, `instagram_manage_insights` | Sí (si Analytics está activo) | Analytics |
+| `pages_manage_engagement`, `pages_read_user_content`, `instagram_manage_comments` | Sí | Inbox y comentarios |
+| `instagram_manage_messages`, `pages_messaging` | Sí | Leer y responder DMs de Instagram y Messenger desde la bandeja (`/me/conversations?platform=instagram`, `POST /me/messages`) |
+| `instagram_manage_contents` | Sí | Borrar una publicación de Instagram desde BEAN (con confirmación) |
+| `pages_manage_metadata`, `business_management` | Sí | El código los pide (`providers/facebook.py::required_scopes`): suscribir la Página a los webhooks de la bandeja y listar Páginas administradas vía Business Portfolio (hoy el código no llama a un endpoint de negocio aparte). `pages_messaging` exige mostrar mensajes de Messenger en el screencast |
 
 ### 1.2 Justificación por permiso (texto para pegar en el formulario)
 
@@ -76,9 +78,24 @@ Meta documenta como mínimo para publicar en Instagram: `instagram_basic`, `inst
 
 **instagram_content_publish** — "BEAN publishes photos, carousels, Reels and Stories to the Instagram professional account that the user connected, using the media and caption composed and approved by the user in BEAN. Publishing happens only when the user schedules or triggers it."
 
-**read_insights / instagram_manage_insights (si se mantienen)** — "BEAN shows the account owner basic performance metrics (reach, impressions, engagement) of the Pages / Instagram account they connected, inside an Analytics screen, so they can see how their own posts performed."
+**instagram_manage_messages** — "BEAN's Inbox shows the direct messages that people send to the connected Instagram professional account and lets an authorized team member answer them. Replies are sent only when the user presses Send, inside the 24-hour window (or the 7-day HUMAN_AGENT window). Messages are not used for any other purpose."
 
-**pages_manage_engagement / pages_read_user_content / instagram_manage_comments (si se mantienen)** — "BEAN's Inbox lets the account owner read and reply to comments on their own posts from one screen. Comments are shown only to authorized team members and are not used for any other purpose."
+**pages_messaging** — "BEAN's Inbox shows the Messenger conversations of the connected Facebook Page (read via /me/conversations and webhooks) and lets an authorized team member answer them with POST /me/messages (messaging_type RESPONSE, or the HUMAN_AGENT tag between 24 hours and 7 days after the person's last message). A reply is sent only when the user presses Send. Messages are stored only to display the conversation and are not used for advertising or any other purpose."
+
+**pages_manage_metadata** — "BEAN subscribes the connected Page to the webhook fields it needs (feed, messages, message_echoes) via POST /{page-id}/subscribed_apps so that new comments and Messenger messages appear in the Inbox without manual refresh. It does not change any other Page setting."
+
+**business_management** — "Our Pages are managed through a Business Portfolio. BEAN needs this permission so that /me/accounts lists the Pages the user manages via that business, letting the user choose which Page to connect. BEAN does not create or modify any business asset."
+
+**pages_manage_posts (delete)** — "In addition to publishing, BEAN lets an authorized user (owner role) delete a post that BEAN previously published to the connected Facebook Page, from the post's detail view (DELETE /{post-id}). The deletion happens on Facebook and only after the user types BORRAR to confirm."
+
+**youtube.force-ssl** — "BEAN uses this scope to read and moderate comments on the connected channel's videos in the Inbox (reply, hide, delete) and to let an authorized user (owner role) delete a video that BEAN previously published to that channel (videos.delete). The deletion happens on YouTube and only after the user types BORRAR to confirm. No other channel data is modified."
+
+
+**instagram_manage_contents** — "BEAN lets the account owner delete a post they previously published to their own Instagram account from the post's detail view. The deletion happens only after the user confirms it explicitly."
+
+**read_insights / instagram_manage_insights** — "BEAN shows the account owner basic performance metrics (reach, impressions, engagement) of the Pages / Instagram account they connected, inside an Analytics screen, so they can see how their own posts performed."
+
+**pages_manage_engagement / pages_read_user_content / instagram_manage_comments** — "BEAN's Inbox lets the account owner read and reply to comments on their own posts from one screen. Comments are shown only to authorized team members and are not used for any other purpose."
 
 ### 1.3 Requisitos de la cuenta de la app
 

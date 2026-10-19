@@ -557,6 +557,10 @@ class YouTubeProvider(SocialProvider):
         """Delete one of our own comments. 50 quota units."""
         self._request("DELETE", f"{API_BASE}/comments", access_token=access_token, params={"id": comment_id})
 
+    def delete_post(self, access_token: str, platform_post_id: str) -> None:
+        """videos.delete. 50 quota units; covered by the youtube.force-ssl scope."""
+        self._request("DELETE", f"{API_BASE}/videos", access_token=access_token, params={"id": platform_post_id})
+
     def set_comment_visibility(self, access_token: str, comment_id: str, visible: bool) -> None:
         """Publish or hold someone else's comment on our video. 50 quota units.
 

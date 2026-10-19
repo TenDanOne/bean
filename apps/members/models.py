@@ -267,6 +267,8 @@ PERMISSION_KEYS = [
     "edit_media",
     "delete_media",
     "manage_media",
+    # Deleting a publication on the platform cannot be undone; owner only by default.
+    "delete_published_posts",
 ]
 
 BUILTIN_ROLE_PERMISSIONS = {
@@ -290,6 +292,7 @@ BUILTIN_ROLE_PERMISSIONS = {
         "edit_media": True,
         "delete_media": True,
         "manage_media": True,
+        "delete_published_posts": False,
     },
     # Creates and answers. `edit_others_posts` used to be True here, which made
     # the role's own name misleading: an editor edits their work, not everyone's.
@@ -308,6 +311,7 @@ BUILTIN_ROLE_PERMISSIONS = {
         "edit_media": True,
         "delete_media": True,
         "manage_media": False,
+        "delete_published_posts": False,
     },
     # Reads and approves; creates nothing. `use_inbox` is on because approving a
     # post without being able to see what people said about the last one is
@@ -327,6 +331,7 @@ BUILTIN_ROLE_PERMISSIONS = {
         "edit_media": False,
         "delete_media": False,
         "manage_media": False,
+        "delete_published_posts": False,
     },
     "contributor": {
         "create_posts": True,
@@ -342,6 +347,7 @@ BUILTIN_ROLE_PERMISSIONS = {
         "edit_media": True,
         "delete_media": False,
         "manage_media": False,
+        "delete_published_posts": False,
     },
     "client": {
         "create_posts": False,
@@ -357,6 +363,7 @@ BUILTIN_ROLE_PERMISSIONS = {
         "edit_media": False,
         "delete_media": False,
         "manage_media": False,
+        "delete_published_posts": False,
     },
     # Reads everything they were given, changes nothing. `use_inbox` is on:
     # "viewer" that cannot open the inbox is not a viewer, it is a role with a
@@ -379,6 +386,7 @@ BUILTIN_ROLE_PERMISSIONS = {
         "edit_media": False,
         "delete_media": False,
         "manage_media": False,
+        "delete_published_posts": False,
     },
 }
 

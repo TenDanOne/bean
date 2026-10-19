@@ -1,0 +1,34 @@
+{% comment %}
+Un destino publicado (PlatformPost) con «Borrar publicación» y confirmación escrita (BORRAR).
+Context: workspace, pp. La vista de borrado devuelve este mismo parcial para reemplazar la fila.
+{% endcomment %}
+{% load common_extras %}
+<div id="pt-{{ pp.id }}" class="flex flex-wrap items-center gap-2" x-data="{ open: false, word: '' }">
+    <span class="w-5 h-5 rounded flex items-center justify-center pi-{{ pp.social_account.platform }} text-app-inverse flex-shrink-0">
+        {% include "social_accounts/partials/_platform_icon.html" with platform=pp.social_account.platform size="3" %}
+    </span>
+    <span class="text-xs text-app-secondary"><span class="font-semibold">{{ pp.social_account.account_name }}</span> · {{ pp.social_account.get_platform_display }}</span>
+    {% if pp.platform_extra.deleted_on_platform_at %}
+    <span class="st-pill st-failed inline-flex items-center rounded-full font-semibold text-[11px] px-2">Borrada en la plataforma</span>
+    {% elif pp.social_account.platform == "tiktok" %}
+    <span class="text-[11px] text-app-ghost">TikTok no permite borrar por API. Bórrala desde la app de TikTok.</span>
+    {% elif request|can:"delete_published_posts" %}
+    <button type="button" @click="open = !open" :aria-expanded="open"
+            class="ml-auto text-xs font-semibold px-2.5 py-1 rounded-lg border border-app text-app-secondary hover:text-red-600 cursor-pointer">
+        Borrar publicación
+    </button>
+    <form x-show="open" x-cloak class="basis-full flex flex-wrap items-center gap-2" role="alertdialog" aria-label="Confirmar borrado"
+          hx-post="{% url 'composer:delete_published_post' workspace_id=workspace.id post_id=pp.post_id platform_post_id=pp.id %}"
+          hx-target="#pt-{{ pp.id }}" hx-swap="outerHTML">
+        <p class="basis-full text-xs text-app-secondary">Se elimina de {{ pp.social_account.get_platform_display }} junto con sus comentarios y reacciones. BEAN conserva el registro como «Borrada». No se puede deshacer.</p>
+        <label class="text-xs font-semibold text-app-secondary" for="bc-{{ pp.id }}">Escribe BORRAR para confirmar</label>
+        <input id="bc-{{ pp.id }}" name="confirm" x-model="word" autocomplete="off" placeholder="BORRAR"
+               class="text-sm px-2 py-1 border border-app rounded-lg w-28">
+        <button type="submit" :disabled="word.trim() !== 'BORRAR'"
+                class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-600 text-app-inverse disabled:opacity-40 cursor-pointer">
+            Borrar definitivamente
+        </button>
+        <button type="button" @click="open = false; word = ''" class="text-xs font-semibold text-app-secondary cursor-pointer">Cancelar</button>
+    </form>
+    {% endif %}
+</div>

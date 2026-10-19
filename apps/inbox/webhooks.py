@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import logging
+from datetime import UTC, datetime
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseForbidden
@@ -16,7 +17,6 @@ from apps.credentials.models import resolve_app_secret, resolve_app_secrets
 from apps.social_accounts.models import SocialAccount
 
 from .models import InboxMessage
-from .sentiment import analyze_sentiment
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ def _process_meta_events(payload: dict, platforms: list[str], valid_secrets: set
                 continue
 
             for change in entry.get("changes", []):
-                _handle_facebook_change(account, change)
+                _handle_facebook_change(account, change, entry.get("time"))
 
             for messaging in entry.get("messaging", []):
                 _handle_facebook_messaging(account, messaging)
@@ -158,13 +158,28 @@ def instagram_login_webhook(request):
 # --- Event handlers (shared between facebook + instagram_login) ---
 
 
-def _handle_facebook_change(account, change: dict):
-    """Handle a single Facebook change event (comment, mention, etc.)."""
+def _unix(value, millis=False):
+    """A webhook's unix time as an aware datetime, or None when absent or garbled."""
+    try:
+        return datetime.fromtimestamp(float(value) / (1000 if millis else 1), tz=UTC)
+    except (TypeError, ValueError, OverflowError, OSError):
+        return None
+
+
+def _handle_facebook_change(account, change: dict, entry_time=None):
+    """Handle a single change event (Facebook feed comments, Instagram comments and mentions)."""
     field = change.get("field", "")
     value = change.get("value", {})
 
     if field == "feed":
-        _upsert_facebook_comment(account, value)
+        # The feed also announces reactions, shares, edits and removals; only a
+        # newly added comment is something to answer.
+        if value.get("item") == "comment" and value.get("verb") == "add":
+            _upsert_facebook_comment(account, value)
+    elif field == "comments":
+        _upsert_instagram_comment(account, value, entry_time)
+    elif field == "mentions":
+        _upsert_instagram_mention(account, value, entry_time)
     elif field == "mention":
         _upsert_facebook_mention(account, value)
 
@@ -176,7 +191,17 @@ def _upsert_facebook_comment(account, value: dict):
         return
 
     from_data = value.get("from", {})
-    text = value.get("message", "")
+    graph_post_id = str(value.get("post_id", ""))
+    extra = {**value, "graph_post_id": graph_post_id, "sender_handle": str(from_data.get("id", ""))}
+    if graph_post_id:
+        # Stored the way the publisher keeps it, so the comment finds its PlatformPost.
+        extra["post_id"] = graph_post_id.rsplit("_", 1)[-1]
+    # On a top-level comment Meta reports the post itself as the parent.
+    parent_id = str(value.get("parent_id", ""))
+    if parent_id and parent_id != graph_post_id:
+        extra["parent_id"] = parent_id
+    else:
+        extra.pop("parent_id", None)
 
     _create_if_new(
         account=account,
@@ -184,8 +209,50 @@ def _upsert_facebook_comment(account, value: dict):
         message_type=InboxMessage.MessageType.COMMENT,
         sender_name=from_data.get("name", "Unknown"),
         sender_id=from_data.get("id", ""),
-        body=text,
-        extra=value,
+        body=value.get("message", ""),
+        extra=extra,
+        timestamp=_unix(value.get("created_time")),
+    )
+
+
+def _upsert_instagram_comment(account, value: dict, entry_time=None):
+    """An Instagram comment (``comments`` field): id, text, from{id,username}, media{id}, parent_id."""
+    comment_id = value.get("id")
+    if not comment_id:
+        return
+    from_data = value.get("from") or {}
+    handle = str(from_data.get("id") or from_data.get("username", ""))
+    extra = {**value, "sender_handle": handle}
+    if (value.get("media") or {}).get("id"):
+        extra["media_id"] = value["media"]["id"]
+    if value.get("parent_id"):
+        extra["parent_id"] = value["parent_id"]
+    _create_if_new(
+        account=account,
+        platform_message_id=str(comment_id),
+        message_type=InboxMessage.MessageType.COMMENT,
+        sender_name=from_data.get("username") or "Usuario de Instagram",
+        sender_id=handle,
+        body=value.get("text", ""),
+        extra=extra,
+        timestamp=_unix(entry_time),
+    )
+
+
+def _upsert_instagram_mention(account, value: dict, entry_time=None):
+    """An Instagram mention (``mentions`` field). Meta sends only ids, so the body stays empty."""
+    mention_id = value.get("comment_id") or value.get("media_id")
+    if not mention_id:
+        return
+    _create_if_new(
+        account=account,
+        platform_message_id=str(mention_id),
+        message_type=InboxMessage.MessageType.MENTION,
+        sender_name="Instagram",
+        sender_id="",
+        body="",
+        extra={**value, "media_id": value.get("media_id", "")},
+        timestamp=_unix(entry_time),
     )
 
 
@@ -206,27 +273,43 @@ def _upsert_facebook_mention(account, value: dict):
         sender_id=from_data.get("id", ""),
         body=text,
         extra=value,
+        timestamp=_unix(value.get("created_time")),
     )
 
 
 def _handle_facebook_messaging(account, messaging: dict):
-    """Handle a Facebook/Instagram messaging event (DM)."""
+    """Handle a Facebook/Instagram messaging event (DM, including echoes of what the Page sent)."""
     message_data = messaging.get("message", {})
     mid = message_data.get("mid")
     if not mid:
         return
 
     sender = messaging.get("sender", {})
-    text = message_data.get("text", "")
+    sender_id = str(sender.get("id", ""))
+    # The conversation partner: the sender, unless this is the Page's own message.
+    if sender_id == account.account_platform_id:
+        partner_id = str((messaging.get("recipient") or {}).get("id", ""))
+    else:
+        partner_id = sender_id
+    conversation_id = ""
+    if partner_id:  # without a partner there is nobody to group under
+        conversation_id = (
+            InboxMessage.objects.filter(social_account=account, extra__recipient_id=partner_id)
+            .exclude(conversation_id="")
+            .values_list("conversation_id", flat=True)
+            .first()
+            or f"user:{partner_id}"
+        )
 
     _create_if_new(
         account=account,
         platform_message_id=str(mid),
         message_type=InboxMessage.MessageType.DM,
         sender_name=sender.get("name", sender.get("id", "Unknown")),
-        sender_id=sender.get("id", ""),
-        body=text,
-        extra=messaging,
+        sender_id=sender_id,
+        body=message_data.get("text", ""),
+        extra={**messaging, "conversation_id": conversation_id, "recipient_id": partner_id},
+        timestamp=_unix(messaging.get("timestamp"), millis=True),
     )
 
 
@@ -238,28 +321,34 @@ def _create_if_new(
     sender_id: str,
     body: str,
     extra: dict,
+    timestamp=None,
 ):
-    """Create InboxMessage if it doesn't already exist (deduplication)."""
+    """Create the InboxMessage unless it already exists (deduplication).
+
+    Goes through the same path as the poller (``_upsert_message``), so a webhook
+    row gets the same outbound detection, threading, related post and
+    ``awaiting_reply`` as a polled one. ``timestamp`` is the platform's own time.
+    """
     from django.utils import timezone
 
-    obj, created = InboxMessage.objects.get_or_create(
-        social_account=account,
-        platform_message_id=platform_message_id,
-        defaults={
-            "workspace": account.workspace,
-            "message_type": message_type,
-            "sender_name": sender_name,
-            "sender_handle": sender_id,  # Platform user ID as fallback handle
-            "body": body,
-            "sentiment": analyze_sentiment(body),
-            "extra": extra,
-            "received_at": timezone.now(),
-        },
-    )
-    if created:
-        from .tasks import InboxSyncEngine
+    from providers.types import InboxMessage as ProviderMessage
 
-        InboxSyncEngine()._notify_new_message(obj)
+    from .tasks import InboxSyncEngine
+
+    if InboxMessage.objects.filter(social_account=account, platform_message_id=platform_message_id).exists():
+        return
+    InboxSyncEngine()._upsert_message(
+        account,
+        ProviderMessage(
+            platform_message_id=platform_message_id,
+            sender_id=sender_id,
+            sender_name=sender_name,
+            text=body,
+            timestamp=timestamp or timezone.now(),
+            message_type=message_type,
+            extra=extra,
+        ),
+    )
 
 
 # --- YouTube PubSubHubbub ---

@@ -31,6 +31,11 @@ urlpatterns = [
         views.transition_platform_post,
         name="transition_platform_post",
     ),
+    path(
+        "compose/<uuid:post_id>/platform-posts/<uuid:platform_post_id>/delete-published/",
+        views.delete_published_post,
+        name="delete_published_post",
+    ),
     # Auto-save
     path("compose/autosave/", views.autosave, name="autosave"),
     path("compose/<uuid:post_id>/autosave/", views.autosave, name="autosave_edit"),

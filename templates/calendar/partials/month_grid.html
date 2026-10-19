@@ -78,6 +78,7 @@ Enhanced with: holidays, custom events, category colors, recurring badges.
                 {% endwith %}
                 {% timezone display_timezone %}<time class="font-medium tabular-nums flex-shrink-0">{{ pp.effective_at|time:"H:i" }}</time>{% endtimezone %}
                 <span class="truncate">{{ pp.post.title|default:pp.post.caption_snippet|truncatechars:28 }}</span>
+                {% if pp.post_type_label %}<span class="pp-kind">{{ pp.post_type_label }}</span>{% endif %}
                 {% if pp.post.recurrence_rule %}
                 {% icon "arrows-rotate" css_class="w-3 h-3 text-current opacity-50 flex-shrink-0" %}
                 {% endif %}

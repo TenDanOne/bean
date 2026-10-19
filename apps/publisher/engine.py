@@ -406,7 +406,9 @@ class PublishEngine:
 
         # Fail clearly (no retries) when the media can't work on this platform.
         media_error = media_error_for_platform(
-            platform, [pm.media_asset.media_type for pm in attachments if pm.media_asset.file]
+            platform,
+            [pm.media_asset.media_type for pm in attachments if pm.media_asset.file],
+            (platform_post.platform_extra or {}).get("post_type"),
         )
         if media_error:
             raise PublishError(media_error, platform=platform, retryable=False)

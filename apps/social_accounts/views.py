@@ -533,6 +533,14 @@ def select_account(request):
                 platform_user_id=page_data.get("platform_user_id", ""),
             )
             connected.append(page["name"])
+            if platform in ("facebook", "instagram"):
+                # Without this Meta never sends comments/DMs to the webhook. Best effort: polling still works.
+                try:
+                    _get_provider_for_platform(platform, request.org.id).subscribe_webhooks(
+                        access_token, page.get("page_id") or page["id"]
+                    )
+                except Exception:
+                    logger.warning("Could not subscribe %s to webhooks", page["name"], exc_info=True)
 
     request.session.pop("oauth_page_select", None)
 

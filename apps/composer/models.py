@@ -505,6 +505,13 @@ class PlatformPost(models.Model):
         return self.post.title
 
     @property
+    def post_type_label(self):
+        """Nombre del tipo elegido en el composer (Short, Reel, Story, Carrusel) o ``""``."""
+        return {"short": "Short", "reel": "Reel", "story": "Story", "carousel": "Carrusel"}.get(
+            (self.platform_extra or {}).get("post_type"), ""
+        )
+
+    @property
     def effective_caption(self):
         """Return platform-specific caption or fall back to base post caption."""
         if self.platform_specific_caption is not None:

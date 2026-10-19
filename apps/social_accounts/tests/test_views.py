@@ -464,3 +464,53 @@ class TestMastodonConnectView:
         response = authenticated_client.get(url)
         assert response.status_code == 200
         assert b"Conectar Mastodon" in response.content
+
+
+class TestSubscribeWebhooksOnConnect:
+    def _select(self, authenticated_client, workspace, platform, page):
+        session = authenticated_client.session
+        session["oauth_page_select"] = {
+            "workspace_id": str(workspace.id),
+            "platform": platform,
+            "user_tokens": {"access_token": "user-token", "refresh_token": ""},
+            "pages": [page],
+        }
+        session.save()
+        with patch("apps.social_accounts.views._get_provider_for_platform") as get_provider:
+            response = authenticated_client.post(
+                reverse("social_accounts:select_account"), {"selected_pages": [page["id"]]}
+            )
+        return response, get_provider.return_value
+
+    def test_facebook_page_is_subscribed_with_its_own_token(self, authenticated_client, workspace):
+        response, provider = self._select(
+            authenticated_client, workspace, "facebook", {"id": "page-1", "name": "P", "access_token": "page-token"}
+        )
+        assert response.status_code == 302
+        provider.subscribe_webhooks.assert_called_once_with("page-token", "page-1")
+
+    def test_instagram_subscribes_the_linked_facebook_page(self, authenticated_client, workspace):
+        _, provider = self._select(
+            authenticated_client,
+            workspace,
+            "instagram",
+            {"id": "ig-1", "name": "IG", "access_token": "page-token", "page_id": "fb-page-9"},
+        )
+        provider.subscribe_webhooks.assert_called_once_with("page-token", "fb-page-9")
+
+    def test_subscription_failure_does_not_block_connecting(self, authenticated_client, workspace):
+        session = authenticated_client.session
+        session["oauth_page_select"] = {
+            "workspace_id": str(workspace.id),
+            "platform": "facebook",
+            "user_tokens": {"access_token": "user-token", "refresh_token": ""},
+            "pages": [{"id": "page-2", "name": "P2", "access_token": "page-token"}],
+        }
+        session.save()
+        with patch("apps.social_accounts.views._get_provider_for_platform") as get_provider:
+            get_provider.return_value.subscribe_webhooks.side_effect = RuntimeError("boom")
+            response = authenticated_client.post(
+                reverse("social_accounts:select_account"), {"selected_pages": ["page-2"]}
+            )
+        assert response.status_code == 302
+        assert SocialAccount.objects.filter(workspace=workspace, account_platform_id="page-2").exists()

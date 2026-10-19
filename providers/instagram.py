@@ -13,6 +13,7 @@ from urllib.parse import urlencode
 
 from .base import SocialProvider
 from .exceptions import APIError, OAuthError, PublishError
+from .meta_inbox import parse_dm, parse_ts, send_dm
 from .meta_insights import fetch_insights_safe
 from .types import (
     AccountMetrics,
@@ -111,6 +112,10 @@ class InstagramProvider(SocialProvider):
             "instagram_content_publish",
             "instagram_manage_comments",
             "instagram_manage_insights",
+            # DMs (/me/conversations?platform=instagram) and deleting publications.
+            "instagram_manage_messages",
+            "instagram_manage_contents",
+            "pages_messaging",
             "pages_show_list",
             "pages_read_engagement",
         ]
@@ -510,46 +515,111 @@ class InstagramProvider(SocialProvider):
     # ------------------------------------------------------------------
 
     def get_messages(self, access_token: str, since: datetime | None = None) -> list[InboxMessage]:
+        """Comments polled from the latest media plus DMs. One failing must not hide the other."""
+        messages: list[InboxMessage] = []
+        errors: list[APIError] = []
+        for fetch in (self._get_comments, self._get_dms):
+            try:
+                messages.extend(fetch(access_token, since))
+            except APIError as exc:
+                logger.warning("Instagram %s failed: %s", fetch.__name__, exc)
+                errors.append(exc)
+        if len(errors) == 2:
+            raise errors[0]
+        return messages
+
+    def _get_comments(self, access_token: str, since: datetime | None) -> list[InboxMessage]:
+        """``/{ig-user}/media`` with each media's comments and their replies."""
         ig_user_id = self.credentials.get("ig_user_id", "me")
-        params: dict = {"fields": "id,participants,messages{id,message,from,created_time}"}
+        leaf = "id,text,timestamp,username,from"
+        resp = self._request(
+            "GET",
+            f"{BASE_URL}/{ig_user_id}/media",
+            access_token=access_token,
+            params={
+                "fields": f"id,timestamp,comments.limit(50){{{leaf},replies.limit(50){{{leaf}}}}}",
+                "limit": 15,
+            },
+        )
+        messages: list[InboxMessage] = []
+        for media in resp.json().get("data", []):
+            for comment in (media.get("comments") or {}).get("data", []):
+                replies = (comment.get("replies") or {}).get("data", [])
+                for node, parent_id in [(comment, None), *((r, comment["id"]) for r in replies)]:
+                    timestamp = parse_ts(node["timestamp"])
+                    if since and timestamp < since:
+                        continue
+                    username = node.get("username", "")
+                    # `from` carries the id only when it is our own account; otherwise the handle is all we get.
+                    handle = str((node.get("from") or {}).get("id") or username)
+                    extra = {"media_id": media["id"], "sender_handle": handle}
+                    if parent_id:
+                        extra["parent_id"] = parent_id
+                    messages.append(
+                        InboxMessage(
+                            platform_message_id=node["id"],
+                            sender_id=handle,
+                            sender_name=username or "Usuario de Instagram",
+                            text=node.get("text", ""),
+                            timestamp=timestamp,
+                            message_type="comment",
+                            extra=extra,
+                        )
+                    )
+        return messages
+
+    def _get_dms(self, access_token: str, since: datetime | None) -> list[InboxMessage]:
+        """DMs through the Page the token belongs to (``me``) with ``platform=instagram``."""
+        params: dict = {
+            "platform": "instagram",
+            "fields": "id,messages{id,message,from,to,created_time}",
+        }
         if since:
             params["since"] = int(since.timestamp())
 
-        resp = self._request(
-            "GET",
-            f"{BASE_URL}/{ig_user_id}/conversations",
-            access_token=access_token,
-            params=params,
-        )
-        conversations = resp.json().get("data", [])
-
+        resp = self._request("GET", f"{BASE_URL}/me/conversations", access_token=access_token, params=params)
         messages: list[InboxMessage] = []
-        for convo in conversations:
+        profiles: dict = {}
+        own_id = self.credentials.get("ig_user_id", "")
+        for convo in resp.json().get("data", []):
             for msg in convo.get("messages", {}).get("data", []):
-                sender = msg.get("from", {})
                 messages.append(
-                    InboxMessage(
-                        platform_message_id=msg["id"],
-                        sender_id=sender.get("id", ""),
-                        sender_name=sender.get("name", sender.get("username", "")),
-                        text=msg.get("message", ""),
-                        timestamp=datetime.fromisoformat(msg["created_time"].replace("+0000", "+00:00")),
-                        message_type="dm",
-                        extra={"conversation_id": convo["id"]},
+                    parse_dm(
+                        self, BASE_URL, access_token, msg, convo["id"], own_id, "name,username,profile_pic", profiles
                     )
                 )
         return messages
 
     def reply_to_message(self, access_token: str, message_id: str, text: str, extra: dict | None = None) -> ReplyResult:
-        """Reply to a conversation. message_id should be the conversation ID."""
-        resp = self._request(
-            "POST",
-            f"{BASE_URL}/{message_id}/messages",
-            access_token=access_token,
-            json={"message": text},
-        )
+        """Answer a comment (``/{comment}/replies``) or a DM (``/me/messages``); see FacebookProvider."""
+        extra = extra or {}
+        if "recipient_id" in extra:  # key present (even empty) = a DM; send_dm refuses an empty one
+            resp = send_dm(self, BASE_URL, access_token, extra["recipient_id"], text, extra.get("last_inbound_at"))
+        else:
+            resp = self._request(
+                "POST", f"{BASE_URL}/{message_id}/replies", access_token=access_token, json={"message": text}
+            )
         data = resp.json()
-        return ReplyResult(platform_message_id=data.get("id", ""), extra=data)
+        return ReplyResult(platform_message_id=data.get("id") or data.get("message_id", ""), extra=data)
+
+    def set_comment_visibility(self, access_token: str, comment_id: str, visible: bool) -> None:
+        self._request("POST", f"{BASE_URL}/{comment_id}", access_token=access_token, json={"hide": not visible})
+
+    def delete_comment(self, access_token: str, comment_id: str) -> None:
+        self._request("DELETE", f"{BASE_URL}/{comment_id}", access_token=access_token)
+
+    def delete_post(self, access_token: str, platform_post_id: str) -> None:
+        """DELETE /{ig-media-id}; needs the ``instagram_manage_contents`` scope."""
+        self._request("DELETE", f"{BASE_URL}/{platform_post_id}", access_token=access_token)
+
+    def subscribe_webhooks(self, page_access_token: str, page_id: str) -> None:
+        """Subscribe the linked Facebook Page so IG DMs, comments and mentions reach the webhook."""
+        self._request(
+            "POST",
+            f"{BASE_URL}/{page_id}/subscribed_apps",
+            access_token=page_access_token,
+            params={"subscribed_fields": "messages,comments,mentions"},
+        )
 
     # ------------------------------------------------------------------
     # Helpers

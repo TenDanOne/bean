@@ -411,6 +411,12 @@
                        Clonar
                     </button>
                 </div>
+                {% if published_targets %}
+                <div class="border border-app bg-app-1 rounded-xl p-3 space-y-2" aria-label="Publicaciones en las plataformas">
+                    <p class="text-[11px] font-semibold text-app-ghost uppercase tracking-wider">Publicado en</p>
+                    {% for pp in published_targets %}{% include "composer/partials/_published_target.html" %}{% endfor %}
+                </div>
+                {% endif %}
                 {% endif %}
 
                 <!-- Title (conditional - only when YouTube/Pinterest selected) -->
@@ -692,6 +698,16 @@ Seleccionar tablero <span class="text-red-400">*</span>
                                   x-html="platformIconSvg(charLimits[accId]?.platform || '')"></span>
                             <span class="text-xs font-semibold text-app-secondary" x-text="charLimits[accId]?.name + ' - Configuración del video'"></span>
                         </div>
+                        <!-- Tipo -->
+                        <div x-data="{ t: platformExtras[accId]?.post_type || 'video' }">
+                            <label class="block text-[11px] font-semibold text-app-ghost uppercase tracking-wider mb-1">Tipo</label>
+                            <select :name="'yt_post_type_' + accId" x-model="t"
+                                    class="bb-select w-full text-sm px-3 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all">
+                                <option value="video">Video</option>
+                                <option value="short">Short</option>
+                            </select>
+                            <p class="text-[11px] text-app-ghost mt-1" x-text="t === 'short' ? 'Short: vertical (9:16) y de hasta 3 minutos. YouTube lo muestra en la pestaña Shorts.' : 'Video normal: horizontal, cualquier duración.'"></p>
+                        </div>
                         <!-- Thumbnail -->
                         <div>
                             <label class="block text-[11px] font-semibold text-app-ghost uppercase tracking-wider mb-1.5">Miniatura personalizada</label>
@@ -780,6 +796,24 @@ Seleccionar tablero <span class="text-red-400">*</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </template>
+
+                <!-- Instagram: tipo de publicación -->
+                <template x-for="accId in selectedAccounts" :key="'ig-settings-' + accId">
+                    <div x-show="['instagram', 'instagram_login'].includes(charLimits[accId]?.platform)"
+                         x-data="{ t: platformExtras[accId]?.post_type || 'feed',
+                                   hints: { feed: 'Publicación en el feed: foto o video, 1:1 o 4:5.', reel: 'Reel: video vertical 9:16, de 3 a 90 segundos.', story: 'Story: vertical 9:16, desaparece en 24 h. No admite pie de foto largo.', carousel: 'Carrusel: de 2 a 10 fotos o videos.' } }"
+                         class="relief p-4 space-y-2">
+                        <span class="text-xs font-semibold text-app-secondary" x-text="charLimits[accId]?.name + ' - Tipo de publicación'"></span>
+                        <select :name="'ig_post_type_' + accId" x-model="t"
+                                class="bb-select w-full text-sm px-3 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all">
+                            <option value="feed">Feed</option>
+                            <option value="reel">Reel</option>
+                            <option value="story">Story</option>
+                            <option value="carousel">Carrusel</option>
+                        </select>
+                        <p class="text-[11px] text-app-ghost" x-text="hints[t]"></p>
                     </div>
                 </template>
 

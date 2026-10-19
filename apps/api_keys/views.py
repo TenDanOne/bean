@@ -51,7 +51,10 @@ from apps.workspaces.models import Workspace
 # routes and the ``get_*_analytics`` MCP tools gate on it), so it's
 # grantable again — the set is empty until the next pre-ship permission
 # lands.
-_HIDDEN_FROM_ISSUANCE: set[str] = set()
+#
+# ``delete_published_posts`` gates a UI action only; no API route or MCP tool
+# deletes a publication, so offering it on a key would be a checkbox that does nothing.
+_HIDDEN_FROM_ISSUANCE: set[str] = {"delete_published_posts"}
 
 # ---------------------------------------------------------------------------
 # Authorization decorator
@@ -72,6 +75,7 @@ _PERMISSION_LABELS_ES = {
     "edit_media": "Editar medios",
     "delete_media": "Eliminar medios",
     "manage_media": "Gestionar medios",
+    "delete_published_posts": "Borrar publicaciones publicadas",
 }
 
 

@@ -179,39 +179,72 @@ class InboxSyncEngine:
         sender_handle = msg.extra.get("sender_handle", msg.sender_id)
         # A comment authored by the connected account is something we said, not
         # something to answer. Without this every reply came back through sync as
-        # a fresh inbound message and half the inbox was our own voice.
-        is_outbound = bool(account.account_platform_id) and sender_handle == account.account_platform_id
+        # a fresh inbound message and half the inbox was our own voice. Instagram
+        # comments only carry the username, so the handle counts too.
+        own = {h.lower() for h in (account.account_platform_id, (account.account_handle or "").lstrip("@")) if h}
+        is_outbound = str(sender_handle).lower() in own
+        parent = self._resolve_parent(account, msg)
 
+        defaults = {
+            "workspace": account.workspace,
+            "sender_name": msg.sender_name,
+            "sender_handle": sender_handle,
+            "sender_avatar_url": msg.extra.get("sender_avatar_url", ""),
+            "body": msg.text,
+            "message_type": msg.message_type,
+            "received_at": msg.timestamp,
+            "extra": msg.extra,
+            "is_outbound": is_outbound,
+            "parent_message": parent,
+            "conversation_id": msg.extra.get("conversation_id", ""),
+            # The publication this comment sits under. Filled at sync time
+            # so the inbox can group by post without a join through JSON on
+            # every page load.
+            "related_post": resolve_related_post_for(account, msg),
+        }
+        # Our own words and thread replies never start out UNREAD.
+        create_defaults = {**defaults, **({"status": InboxMessage.Status.OPEN} if is_outbound or parent else {})}
         obj, created = InboxMessage.objects.update_or_create(
             social_account=account,
             platform_message_id=msg.platform_message_id,
-            defaults={
-                "workspace": account.workspace,
-                "sender_name": msg.sender_name,
-                "sender_handle": sender_handle,
-                "sender_avatar_url": msg.extra.get("sender_avatar_url", ""),
-                "body": msg.text,
-                "message_type": msg.message_type,
-                "received_at": msg.timestamp,
-                "extra": msg.extra,
-                "is_outbound": is_outbound,
-                "parent_message": self._resolve_parent(account, msg),
-                # The publication this comment sits under. Filled at sync time
-                # so the inbox can group by post without a join through JSON on
-                # every page load.
-                "related_post": resolve_related_post_for(account, msg),
-            },
+            defaults=defaults,
+            create_defaults=create_defaults,
         )
+
+        # A webhook DM stored under "user:<psid>" joins the real thread once polling reports its id.
+        recipient = msg.extra.get("recipient_id")
+        if recipient and obj.conversation_id and obj.conversation_id != f"user:{recipient}":
+            InboxMessage.objects.filter(social_account=account, conversation_id=f"user:{recipient}").update(
+                conversation_id=obj.conversation_id
+            )
 
         if is_outbound:
             self._reconcile_with_pending_reply(obj)
+            obj.mark_thread_answered(before=obj.received_at)
 
         if created:
             obj.sentiment = analyze_sentiment(obj.body)
-            obj.save(update_fields=["sentiment"])
+            update_fields = ["sentiment"]
+            # YouTube's video announcements are not something a person wrote to us.
+            if not is_outbound and not obj.platform_message_id.startswith(InboxMessage.NON_COMMENT_ID_PREFIXES):
+                obj.awaiting_reply = not self._already_answered(obj)
+                update_fields.append("awaiting_reply")
+            obj.save(update_fields=update_fields)
             # Never alert on our own words.
             if notify and not is_outbound:
                 self._notify_new_message(obj)
+
+    @staticmethod
+    def _already_answered(message):
+        """Whether something of ours later in the thread already answers this (history imported out of order)."""
+        later = InboxMessage.objects.filter(
+            social_account_id=message.social_account_id, is_outbound=True, received_at__gte=message.received_at
+        )
+        if message.conversation_id:
+            later = later.filter(conversation_id=message.conversation_id)
+        else:
+            later = later.filter(parent_message_id=message.parent_message_id or message.id)
+        return later.exists() or message.replies.exists()
 
     @staticmethod
     def _resolve_parent(account, msg):

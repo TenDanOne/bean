@@ -204,6 +204,21 @@ def _is_read_only_published(post):
     return statuses == {PlatformPost.Status.PUBLISHED}
 
 
+#: Tipo elegido en el composer -> valor de ``platform_extra["post_type"]`` (los que entiende el motor).
+#: «Video»/«Feed» no guardan nada: el motor lo deduce de los medios.
+_POST_TYPE_FIELDS = {
+    "youtube": ("yt_post_type_", {"short"}),
+    "instagram": ("ig_post_type_", {"reel", "story", "carousel"}),
+    "instagram_login": ("ig_post_type_", {"reel", "story", "carousel"}),
+}
+
+
+def _post_type_from_form(post_data, acc_id, platform) -> str | None:
+    prefix, allowed = _POST_TYPE_FIELDS.get(platform, ("", set()))
+    value = post_data.get(f"{prefix}{acc_id}", "").strip() if prefix else ""
+    return value if value in allowed else None
+
+
 def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_approval=True):
     """400 JSON when this save may not go out: approval gate or media unfit for a platform.
 
@@ -232,16 +247,19 @@ def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_appro
             MediaAsset.objects.filter(id__in=pending, workspace=workspace).values_list("media_type", flat=True)
         )
     account_ids = set(_parse_selected_account_ids(request.POST.get("selected_accounts", "")))
-    platforms = set(
-        SocialAccount.objects.filter(id__in=account_ids, workspace=workspace).values_list("platform", flat=True)
-    )
+    targets = {
+        (platform, _post_type_from_form(request.POST, str(acc_id), platform))
+        for acc_id, platform in SocialAccount.objects.filter(id__in=account_ids, workspace=workspace).values_list(
+            "id", "platform"
+        )
+    }
     if queue_id and _is_valid_uuid(queue_id):
         from apps.calendar.models import Queue
 
         q = Queue.objects.filter(id=queue_id, workspace=workspace).select_related("social_account").first()
         if q and q.social_account_id:
-            platforms.add(q.social_account.platform)
-    errors = [e for e in (media_error_for_platform(p, media_types) for p in sorted(platforms)) if e]
+            targets.add((q.social_account.platform, None))
+    errors = sorted({e for e in (media_error_for_platform(p, media_types, t) for p, t in targets) if e})
     if errors:
         return JsonResponse({"errors": {"media": " ".join(errors)}}, status=400)
     return None
@@ -297,6 +315,7 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
                 setattr(pp, attr, request.POST[key].strip() or None)
 
         # Per-platform extras
+        post_type = _post_type_from_form(request.POST, acc_id, account.platform)
         if account.platform == "youtube":
             tags_list = parse_and_truncate_youtube_tag_string(request.POST.get(f"yt_tags_{acc_id}", ""))
             privacy_status = request.POST.get(f"yt_privacy_status_{acc_id}", "public")
@@ -308,7 +327,15 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
                 "self_declared_made_for_kids": request.POST.get(f"yt_made_for_kids_{acc_id}") == "true",
                 "tags": tags_list,
                 "thumbnail_asset_id": thumb_id,
+                **({"post_type": post_type} if post_type else {}),
             }
+
+        elif account.platform in ("instagram", "instagram_login") and f"ig_post_type_{acc_id}" in request.POST:
+            # Solo si el selector viajó en el formulario, para no borrar el tipo en otros guardados.
+            extra = {k: v for k, v in (pp.platform_extra or {}).items() if k != "post_type"}
+            if post_type:
+                extra["post_type"] = post_type
+            pp.platform_extra = extra
 
         elif account.platform == "pinterest":
             board_id = request.POST.get(f"pin_board_id_{acc_id}", "").strip()
@@ -751,6 +778,9 @@ def compose(request, workspace_id, post_id=None):
         "social_accounts": social_accounts,
         "selected_account_ids": [str(aid) for aid in selected_account_ids],
         "platform_extras": platform_extras,
+        "published_targets": [
+            pp for pp in platform_post_list if pp.status == PlatformPost.Status.PUBLISHED and pp.platform_post_id
+        ],
         "platform_overrides": platform_overrides,
         "media_attachments": media_attachments,
         "media_items": media_items,
@@ -1223,6 +1253,49 @@ def save_post(request, workspace_id, post_id=None):
         )
 
     return redirect("composer:compose_edit", workspace_id=workspace.id, post_id=post.id)
+
+
+#: Plataformas donde BEAN puede borrar una publicación ya publicada (TikTok no lo permite por API).
+DELETABLE_PLATFORMS = ("facebook", "instagram", "instagram_login", "youtube")
+
+
+@login_required
+@require_POST
+@require_permission("delete_published_posts")
+def delete_published_post(request, workspace_id, post_id, platform_post_id):
+    """Borra en la plataforma una publicación ya publicada y la marca como borrada en BEAN."""
+    from apps.publisher.engine import _resolve_publish_credentials
+    from providers import get_provider
+
+    workspace = _get_workspace(request, workspace_id)
+    pp = get_object_or_404(
+        PlatformPost.objects.select_related("post", "social_account").filter(
+            social_account__in=visible_accounts(request.workspace_membership)
+        ),
+        id=platform_post_id,
+        post_id=post_id,
+        post__workspace=workspace,
+    )
+    account = pp.social_account
+    if account.platform not in DELETABLE_PLATFORMS:
+        return HttpResponse("Esta plataforma no permite borrar la publicación desde BEAN.", status=400)
+    if pp.status != PlatformPost.Status.PUBLISHED or not pp.platform_post_id:
+        return HttpResponse("Solo se pueden borrar publicaciones ya publicadas.", status=400)
+    if request.POST.get("confirm", "").strip() != "BORRAR":
+        return HttpResponse("Escribe BORRAR para confirmar.", status=400)
+
+    if not (pp.platform_extra or {}).get("deleted_on_platform_at"):
+        try:
+            provider = get_provider(account.platform, _resolve_publish_credentials(account))
+            provider.delete_post(account.get_fresh_access_token(provider), pp.platform_post_id)
+        except NotImplementedError:
+            return HttpResponse("Esta plataforma aún no permite borrar desde BEAN.", status=400)
+        except Exception as exc:
+            logger.warning("Borrar publicación %s falló: %s", pp.id, exc)
+            return HttpResponse(f"No se pudo borrar en {account.get_platform_display()}: {exc}", status=400)
+        pp.platform_extra = {**(pp.platform_extra or {}), "deleted_on_platform_at": timezone.now().isoformat()}
+        pp.save(update_fields=["platform_extra"])
+    return render(request, "composer/partials/_published_target.html", {"workspace": workspace, "pp": pp})
 
 
 @login_required

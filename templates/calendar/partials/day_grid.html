@@ -64,6 +64,7 @@ Context: day_slots, target_date, workspace.
                 {% endif %}
                 {% endwith %}
                 <span class="truncate">{{ pp.post.title|default:pp.post.caption_snippet|truncatechars:28 }}</span>
+                {% if pp.post_type_label %}<span class="pp-kind">{{ pp.post_type_label }}</span>{% endif %}
                 {% if pp.takes_calendar_slot %}
                 <span class="calendar-post-slot-check" title="Programada en un horario del canal">
                     {% icon "check" css_class="w-3 h-3" %}

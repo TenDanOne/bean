@@ -8,6 +8,7 @@ from urllib.parse import urlencode, urlparse
 
 from .base import SocialProvider
 from .exceptions import APIError, OAuthError, PublishError
+from .meta_inbox import parse_dm, parse_ts, send_dm
 from .meta_insights import fetch_insights_safe, parse_insights_response
 from .types import (
     AccountMetrics,
@@ -654,6 +655,66 @@ class FacebookProvider(SocialProvider):
     # ------------------------------------------------------------------
 
     def get_messages(self, access_token: str, since: datetime | None = None) -> list[InboxMessage]:
+        """Comments (polled from the Page feed) plus Messenger DMs.
+
+        One source failing must not hide the other, so a failure is logged and
+        only raised when both sources fail.
+        """
+        messages: list[InboxMessage] = []
+        errors: list[APIError] = []
+        for fetch in (self._get_comments, self._get_dms):
+            try:
+                messages.extend(fetch(access_token, since))
+            except APIError as exc:
+                logger.warning("Facebook %s failed: %s", fetch.__name__, exc)
+                errors.append(exc)
+        if len(errors) == 2:
+            raise errors[0]
+        return messages
+
+    def _get_comments(self, access_token: str, since: datetime | None) -> list[InboxMessage]:
+        """Comments and their replies on the Page's latest posts (``/{page}/feed``)."""
+        page_id = self.credentials.get("page_id", "me")
+        leaf = "id,message,created_time,from{id,name,picture{url}}"
+        resp = self._request(
+            "GET",
+            f"{BASE_URL}/{page_id}/feed",
+            access_token=access_token,
+            params={
+                "fields": f"id,created_time,comments.limit(50){{{leaf},comments.limit(50){{{leaf}}}}}",
+                "limit": 15,
+            },
+        )
+        messages: list[InboxMessage] = []
+        for post in resp.json().get("data", []):
+            post_extra = {"post_id": self._stored_post_id(post["id"]), "graph_post_id": post["id"]}
+            for comment in (post.get("comments") or {}).get("data", []):
+                replies = (comment.get("comments") or {}).get("data", [])
+                for node, parent_id in [(comment, None), *((r, comment["id"]) for r in replies)]:
+                    timestamp = parse_ts(node["created_time"])
+                    if since and timestamp < since:
+                        continue
+                    sender = node.get("from") or {}
+                    extra = {**post_extra, "sender_handle": str(sender.get("id", ""))}
+                    if parent_id:
+                        extra["parent_id"] = parent_id
+                    avatar = ((sender.get("picture") or {}).get("data") or {}).get("url")
+                    if avatar:
+                        extra["sender_avatar_url"] = avatar
+                    messages.append(
+                        InboxMessage(
+                            platform_message_id=node["id"],
+                            sender_id=str(sender.get("id", "")),
+                            sender_name=sender.get("name") or "Usuario de Facebook",
+                            text=node.get("message", ""),
+                            timestamp=timestamp,
+                            message_type="comment",
+                            extra=extra,
+                        )
+                    )
+        return messages
+
+    def _get_dms(self, access_token: str, since: datetime | None) -> list[InboxMessage]:
         page_id = self.credentials.get("page_id", "me")
         params: dict = {}
         if since:
@@ -665,42 +726,65 @@ class FacebookProvider(SocialProvider):
             access_token=access_token,
             params=params,
         )
-        conversations = resp.json().get("data", [])
-
         messages: list[InboxMessage] = []
-        for convo in conversations:
+        profiles: dict = {}
+        own_id = self.credentials.get("page_id", "")
+        for convo in resp.json().get("data", []):
             convo_id = convo["id"]
             msg_resp = self._request(
                 "GET",
                 f"{BASE_URL}/{convo_id}/messages",
                 access_token=access_token,
-                params={"fields": "id,message,from,created_time"},
+                params={"fields": "id,message,from,to,created_time"},
             )
             for msg in msg_resp.json().get("data", []):
-                sender = msg.get("from", {})
                 messages.append(
-                    InboxMessage(
-                        platform_message_id=msg["id"],
-                        sender_id=sender.get("id", ""),
-                        sender_name=sender.get("name", ""),
-                        text=msg.get("message", ""),
-                        timestamp=datetime.fromisoformat(msg["created_time"].replace("+0000", "+00:00")),
-                        message_type="dm",
-                        extra={"conversation_id": convo_id},
-                    )
+                    parse_dm(self, BASE_URL, access_token, msg, convo_id, own_id, "name,profile_pic", profiles)
                 )
         return messages
 
     def reply_to_message(self, access_token: str, message_id: str, text: str, extra: dict | None = None) -> ReplyResult:
-        """Reply to a conversation. message_id should be the conversation ID."""
-        resp = self._request(
-            "POST",
-            f"{BASE_URL}/{message_id}/messages",
-            access_token=access_token,
-            json={"message": text},
-        )
+        """Answer a comment (``/{comment}/comments``) or a DM (``/me/messages``).
+
+        A DM is recognised by ``extra["recipient_id"]``, which the inbox stores on
+        every conversation message; ``extra["last_inbound_at"]`` (ISO) picks the
+        messaging window.
+        """
+        extra = extra or {}
+        if "recipient_id" in extra:  # key present (even empty) = a DM; send_dm refuses an empty one
+            resp = send_dm(self, BASE_URL, access_token, extra["recipient_id"], text, extra.get("last_inbound_at"))
+        else:
+            resp = self._request(
+                "POST", f"{BASE_URL}/{message_id}/comments", access_token=access_token, json={"message": text}
+            )
         data = resp.json()
-        return ReplyResult(platform_message_id=data.get("id", ""), extra=data)
+        return ReplyResult(platform_message_id=data.get("id") or data.get("message_id", ""), extra=data)
+
+    def set_comment_visibility(self, access_token: str, comment_id: str, visible: bool) -> None:
+        self._request("POST", f"{BASE_URL}/{comment_id}", access_token=access_token, json={"is_hidden": not visible})
+
+    def delete_comment(self, access_token: str, comment_id: str) -> None:
+        self._request("DELETE", f"{BASE_URL}/{comment_id}", access_token=access_token)
+
+    def delete_post(self, access_token: str, platform_post_id: str) -> None:
+        """DELETE the post. The stored id lacks the ``PAGEID_`` prefix feed posts need; videos use the bare id."""
+        scoped = self._page_scoped_post_id(platform_post_id)
+        if scoped != platform_post_id:
+            try:
+                self._request("DELETE", f"{BASE_URL}/{scoped}", access_token=access_token)
+                return
+            except APIError:
+                logger.debug("Facebook delete of %s failed, retrying with the bare id", scoped)
+        self._request("DELETE", f"{BASE_URL}/{platform_post_id}", access_token=access_token)
+
+    def subscribe_webhooks(self, page_access_token: str, page_id: str) -> None:
+        """Subscribe the app to the Page's feed and messages so webhooks arrive."""
+        self._request(
+            "POST",
+            f"{BASE_URL}/{page_id}/subscribed_apps",
+            access_token=page_access_token,
+            params={"subscribed_fields": "feed,messages,message_echoes"},
+        )
 
     # ------------------------------------------------------------------
     # Token management

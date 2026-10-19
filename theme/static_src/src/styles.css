@@ -2129,6 +2129,8 @@ button.filter-select:active {
   background: var(--st-bg); color: var(--st-fg); border: 1.5px dashed var(--st-dot);
 }
 .post-chip .chip-dot { display: none; }
+/* Insignia de tipo (Short/Reel/Story/Carrusel) dentro del chip o la lista. */
+.pp-kind { flex: none; font-size: 11px; font-weight: 700; line-height: 1.5; padding: 0 5px; border: 1px solid currentColor; border-radius: 4px; }
 /* «Publicando»: borde sólido + punto pulsante (único pulso; la pastilla no pulsa). */
 .st-publishing, .status-publishing { border-style: solid; }
 .st-publishing::before, .status-publishing::before {

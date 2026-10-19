@@ -4,6 +4,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 from apps.common.managers import WorkspaceScopedManager
 
@@ -128,6 +129,13 @@ class InboxMessage(models.Model):
         help_text="Who last hid, restored or deleted it.",
     )
 
+    # Groups the chat messages of one DM thread; empty for comments.
+    conversation_id = models.CharField(max_length=255, blank=True, default="", db_index=True)
+    # Inbound and still unanswered. Set when it arrives, cleared when we answer
+    # from BEAN or an outbound message shows up later in the same thread (sync or
+    # webhook). Replaces guessing from `status`, which people change for other reasons.
+    awaiting_reply = models.BooleanField(default=False, db_index=True)
+
     extra = models.JSONField(default=dict, blank=True)
     received_at = models.DateTimeField(db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -159,6 +167,32 @@ class InboxMessage(models.Model):
     @property
     def platform(self):
         return self.social_account.platform
+
+    @classmethod
+    def pending_q(cls):
+        """Top-level inbound messages still waiting for an answer (what the sidebar badge counts)."""
+        return Q(
+            awaiting_reply=True,
+            is_outbound=False,
+            parent_message__isnull=True,
+            deleted_on_platform__isnull=True,
+        ) & ~Q(status__in=[cls.Status.RESOLVED, cls.Status.ARCHIVED])
+
+    def mark_thread_answered(self, before=None):
+        """Clear ``awaiting_reply`` on this message's thread (its DM conversation, or its comment and replies).
+
+        ``before`` limits it to messages received up to that moment, so an
+        outbound message does not answer something that arrived after it.
+        """
+        qs = InboxMessage.objects.filter(social_account_id=self.social_account_id, awaiting_reply=True)
+        if self.conversation_id:
+            qs = qs.filter(conversation_id=self.conversation_id)
+        else:
+            root = self.parent_message_id or self.id
+            qs = qs.filter(Q(id=root) | Q(parent_message_id=root))
+        if before is not None:
+            qs = qs.filter(received_at__lte=before)
+        return qs.update(awaiting_reply=False)
 
     # Ids that are not comment ids, per platform. YouTube's PubSubHubbub feed
     # announces a new video as an Atom entry (`yt:video:<id>`), and the webhook
