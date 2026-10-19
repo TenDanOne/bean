@@ -59,7 +59,7 @@ def _reject_workspace_owner(role, *, current_role=None):
         return
     if current_role == WorkspaceMembership.WorkspaceRole.OWNER:
         return
-    raise ValueError("Cannot grant workspace ownership. Transfer ownership instead.")
+    raise ValueError("No se puede otorgar la propiedad del espacio de trabajo. Transfiere la propiedad.")
 
 
 def _inviter_org_level(inviter, org):
@@ -99,13 +99,13 @@ def _validate_invite_request(org, org_role, workspace_assignments, inviter):
     """
     # Don't allow inviting as owner (use ownership transfer instead).
     if org_role == OrgMembership.OrgRole.OWNER:
-        raise ValueError("Cannot invite someone as an organization owner.")
+        raise ValueError("No se puede invitar a alguien como propietario de la organización.")
 
     # Enforce org-role hierarchy: inviter cannot grant a role above their own.
     inviter_org_level = _inviter_org_level(inviter, org)
     requested_org_level = ORG_ROLE_LEVEL.get(org_role, 0)
     if requested_org_level == 0:
-        raise ValueError(f"Unknown org role: {org_role!r}.")
+        raise ValueError(f"Rol de organización desconocido: {org_role!r}.")
     # Strict inequality on org-role, but ONLY for the admin/owner tier:
     # blocks lateral admin grants (a compromised admin shouldn't be able to
     # clone their privileges) while still permitting member-tier invites —
@@ -113,7 +113,7 @@ def _validate_invite_request(org, org_role, workspace_assignments, inviter):
     # those managers are themselves only org-role=member.
     admin_level = ORG_ROLE_LEVEL[OrgMembership.OrgRole.ADMIN]
     if requested_org_level >= admin_level and requested_org_level >= inviter_org_level:
-        raise ValueError("Only organization owners can invite someone as an admin.")
+        raise ValueError("Solo los propietarios de la organización pueden invitar a alguien como administrador.")
 
     # Validate workspace assignments belong to org AND don't exceed inviter's
     # workspace role in that specific workspace.
@@ -121,16 +121,16 @@ def _validate_invite_request(org, org_role, workspace_assignments, inviter):
     for assignment in workspace_assignments:
         ws_id = uuid.UUID(str(assignment["workspace_id"]))
         if ws_id not in org_workspace_ids:
-            raise ValueError(f"Workspace {ws_id} does not belong to this organization.")
+            raise ValueError(f"El espacio de trabajo {ws_id} no pertenece a esta organización.")
 
         requested_ws_role = assignment.get("role", WorkspaceMembership.WorkspaceRole.VIEWER)
         _reject_workspace_owner(requested_ws_role)
         requested_ws_level = _ws_level(requested_ws_role)
         if requested_ws_level == 0:
-            raise ValueError(f"Unknown workspace role: {requested_ws_role!r}.")
+            raise ValueError(f"Rol de espacio de trabajo desconocido: {requested_ws_role!r}.")
         inviter_ws_level = _inviter_workspace_level(inviter, org, ws_id)
         if requested_ws_level > inviter_ws_level:
-            raise ValueError("You cannot grant a workspace role higher than your own in that workspace.")
+            raise ValueError("No puedes otorgar un rol superior al tuyo en ese espacio de trabajo.")
 
 
 def create_invitation(org, email, org_role, workspace_assignments, invited_by, *, inviter=None):
@@ -153,7 +153,7 @@ def create_invitation(org, email, org_role, workspace_assignments, invited_by, *
 
     # Check if already a member
     if OrgMembership.objects.filter(organization=org, user__email=email).exists():
-        raise ValueError("This person is already a member of your organization.")
+        raise ValueError("Esta persona ya es miembro de tu organización.")
 
     # Check for pending invite
     pending = Invitation.objects.filter(
@@ -163,7 +163,7 @@ def create_invitation(org, email, org_role, workspace_assignments, invited_by, *
         expires_at__gt=timezone.now(),
     ).first()
     if pending:
-        raise ValueError("An invitation is already pending for this email. You can resend it instead.")
+        raise ValueError("Ya hay una invitación pendiente para este correo. Puedes reenviarla.")
 
     # Default `inviter` to `invited_by` so legacy callers without the kwarg
     # still get an enforced check (no silent bypass).
@@ -235,7 +235,7 @@ def add_existing_user_to_org(org, user, org_role, workspace_assignments, *, invi
             entitled to grant the requested roles.
     """
     if OrgMembership.objects.filter(organization=org, user=user).exists():
-        raise ValueError("This person is already a member of your organization.")
+        raise ValueError("Esta persona ya es miembro de tu organización.")
 
     _validate_invite_request(org, org_role, workspace_assignments, inviter)
 
@@ -280,7 +280,7 @@ def _notify_added_to_org(user, org, inviter):
         notify(
             user=user,
             event_type=EventType.TEAM_MEMBER_INVITED,
-            title=f"You were added to {org.name}",
+            title=f"Te agregaron a {org.name}",
             body=f"{getattr(inviter, 'display_name', None) or 'An administrator'} added you to {org.name}.",
             data={"organization_id": str(org.id)},
         )
@@ -305,12 +305,12 @@ def accept_invitation(invitation, user, *, require_email_match=True):
             user's email does not match (when require_email_match is True).
     """
     if invitation.is_expired:
-        raise ValueError("This invitation has expired.")
+        raise ValueError("Esta invitación expiró.")
     if invitation.is_accepted:
-        raise ValueError("This invitation has already been accepted.")
+        raise ValueError("Esta invitación ya fue aceptada.")
 
     if require_email_match and user.email.lower() != invitation.email.lower():
-        raise ValueError("This invitation was sent to a different email address.")
+        raise ValueError("Esta invitación se envió a otro correo electrónico.")
 
     # Create org membership (skip if exists, e.g. user was already added)
     org_membership, created = OrgMembership.objects.get_or_create(
@@ -356,7 +356,7 @@ def resend_invitation(invitation):
         ValueError: If the invitation is already accepted.
     """
     if invitation.is_accepted:
-        raise ValueError("This invitation has already been accepted.")
+        raise ValueError("Esta invitación ya fue aceptada.")
 
     import secrets
 
@@ -371,7 +371,7 @@ def resend_invitation(invitation):
 def revoke_invitation(invitation):
     """Revoke an invitation by expiring it immediately."""
     if invitation.is_accepted:
-        raise ValueError("Cannot revoke an already accepted invitation.")
+        raise ValueError("No se puede revocar una invitación ya aceptada.")
     invitation.expires_at = timezone.now()
     invitation.save(update_fields=["expires_at"])
 
@@ -388,12 +388,12 @@ def remove_member(org, membership, removed_by):
         ValueError: If trying to remove the last owner or yourself.
     """
     if membership.user_id == removed_by.id:
-        raise ValueError("You cannot remove yourself from the organization.")
+        raise ValueError("No puedes quitarte a ti mismo de la organización.")
 
     if membership.org_role == OrgMembership.OrgRole.OWNER:
         owner_count = OrgMembership.objects.filter(organization=org, org_role=OrgMembership.OrgRole.OWNER).count()
         if owner_count <= 1:
-            raise ValueError("Cannot remove the last organization owner.")
+            raise ValueError("No se puede quitar al último propietario de la organización.")
 
     # Delete workspace memberships in this org's workspaces
     org_workspace_ids = Workspace.objects.filter(organization=org).values_list("id", flat=True)
@@ -413,11 +413,11 @@ def update_member_org_role(org, membership, new_role, *, caller=None):
             to either remove the existing role or set the requested one.
     """
     if new_role == OrgMembership.OrgRole.OWNER:
-        raise ValueError("Cannot promote to owner. Transfer ownership instead.")
+        raise ValueError("No se puede promover a propietario. Transfiere la propiedad.")
 
     new_level = ORG_ROLE_LEVEL.get(new_role, 0)
     if new_level == 0:
-        raise ValueError(f"Unknown org role: {new_role!r}.")
+        raise ValueError(f"Rol de organización desconocido: {new_role!r}.")
 
     # Caller hierarchy: must be at least as senior as both the existing role
     # and the requested role. Blocks an admin demoting an owner (existing
@@ -426,15 +426,15 @@ def update_member_org_role(org, membership, new_role, *, caller=None):
         caller_level = _inviter_org_level(caller, org)
         existing_level = ORG_ROLE_LEVEL.get(membership.org_role, 0)
         if caller_level < existing_level:
-            raise ValueError("You cannot change a member whose role is higher than your own.")
+            raise ValueError("No puedes cambiar a un miembro con un rol superior al tuyo.")
         admin_level = ORG_ROLE_LEVEL[OrgMembership.OrgRole.ADMIN]
         if new_level >= admin_level and new_level >= caller_level:
-            raise ValueError("Only organization owners can promote someone to admin.")
+            raise ValueError("Solo los propietarios de la organización pueden promover a alguien a administrador.")
 
     if membership.org_role == OrgMembership.OrgRole.OWNER:
         owner_count = OrgMembership.objects.filter(organization=org, org_role=OrgMembership.OrgRole.OWNER).count()
         if owner_count <= 1:
-            raise ValueError("Cannot change the role of the last organization owner.")
+            raise ValueError("No se puede cambiar el rol del último propietario de la organización.")
 
     membership.org_role = new_role
     membership.save(update_fields=["org_role"])
@@ -459,7 +459,7 @@ def set_member_role(org, user, new_role, *, caller=None):
     _reject_workspace_owner(new_role)
     new_level = _ws_level(new_role)
     if new_level == 0:
-        raise ValueError(f"Unknown workspace role: {new_role!r}.")
+        raise ValueError(f"Rol de espacio de trabajo desconocido: {new_role!r}.")
 
     memberships = list(
         WorkspaceMembership.objects.filter(user=user, workspace__organization=org).exclude(
@@ -476,11 +476,11 @@ def set_member_role(org, user, new_role, *, caller=None):
         for membership in memberships:
             caller_level = _inviter_workspace_level(caller, org, membership.workspace_id)
             if caller_level < _ws_level(WorkspaceMembership.WorkspaceRole.MANAGER):
-                raise ValueError("You do not have permission to change roles.")
+                raise ValueError("No tienes permiso para cambiar roles.")
             if new_level >= caller_level:
-                raise ValueError("You can only give someone a role below your own.")
+                raise ValueError("Solo puedes dar un rol inferior al tuyo.")
             if _ws_level(membership.workspace_role) >= caller_level:
-                raise ValueError("You cannot change the role of someone at or above your own.")
+                raise ValueError("No puedes cambiar el rol de alguien con un rol igual o superior al tuyo.")
 
     changed = 0
     for membership in memberships:
@@ -537,12 +537,12 @@ def update_workspace_assignments(org, user, assignments, *, inviter=None):
     for a in assignments:
         ws_id = uuid_mod.UUID(str(a["workspace_id"]))
         if ws_id not in org_workspace_ids:
-            raise ValueError(f"Workspace {ws_id} does not belong to this organization.")
+            raise ValueError(f"El espacio de trabajo {ws_id} no pertenece a esta organización.")
         requested_role = a.get("role", WorkspaceMembership.WorkspaceRole.VIEWER)
         _reject_workspace_owner(requested_role, current_role=held_roles.get(ws_id))
         requested_level = _ws_level(requested_role)
         if requested_level == 0:
-            raise ValueError(f"Unknown workspace role: {requested_role!r}.")
+            raise ValueError(f"Rol de espacio de trabajo desconocido: {requested_role!r}.")
         # Preserving is not granting. The form that calls this decides which
         # brands someone works on and resubmits the role they already hold, so
         # checking the height of an unchanged role would refuse the whole save —
@@ -551,7 +551,7 @@ def update_workspace_assignments(org, user, assignments, *, inviter=None):
         if inviter is not None and requested_role != held_roles.get(ws_id):
             inviter_level = _inviter_workspace_level(inviter, org, ws_id)
             if requested_level > inviter_level:
-                raise ValueError("You cannot grant a workspace role higher than your own in that workspace.")
+                raise ValueError("No puedes otorgar un rol superior al tuyo en ese espacio de trabajo.")
         desired[ws_id] = requested_role
 
     # Current assignments in this org
@@ -573,12 +573,10 @@ def update_workspace_assignments(org, user, assignments, *, inviter=None):
             if ws_id not in desired:
                 # About to delete this membership entirely.
                 if existing_level > inviter_level:
-                    raise ValueError(
-                        "You cannot remove a workspace membership whose current role is higher than your own."
-                    )
+                    raise ValueError("No puedes quitar una membresía cuyo rol actual es superior al tuyo.")
             elif desired[ws_id] != m.workspace_role and existing_level > inviter_level:
                 # About to change this membership's role.
-                raise ValueError("You cannot modify a workspace membership whose current role is higher than your own.")
+                raise ValueError("No puedes modificar una membresía cuyo rol actual es superior al tuyo.")
 
     # Remove memberships not in desired
     for ws_id, m in current_map.items():
@@ -613,7 +611,7 @@ def _send_invite_email(invitation):
         "app_url": app_url,
     }
 
-    subject = f"You've been invited to join {invitation.organization.name} on Brightbean"
+    subject = f"Te invitaron a unirte a {invitation.organization.name} en BEAN"
     text_content = render_to_string("members/email/invite.txt", context)
     html_content = render_to_string("members/email/invite.html", context)
 

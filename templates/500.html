@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Something went wrong - BEAN</title>
+    <title>Algo salió mal - BEAN</title>
     {% comment %} No template variables below this line: Django renders 500.html with an
        empty context, so anything dynamic would silently come out blank. {% endcomment %}
     {% include "errors/_style.html" %}
@@ -15,12 +15,12 @@
             {% icon "triangle-exclamation" css_class="w-[48px] h-[48px]" %}
         </div>
         <div class="code">Error 500</div>
-        <h1>Something went wrong on our end</h1>
+        <h1>Algo salió mal de nuestro lado</h1>
         <p class="message">
-            This one is a bug, not something you did. The details were written to the
-            server log. If it keeps happening, that log is what a maintainer needs.
+            Esto es un error del sistema, no algo que hayas hecho. Los detalles se guardaron en el
+            registro del servidor. Si sigue pasando, ese registro es lo que necesita quien lo mantiene.
         </p>
-        <a href="/" class="link">Back to BEAN</a>
+        <a href="/" class="link">Volver a BEAN</a>
     </div>
 </body>
 </html>

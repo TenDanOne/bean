@@ -266,7 +266,7 @@ class InboxSyncEngine:
             notify(
                 user=user,
                 event_type=EventType.NEW_INBOX_MESSAGE,
-                title=f"New {message.get_message_type_display()} from {message.sender_name}",
+                title=f"Nuevo {message.get_message_type_display()} de {message.sender_name}",
                 body=message.body[:200],
                 data={
                     "message_id": str(message.id),
@@ -308,8 +308,8 @@ class InboxSyncEngine:
             notify(
                 user=user,
                 event_type=EventType.INBOX_SLA_OVERDUE,
-                title=f"SLA overdue: {message.get_message_type_display()} from {message.sender_name}",
-                body=f"Response target of {config.target_response_minutes} minutes exceeded.",
+                title=f"SLA vencido: {message.get_message_type_display()} de {message.sender_name}",
+                body=f"Se superó el tiempo objetivo de respuesta de {config.target_response_minutes} minutos.",
                 data={
                     "message_id": str(message.id),
                     "workspace_id": str(message.workspace_id),

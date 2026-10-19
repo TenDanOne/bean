@@ -145,9 +145,9 @@ class TestListPage:
     def test_admin_can_view_list(self, admin_client):
         r = admin_client.get(reverse("api_keys:list"))
         assert r.status_code == 200
-        assert b"API Keys" in r.content
+        assert b"Claves de API" in r.content
         # Empty state — no rows yet.
-        assert b"No API keys issued yet." in r.content
+        assert "Aún no se emite ninguna clave de API." in r.content.decode()
 
     def test_active_key_row_uses_modal_not_native_confirm(self, admin_client, admin_user, workspace, social_account):
         """An active key renders the Alpine revoke-confirmation modal rather
@@ -174,7 +174,7 @@ class TestListPage:
         assert "render-me" in html
         assert "showRevokeModal" in html
         assert 'x-teleport="body"' in html
-        assert "Revoke key" in html  # modal's submit button
+        assert "Revocar clave" in html  # modal's submit button
         # The native confirm() dialog wiring is gone.
         assert "if (confirm(" not in html
         # The explanatory comment must NOT leak into the page. A multi-line
@@ -286,7 +286,7 @@ class TestIssue:
         assert r.status_code == 200, r.content[:300]
         body = r.content.decode()
         # Reveal modal markers.
-        assert "Save this token now." in body
+        assert "Guarda este token ahora." in body
         assert "bb_studio_" in body
         # Row persisted.
         keys = list(ApiKey.objects.filter(workspace=workspace))
@@ -315,7 +315,7 @@ class TestIssue:
         # Following the redirect reveals the token once.
         r1 = admin_client.get(r0.headers["Location"])
         body1 = r1.content.decode()
-        assert "Save this token now." in body1
+        assert "Guarda este token ahora." in body1
         assert "bb_studio_" in body1
         assert ApiKey.objects.filter(workspace=workspace).count() == 1
 
@@ -324,7 +324,7 @@ class TestIssue:
         # re-POSTed and minted a fresh key on every refresh).
         r2 = admin_client.get(reverse("api_keys:list"))
         body2 = r2.content.decode()
-        assert "Save this token now." not in body2
+        assert "Guarda este token ahora." not in body2
         assert "bb_studio_" not in body2
         assert ApiKey.objects.filter(workspace=workspace).count() == 1
 
@@ -340,7 +340,7 @@ class TestIssue:
         )
         assert r.status_code == 200
         assert ApiKey.objects.count() == 0
-        assert b"Name is required" in r.content
+        assert b"El nombre es obligatorio" in r.content
 
     def test_foreign_workspace_is_rejected(self, admin_client, social_account, db):
         """A tampered POST naming a workspace from another org must fail
@@ -361,7 +361,7 @@ class TestIssue:
             follow=True,
         )
         assert ApiKey.objects.count() == 0
-        assert b"not in this organisation" in r.content
+        assert "no pertenece a esta organización" in r.content.decode()
 
     def test_account_outside_workspace_rejected(self, admin_client, workspace, db):
         """Social account from a different workspace must not be accepted
@@ -388,7 +388,7 @@ class TestIssue:
             follow=True,
         )
         assert ApiKey.objects.count() == 0
-        assert b"do not belong to that workspace" in r.content
+        assert b"no pertenecen a ese espacio de trabajo" in r.content
 
     def test_malformed_account_id_redirects_not_500(self, admin_client, workspace, social_account):
         """A tampered, non-UUID ``social_account_ids`` must yield a graceful
@@ -404,7 +404,7 @@ class TestIssue:
             follow=True,
         )
         assert r.status_code == 200  # followed the redirect — not a 500
-        assert b"do not belong to that workspace" in r.content
+        assert b"no pertenecen a ese espacio de trabajo" in r.content
         assert ApiKey.objects.count() == 0
 
 
@@ -548,7 +548,7 @@ class TestEditKey:
             follow=True,
         )
         assert r.status_code == 200
-        assert b"Select at least one connected account" in r.content
+        assert b"Selecciona al menos una cuenta conectada" in r.content
         key.refresh_from_db()
         # Unchanged.
         assert key.permissions == ["create_posts"]
@@ -578,7 +578,7 @@ class TestEditKey:
             follow=True,
         )
         assert r.status_code == 200
-        assert b"is not active" in r.content
+        assert "no está activa" in r.content.decode()
         key.refresh_from_db()
         # Permissions untouched despite the POST.
         assert key.permissions == ["create_posts"]
@@ -632,8 +632,8 @@ class TestEditKey:
         r = admin_client.get(reverse("api_keys:list"))
         html = r.content.decode()
         assert "showEditModal" in html
-        assert "Edit API key" in html
-        assert "Save changes" in html
+        assert "Editar clave de API" in html
+        assert "Guardar cambios" in html
         assert reverse("api_keys:edit", args=[ApiKey.objects.first().id]) in html
 
     def test_malformed_account_id_redirects_not_500(self, admin_client, admin_user, workspace, social_account):
@@ -647,7 +647,7 @@ class TestEditKey:
             follow=True,
         )
         assert r.status_code == 200  # followed the redirect — not a 500
-        assert b"do not belong to that workspace" in r.content
+        assert b"no pertenecen a ese espacio de trabajo" in r.content
         key.refresh_from_db()
         assert key.permissions == ["create_posts"]
         assert set(key.social_accounts.values_list("id", flat=True)) == {social_account.id}

@@ -3,22 +3,22 @@
     <div class="relief p-6">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-app-on-primary" style="background: var(--primary);">3</div>
-            <h2 class="text-sm font-semibold text-app-strong">Validation Results</h2>
+            <h2 class="text-sm font-semibold text-app-strong">Resultados de la validación</h2>
         </div>
 
         <!-- Summary -->
         <div class="flex items-center gap-4 mb-5">
             <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
                 {% icon "check" css_class="w-4 h-4 text-green-600" %}
-                <span class="text-sm font-semibold text-green-800">{{ valid_count }} valid</span>
+                <span class="text-sm font-semibold text-green-800">{{ valid_count }} válida{{ valid_count|pluralize }}</span>
             </div>
             {% if errors %}
             <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
                 {% icon "xmark" css_class="w-4 h-4 text-red-600" %}
-                <span class="text-sm font-semibold text-red-800">{{ errors|length }}{% if has_more_errors %}+{% endif %} error{{ errors|length|pluralize }}</span>
+                <span class="text-sm font-semibold text-red-800">{{ errors|length }}{% if has_more_errors %}+{% endif %} error{{ errors|length|pluralize:",es" }}</span>
             </div>
             {% endif %}
-            <span class="text-xs text-app-ghost">{{ total_rows }} total rows</span>
+            <span class="text-xs text-app-ghost">{{ total_rows }} filas en total</span>
         </div>
 
         <!-- Errors list -->
@@ -26,7 +26,7 @@
         <div class="mb-5 max-h-64 overflow-y-auto rounded-lg border border-red-100">
             {% for err in errors %}
             <div class="flex items-start gap-2 px-3 py-2 text-xs {% if not forloop.last %}border-b border-red-50{% endif %} bg-red-50/50">
-                <span class="font-mono font-semibold text-red-600 flex-shrink-0">Row {{ err.row }}</span>
+                <span class="font-mono font-semibold text-red-600 flex-shrink-0">Fila {{ err.row }}</span>
                 <div class="text-red-700">
                     {% for e in err.errors %}
                     <span>{{ e }}{% if not forloop.last %}; {% endif %}</span>
@@ -36,7 +36,7 @@
             {% endfor %}
         </div>
         {% if has_more_errors %}
-        <p class="text-xs text-app-tertiary mb-4">Showing first 50 errors. Fix and re-upload for the full list.</p>
+        <p class="text-xs text-app-tertiary mb-4">Se muestran los primeros 50 errores. Corrígelos y vuelve a subir el archivo para ver la lista completa.</p>
         {% endif %}
         {% endif %}
 
@@ -48,20 +48,20 @@
             {% csrf_token %}
             <div class="flex items-center justify-between p-4 bg-app-1 rounded-lg">
                 <div>
-                    <p class="text-sm font-medium text-app-strong">Ready to import {{ valid_count }} post{{ valid_count|pluralize }}</p>
+                    <p class="text-sm font-medium text-app-strong">Listo para importar {{ valid_count }} publicaci{{ valid_count|pluralize:"ón,ones" }}</p>
                     {% if errors %}
-                    <p class="text-xs text-app-tertiary mt-0.5">{{ errors|length }} invalid row{{ errors|length|pluralize }} will be skipped.</p>
+                    <p class="text-xs text-app-tertiary mt-0.5">Se omitirá{{ errors|length|pluralize:",n" }} {{ errors|length }} fila{{ errors|length|pluralize }} no válida{{ errors|length|pluralize }}.</p>
                     {% endif %}
                 </div>
                 <button type="submit" class="btn-brand text-sm py-2 px-5">
-                    Confirm Import
+                   Confirmar importación
                 </button>
             </div>
         </form>
         {% else %}
         <div class="p-4 bg-red-50 rounded-lg text-center">
-            <p class="text-sm font-medium text-red-800">No valid rows to import.</p>
-            <p class="text-xs text-red-600 mt-1">Fix the errors in your CSV and re-upload.</p>
+            <p class="text-sm font-medium text-red-800">No hay filas válidas para importar.</p>
+            <p class="text-xs text-red-600 mt-1">Corrige los errores de tu CSV y vuélvelo a subir.</p>
         </div>
         {% endif %}
     </div>

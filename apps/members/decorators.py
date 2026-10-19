@@ -17,13 +17,13 @@ def require_org_role(min_role):
         @functools.wraps(view_func)
         def _wrapped(request, *args, **kwargs):
             if not request.org_membership:
-                raise PermissionDenied("You are not a member of any organization.")
+                raise PermissionDenied("No eres miembro de ninguna organización.")
             # Org roles are their own scale (owner/admin/member) — deliberately
             # not the workspace one, which knows nothing about "admin".
             user_level = role_hierarchy.get(request.org_membership.org_role, 0)
             required_level = role_hierarchy.get(min_role, 0)
             if user_level < required_level:
-                raise PermissionDenied("Insufficient organization role.")
+                raise PermissionDenied("Tu rol en la organización no es suficiente.")
             return view_func(request, *args, **kwargs)
 
         return _wrapped
@@ -51,12 +51,12 @@ def require_workspace_role(min_role):
         @functools.wraps(view_func)
         def _wrapped(request, *args, **kwargs):
             if not request.workspace_membership:
-                raise PermissionDenied("You are not a member of this workspace.")
+                raise PermissionDenied("No eres miembro de este espacio de trabajo.")
             membership = request.workspace_membership
             user_level = role_rank(membership.workspace_role)
             required_level = role_rank(min_role)
             if user_level < required_level:
-                raise PermissionDenied("Insufficient workspace role.")
+                raise PermissionDenied("Tu rol en el espacio de trabajo no es suficiente.")
             return view_func(request, *args, **kwargs)
 
         return _wrapped
@@ -75,10 +75,10 @@ def require_permission(permission_key):
         @functools.wraps(view_func)
         def _wrapped(request, *args, **kwargs):
             if not request.workspace_membership:
-                raise PermissionDenied("You are not a member of this workspace.")
+                raise PermissionDenied("No eres miembro de este espacio de trabajo.")
             perms = request.workspace_membership.effective_permissions
             if not perms.get(permission_key, False):
-                raise PermissionDenied(f"Permission denied: {permission_key}")
+                raise PermissionDenied(f"Permiso denegado: {permission_key}")
             return view_func(request, *args, **kwargs)
 
         return _wrapped
@@ -111,13 +111,13 @@ def require_channel_capability(capability, resolver):
         def _wrapped(request, *args, **kwargs):
             membership = getattr(request, "workspace_membership", None)
             if not membership:
-                raise PermissionDenied("You are not a member of this workspace.")
+                raise PermissionDenied("No eres miembro de este espacio de trabajo.")
             account = resolver(request, *args, **kwargs)
             if account is None:
-                raise PermissionDenied("This action has no channel to check against.")
+                raise PermissionDenied("Esta acción no tiene un canal contra el cual verificar.")
             if not can_on_channel(membership, account, capability):
                 raise PermissionDenied(
-                    f"You do not have permission to do this on {account.account_name or account.account_handle}."
+                    f"No tienes permiso para hacer esto en {account.account_name or account.account_handle}."
                 )
             return view_func(request, *args, **kwargs)
 
@@ -149,16 +149,16 @@ def require_org_permission(permission_key):
         def _wrapped(request, *args, **kwargs):
             org_id = kwargs.get("org_id")
             if org_id is None:
-                raise PermissionDenied("URL is missing required org_id.")
+                raise PermissionDenied("Falta el org_id requerido en la URL.")
             try:
                 membership = OrgMembership.objects.select_related("organization").get(
                     user=request.user, organization_id=org_id
                 )
             except OrgMembership.DoesNotExist as exc:
-                raise PermissionDenied("Not a member of this organization.") from exc
+                raise PermissionDenied("No eres miembro de esta organización.") from exc
 
             if not has_org_permission(membership, permission_key):
-                raise PermissionDenied(f"Missing org permission: {permission_key}")
+                raise PermissionDenied(f"Falta el permiso de organización: {permission_key}")
 
             # Make resolved context available to the view body.
             request.org_membership = membership

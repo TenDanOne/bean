@@ -1,10 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accept Terms - BEAN</title>
+    <title>Aceptar términos - BEAN</title>
     <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon/favicon.svg' %}">
     <link rel="icon" type="image/png" sizes="96x96" href="{% static 'favicon/favicon-96x96.png' %}">
@@ -19,10 +19,10 @@
         <div class="text-center mb-8">
             <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-14 w-auto mx-auto mb-5">
             <h1 class="text-2xl font-bold tracking-tight" style="color: var(--text-primary);">
-                Almost there
+                Ya casi
             </h1>
             <p class="text-sm mt-1" style="color: var(--text-secondary);">
-                Please review and accept our terms to continue
+                Revisa y acepta nuestros términos para continuar
             </p>
         </div>
 
@@ -39,7 +39,7 @@
             {% endif %}
 
             <p class="text-sm mb-6" style="color: var(--text-secondary); line-height: 1.6;">
-                One quick step before you get started.
+                Un paso rápido antes de empezar.
             </p>
 
             <form method="post">
@@ -52,22 +52,22 @@
                            class="w-4 h-4 rounded mt-0.5 flex-shrink-0 cursor-pointer accent-[var(--primary)]"
                            style="border-color: var(--border);">
                     <span class="text-sm" style="color: var(--text-primary); line-height: 1.5;">
-                        I agree to the
-                        <a href="{% url 'public_terms' %}" target="_blank" rel="noopener" class="font-semibold underline hover:no-underline" style="color: var(--primary);">Terms of Service</a>
-                        and
-                        <a href="{% url 'public_privacy' %}" target="_blank" rel="noopener" class="font-semibold underline hover:no-underline" style="color: var(--primary);">Privacy Policy</a>
+                        Acepto los
+                        <a href="{% url 'public_terms' %}" target="_blank" rel="noopener" class="font-semibold underline hover:no-underline" style="color: var(--primary);">Términos del Servicio</a>
+                        y la
+                        <a href="{% url 'public_privacy' %}" target="_blank" rel="noopener" class="font-semibold underline hover:no-underline" style="color: var(--primary);">Política de Privacidad</a>
                     </span>
                 </label>
 
                 <button type="submit" class="btn-brand">
-                    Continue
+                    Continuar
                 </button>
             </form>
         </div>
 
         <!-- Sign out link -->
         <p class="text-center text-sm mt-6" style="color: var(--text-secondary);">
-            <a href="{% url 'accounts:logout' %}" class="font-semibold hover:underline" style="color: var(--primary);">Sign out</a>
+            <a href="{% url 'accounts:logout' %}" class="font-semibold hover:underline" style="color: var(--primary);">Cerrar sesión</a>
         </p>
     </div>
 </main>

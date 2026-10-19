@@ -137,11 +137,11 @@ def upload(request, workspace_id):
 
     files = request.FILES.getlist("files")
     if not files:
-        return JsonResponse({"error": "No files provided"}, status=400)
+        return JsonResponse({"error": "No se enviaron archivos"}, status=400)
 
     max_bulk = getattr(settings, "MEDIA_LIBRARY_MAX_BULK_UPLOAD", 50)
     if len(files) > max_bulk:
-        return JsonResponse({"error": f"Maximum {max_bulk} files per upload"}, status=400)
+        return JsonResponse({"error": f"Máximo {max_bulk} archivos por carga"}, status=400)
 
     folder_id = request.POST.get("folder_id")
     folder = None
@@ -284,7 +284,7 @@ def asset_edit(request, workspace_id, asset_id):
                         "height": crop_h,
                     }
                 except (ValueError, TypeError):
-                    return JsonResponse({"error": "Invalid crop parameters"}, status=400)
+                    return JsonResponse({"error": "Parámetros de recorte no válidos"}, status=400)
             if request.POST.get("rotate"):
                 try:
                     rotate_val = int(request.POST["rotate"])
@@ -292,11 +292,11 @@ def asset_edit(request, workspace_id, asset_id):
                         raise ValueError("Rotate must be 0, 90, 180, or 270")
                     operations["rotate"] = rotate_val
                 except (ValueError, TypeError):
-                    return JsonResponse({"error": "Invalid rotate parameter"}, status=400)
+                    return JsonResponse({"error": "Parámetro de rotación no válido"}, status=400)
             if request.POST.get("flip"):
                 flip_val = request.POST["flip"]
                 if flip_val not in ("horizontal", "vertical"):
-                    return JsonResponse({"error": "Invalid flip parameter"}, status=400)
+                    return JsonResponse({"error": "Parámetro de volteo no válido"}, status=400)
                 operations["flip"] = flip_val
             if request.POST.get("resize_width") and request.POST.get("resize_height"):
                 try:
@@ -306,7 +306,7 @@ def asset_edit(request, workspace_id, asset_id):
                         raise ValueError("Resize dimensions out of range")
                     operations["resize"] = {"width": rw, "height": rh}
                 except (ValueError, TypeError):
-                    return JsonResponse({"error": "Invalid resize parameters"}, status=400)
+                    return JsonResponse({"error": "Parámetros de redimensión no válidos"}, status=400)
 
             if operations:
                 # Build change description
@@ -457,7 +457,9 @@ def asset_delete(request, workspace_id, asset_id):
 
     # Shared assets cannot be deleted from workspace context
     if asset.is_shared:
-        return JsonResponse({"error": "Cannot delete shared assets from workspace context"}, status=403)
+        return JsonResponse(
+            {"error": "No se pueden eliminar recursos compartidos desde un espacio de trabajo"}, status=403
+        )
 
     try:
         delete_asset(asset)
@@ -474,7 +476,7 @@ def asset_delete(request, workspace_id, asset_id):
             )
         return JsonResponse(
             {
-                "error": "Asset is referenced by scheduled posts",
+                "error": "El recurso está en uso en publicaciones programadas",
                 "posts": e.referencing_posts,
             },
             status=409,
@@ -527,7 +529,7 @@ def folder_create(request, workspace_id):
 
     name = request.POST.get("name", "").strip()
     if not name:
-        return JsonResponse({"error": "Folder name is required"}, status=400)
+        return JsonResponse({"error": "El nombre de la carpeta es obligatorio"}, status=400)
 
     parent_id = request.POST.get("parent_folder_id")
     parent = None
@@ -569,7 +571,7 @@ def folder_rename(request, workspace_id, folder_id):
 
     name = request.POST.get("name", "").strip()
     if not name:
-        return JsonResponse({"error": "Folder name is required"}, status=400)
+        return JsonResponse({"error": "El nombre de la carpeta es obligatorio"}, status=400)
 
     # Check for duplicate sibling name before saving
     duplicate = (
@@ -583,7 +585,7 @@ def folder_rename(request, workspace_id, folder_id):
     )
     if duplicate:
         return JsonResponse(
-            {"error": f"A folder named '{name}' already exists in this location."},
+            {"error": f"Ya existe una carpeta llamada '{name}' en esta ubicación."},
             status=400,
         )
 

@@ -59,7 +59,7 @@ class AuthRateLimitMiddleware:
 
             attempts = cache.get(cache_key, 0)
             if attempts >= AUTH_RATE_LIMIT:
-                return HttpResponse("Too many requests. Please try again later.", status=429)
+                return HttpResponse("Demasiadas solicitudes. Inténtalo de nuevo más tarde.", status=429)
 
             cache.set(cache_key, attempts + 1, AUTH_RATE_WINDOW)
 

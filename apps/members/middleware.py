@@ -99,7 +99,7 @@ class RBACMiddleware:
             .first()
         )
         if not ws_membership:
-            raise PermissionDenied("You do not have access to this workspace.")
+            raise PermissionDenied("No tienes acceso a este espacio de trabajo.")
 
         request.workspace = ws_membership.workspace
         request.workspace_membership = ws_membership

@@ -124,8 +124,8 @@ def submit_for_review(target, user, workspace):
         user,
         post=post,
         event_type=EventType.POST_SUBMITTED,
-        title="Post submitted for review",
-        body=f'{user.display_name} submitted a post for your review: "{post.caption_snippet}"',
+        title="Publicación enviada a revisión",
+        body=f'{user.display_name} envió una publicación para tu revisión: "{post.caption_snippet}"',
     )
 
     return post
@@ -178,8 +178,8 @@ def approve_post(target, user, workspace, comment=""):
         notify(
             user=post.author,
             event_type=EventType.POST_APPROVED,
-            title="Post approved",
-            body=f'Your post "{post.caption_snippet}" was approved by {user.display_name}.',
+            title="Publicación aprobada",
+            body=f'{user.display_name} aprobó tu publicación "{post.caption_snippet}".',
             data={
                 "post_id": str(post.id),
                 "workspace_id": str(workspace.id),
@@ -192,7 +192,7 @@ def approve_post(target, user, workspace, comment=""):
 def request_changes(target, user, workspace, comment):
     """Request changes on a post or single platform post. Comment is required."""
     if not comment.strip():
-        raise ValueError("A comment is required when requesting changes.")
+        raise ValueError("Se requiere un comentario al solicitar cambios.")
 
     post, targets, is_bundled = _resolve_targets(target, eligible_from_states={"pending_review", "pending_client"})
 
@@ -214,8 +214,8 @@ def request_changes(target, user, workspace, comment):
         notify(
             user=post.author,
             event_type=EventType.POST_CHANGES_REQUESTED,
-            title="Changes requested on your post",
-            body=f'{user.display_name} requested changes: "{comment[:100]}"',
+            title="Se solicitaron cambios en tu publicación",
+            body=f'{user.display_name} solicitó cambios: "{comment[:100]}"',
             data={
                 "post_id": str(post.id),
                 "workspace_id": str(workspace.id),
@@ -228,7 +228,7 @@ def request_changes(target, user, workspace, comment):
 def reject_post(target, user, workspace, comment):
     """Reject a post or single platform post. Comment is required."""
     if not comment.strip():
-        raise ValueError("A comment is required when rejecting a post.")
+        raise ValueError("Se requiere un comentario al rechazar una publicación.")
 
     post, targets, is_bundled = _resolve_targets(target, eligible_from_states={"pending_review", "pending_client"})
 
@@ -250,8 +250,8 @@ def reject_post(target, user, workspace, comment):
         notify(
             user=post.author,
             event_type=EventType.POST_REJECTED,
-            title="Post rejected",
-            body=f'{user.display_name} rejected your post: "{comment[:100]}"',
+            title="Publicación rechazada",
+            body=f'{user.display_name} rechazó tu publicación: "{comment[:100]}"',
             data={
                 "post_id": str(post.id),
                 "workspace_id": str(workspace.id),
@@ -269,7 +269,7 @@ def request_hold(target, user, workspace, comment):
     and notifies the team so they can resume, rework, or drop it.
     """
     if not comment.strip():
-        raise ValueError("A comment is required when requesting a hold.")
+        raise ValueError("Se requiere un comentario al pedir una pausa.")
 
     post, targets, is_bundled = _resolve_targets(target, eligible_from_states={"approved"})
 
@@ -308,10 +308,10 @@ def resume_hold(target, user, workspace):
             return moved
 
         if is_bundled:
-            _record_action(post, None, user, ApprovalAction.ActionType.APPROVED, "Hold lifted.")
+            _record_action(post, None, user, ApprovalAction.ActionType.APPROVED, "Pausa levantada.")
         else:
             for pp in moved:
-                _record_action(post, pp, user, ApprovalAction.ActionType.APPROVED, "Hold lifted.")
+                _record_action(post, pp, user, ApprovalAction.ActionType.APPROVED, "Pausa levantada.")
 
     return moved
 
@@ -347,8 +347,8 @@ def resubmit_post(target, user, workspace):
         user,
         post=post,
         event_type=EventType.POST_SUBMITTED,
-        title="Post resubmitted for review",
-        body=f'{user.display_name} resubmitted a post: "{post.caption_snippet}"',
+        title="Publicación reenviada a revisión",
+        body=f'{user.display_name} reenvió una publicación: "{post.caption_snippet}"',
     )
 
     return post
@@ -376,7 +376,7 @@ def bulk_approve(post_ids, user, workspace):
 def bulk_reject(post_ids, user, workspace, comment):
     """Reject all eligible PlatformPosts under each post (bundled per post)."""
     if not comment.strip():
-        raise ValueError("A comment is required for bulk rejection.")
+        raise ValueError("Se requiere un comentario para rechazar en lote.")
 
     results = []
     posts = Post.objects.filter(
@@ -402,8 +402,8 @@ def _notify_reviewers_of_hold(post, workspace, user, comment):
         user,
         post=post,
         event_type=EventType.APPROVAL_HOLD_REQUESTED,
-        title="Client requested a hold",
-        body=f'{user.display_name} put a post on hold: "{comment[:100]}"',
+        title="El cliente pidió una pausa",
+        body=f'{user.display_name} puso una publicación en pausa: "{comment[:100]}"',
     )
 
 
@@ -418,8 +418,8 @@ def _notify_clients(post, workspace):
         notify(
             user=membership.user,
             event_type=EventType.CLIENT_APPROVAL_REQUESTED,
-            title="Posts ready for your review",
-            body=f"A post in {workspace.name} is waiting for your approval.",
+            title="Publicaciones listas para tu revisión",
+            body=f"Una publicación en {workspace.name} espera tu aprobación.",
             data={
                 "post_id": str(post.id),
                 "workspace_id": str(workspace.id),

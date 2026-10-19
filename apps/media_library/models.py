@@ -78,10 +78,10 @@ class MediaAsset(models.Model):
     """
 
     class MediaType(models.TextChoices):
-        IMAGE = "image", "Image"
+        IMAGE = "image", "Imagen"
         VIDEO = "video", "Video"
         GIF = "gif", "GIF"
-        DOCUMENT = "document", "Document"
+        DOCUMENT = "document", "Documento"
 
     class ProcessingStatus(models.TextChoices):
         PENDING = "pending", "Pending"

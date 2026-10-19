@@ -445,7 +445,7 @@ class TestMalformedUuidHandling:
         )
         # Redirects to list with an error message — not a 500.
         assert r.status_code == 200
-        assert b"not in this organisation" in r.content
+        assert "no pertenece a esta organización" in r.content.decode()
 
 
 # ===========================================================================

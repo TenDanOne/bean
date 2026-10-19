@@ -16,12 +16,12 @@ class ApprovalAction(models.Model):
     """Audit trail entry for an approval workflow action on a post."""
 
     class ActionType(models.TextChoices):
-        SUBMITTED = "submitted", "Submitted"
-        APPROVED = "approved", "Approved"
-        CHANGES_REQUESTED = "changes_requested", "Changes Requested"
-        REJECTED = "rejected", "Rejected"
-        RESUBMITTED = "resubmitted", "Resubmitted"
-        HELD = "held", "Hold Requested"
+        SUBMITTED = "submitted", "Enviado a revisión"
+        APPROVED = "approved", "Aprobado"
+        CHANGES_REQUESTED = "changes_requested", "Cambios solicitados"
+        REJECTED = "rejected", "Rechazado"
+        RESUBMITTED = "resubmitted", "Reenviado"
+        HELD = "held", "Pausa solicitada"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     post = models.ForeignKey(

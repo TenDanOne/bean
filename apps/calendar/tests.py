@@ -871,7 +871,7 @@ class PublishTabTimezoneTests(TestCase):
         resp = self.client.get(url + "?tz=Not/AReal/Zone")
         self.assertEqual(resp.status_code, 200)
         # Falls back to the workspace zone, so the proposed badge still renders.
-        self.assertContains(resp, "Proposed")
+        self.assertContains(resp, "Publicación propuesta")
 
     def test_drafts_tab_with_empty_tz_does_not_500(self):
         url = reverse("calendar:publish_tab_drafts", kwargs={"workspace_id": self.ws.id})
@@ -1272,6 +1272,6 @@ class QueueEntryEndpointTests(TestCase):
         url = reverse("calendar:queue_detail", kwargs={"workspace_id": self.workspace.id, "queue_id": self.queue.id})
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "Remove from queue")
+        self.assertContains(resp, "Quitar de la cola")
         body = resp.content.decode()
         self.assertLess(body.index("EARLIER caption"), body.index("LATER caption"))

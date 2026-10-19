@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Access denied - BEAN</title>
+    <title>Acceso denegado - BEAN</title>
     {% include "errors/_style.html" %}
 </head>
 <body>
@@ -13,10 +13,10 @@
             {% icon "lock" css_class="w-[48px] h-[48px]" %}
         </div>
         <div class="code">Error 403</div>
-        <h1>You don't have access to this</h1>
+        <h1>No tienes acceso a esto</h1>
         <p class="message">
-            Your role in this workspace doesn't include this action. Ask an owner or
-            manager to grant it, or switch to a workspace where you have it.
+            Tu rol en este espacio de trabajo no incluye esta acción. Pídele a un propietario o
+            gestor que te la otorgue, o cambia a un espacio donde la tengas.
         </p>
 
         {% comment %} Django's permission_denied view passes the exception through, and every
@@ -24,12 +24,12 @@
            it turns a dead end into something the user can actually act on. {% endcomment %}
         {% if exception %}
         <div class="reason">
-            <strong>Reason</strong>
+            <strong>Motivo</strong>
             {{ exception }}
         </div>
         {% endif %}
 
-        <a href="/" class="link">Back to BEAN</a>
+        <a href="/" class="link">Volver a BEAN</a>
     </div>
 </body>
 </html>

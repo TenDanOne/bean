@@ -88,7 +88,7 @@ def invite_client(request, workspace_id):
 
     if not email:
         return HttpResponse(
-            '<div class="text-red-600 text-sm p-3">Email address is required.</div>',
+            '<div class="text-red-600 text-sm p-3">El correo electrónico es obligatorio.</div>',
             status=422,
         )
 

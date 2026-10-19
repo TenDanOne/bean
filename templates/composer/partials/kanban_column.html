@@ -14,7 +14,7 @@
         <div class="flex items-center gap-0.5">
             <button @click="showCreateModal = true; createGroupId = '{{ col.id }}'; createSelectedGroup = '{{ col.id }}'"
                     class="w-6 h-6 rounded-md text-app-tertiary hover:text-app-secondary hover:bg-white/80 flex items-center justify-center transition-colors cursor-pointer"
-                    title="Add idea">
+                    title="Agregar idea">
                 {% icon "plus" css_class="w-4 h-4" %}
             </button>
             <div class="relative" x-data="{ menuOpen: false }">
@@ -30,11 +30,11 @@
                     {% if col.ideas|length == 0 %}
                     <button @click="menuOpen = false; deleteGroup('{{ col.id }}')"
                             class="w-full text-left px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors">
-                        Delete column
+                       Eliminar columna
                     </button>
                     {% else %}
                     <span class="block px-3 py-1.5 text-xs text-app-ghost">
-                        Remove all ideas first
+                       Primero quita todas las ideas
                     </span>
                     {% endif %}
                 </div>
@@ -54,6 +54,6 @@
     <button @click="showCreateModal = true; createGroupId = '{{ col.id }}'; createSelectedGroup = '{{ col.id }}'"
             class="new-idea-inline">
         {% icon "plus" css_class="w-4 h-4" %}
-        New Idea
+       Nueva idea
     </button>
 </div>

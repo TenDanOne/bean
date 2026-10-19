@@ -1,8 +1,8 @@
 {% extends "layouts/settings.html" %}
-{% block title %}Workspaces - Settings - BEAN{% endblock %}
+{% block title %}Espacios de trabajo - Ajustes - BEAN{% endblock %}
 {% block content %}
 <div class="">
-    <h2 class="text-xl font-semibold mb-8" style="color: var(--text-primary);">Workspaces</h2>
+    <h2 class="text-xl font-semibold mb-8" style="color: var(--text-primary);">Espacios de trabajo</h2>
 
     {% if workspace_data %}
     <div style="background: var(--surface-0); border: 1px solid var(--border); border-radius: var(--radius-xl);">
@@ -14,12 +14,12 @@
     </div>
     {% else %}
     <div class="px-6 py-12 text-center rounded-xl" style="background: var(--surface-0); border: 1px solid var(--border);">
-        <p class="text-sm" style="color: var(--text-tertiary);">No workspaces yet.</p>
+        <p class="text-sm" style="color: var(--text-tertiary);">Aún no hay espacios de trabajo.</p>
     </div>
     {% endif %}
 
     {% if archived_data %}
-    <h3 class="text-sm font-semibold mt-10 mb-3" style="color: var(--text-secondary);">Archived</h3>
+    <h3 class="text-sm font-semibold mt-10 mb-3" style="color: var(--text-secondary);">Archivados</h3>
     <div style="background: var(--surface-0); border: 1px solid var(--border); border-radius: var(--radius-xl); opacity: 0.75;">
         {% for item in archived_data %}
         <div class="px-6 py-4{% if not forloop.last %}" style="border-bottom: 1px solid var(--border);"{% else %}"{% endif %}>

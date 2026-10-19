@@ -4,7 +4,7 @@
     <div class="relief p-6">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-app-on-primary" style="background: var(--primary);">2</div>
-            <h2 class="text-sm font-semibold text-app-strong">Map Columns</h2>
+            <h2 class="text-sm font-semibold text-app-strong">Asignar columnas</h2>
         </div>
 
         <form hx-post="{% url 'composer:csv_preview' workspace_id=workspace.id %}"
@@ -12,7 +12,7 @@
               hx-swap="innerHTML">
             {% csrf_token %}
 
-            <p class="text-xs text-app-tertiary mb-4">Match each CSV column to the corresponding post field. Leave unmapped columns as "Skip".</p>
+            <p class="text-xs text-app-tertiary mb-4">Relaciona cada columna del CSV con el campo correspondiente de la publicación. Deja como «Omitir» las columnas sin asignar.</p>
 
             <!-- Preview table -->
             <div class="overflow-x-auto mb-6 rounded-lg border border-app">
@@ -49,7 +49,7 @@
                 <div>
                     <label class="block text-[11px] font-semibold text-app-tertiary mb-1 uppercase tracking-wide">{{ field }}</label>
                     <select name="map_{{ field }}" class="form-input w-full text-xs py-1.5">
-                        <option value="">- Skip -</option>
+                        <option value="">- Omitir -</option>
                         {% for header in headers %}
                         <option value="{{ forloop.counter0 }}">{{ header }}</option>
                         {% endfor %}
@@ -60,7 +60,7 @@
 
             <div class="mt-5 flex justify-end">
                 <button type="submit" class="btn-brand text-sm py-2 px-5">
-                    Validate &amp; Preview
+                    Validar y previsualizar
                 </button>
             </div>
         </form>

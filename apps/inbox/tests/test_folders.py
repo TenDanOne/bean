@@ -358,7 +358,7 @@ class TestSentimentUpdate:
         body = response.content.decode()
         # The message text proves the panel came back, not just its label.
         assert "hola" in body
-        assert "Positive" in body
+        assert "Positivo" in body
 
     def test_a_manual_label_is_recorded_as_manual(self, client, operator, workspace, channel):
         """So the keyword guess never quietly overwrites a deliberate call."""

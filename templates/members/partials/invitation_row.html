@@ -1,3 +1,4 @@
+{% load common_extras %}
 <div class="px-6 py-4 flex items-center gap-4" id="invite-{{ invite.id }}"
      style="border-bottom: 1px solid var(--border);">
     <!-- Email icon -->
@@ -10,16 +11,16 @@
     <div class="flex-1 min-w-0">
         <div class="text-sm font-medium truncate" style="color: var(--text-primary);">{{ invite.email }}</div>
         <div class="text-xs" style="color: var(--text-tertiary);">
-            Invited by {{ invite.invited_by.display_name }} · Expires {{ invite.expires_at|timesince }} from now
+            Invitó {{ invite.invited_by.display_name }} · Vence en {{ invite.expires_at|timesince }}
         </div>
     </div>
 
     <!-- Role Badge -->
     <div class="flex-shrink-0">
         {% if invite.org_role == "admin" %}
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: #DBEAFE; color: #1E40AF;">Admin</span>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: #DBEAFE; color: #1E40AF;">Administrador</span>
         {% else %}
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: var(--neutral-100); color: var(--text-secondary);">Member</span>
+        <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: var(--neutral-100); color: var(--text-secondary);">Miembro</span>
         {% endif %}
     </div>
 
@@ -27,7 +28,7 @@
     <div class="flex-shrink-0 flex items-center gap-1 max-w-[150px] overflow-hidden">
         {% for assignment in invite.workspace_assignments %}
         <span class="text-xs px-2 py-0.5 rounded-full truncate" style="background: var(--neutral-100); color: var(--text-secondary);">
-            {{ assignment.role }}
+            {{ assignment.role|role_es }}
         </span>
         {% endfor %}
     </div>
@@ -42,8 +43,8 @@
                     @click="navigator.clipboard.writeText('{{ request.scheme }}://{{ request.get_host }}{% url 'members:accept_invite' token=invite.token %}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
                     class="btn-neutral-surface text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
                     style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
-                <span x-show="!copied">Copy link</span>
-                <span x-show="copied" x-cloak>Copied</span>
+                <span x-show="!copied">Copiar enlace</span>
+                <span x-show="copied" x-cloak>Copiado</span>
             </button>
         </div>
         <form hx-post="{% url 'members:resend_invite' invitation_id=invite.id %}"
@@ -53,18 +54,18 @@
             <button type="submit"
                     class="btn-neutral-surface text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
                     style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
-                Resend
+                Reenviar
             </button>
         </form>
         <form hx-post="{% url 'members:revoke_invite' invitation_id=invite.id %}"
               hx-target="#invite-{{ invite.id }}"
               hx-swap="delete"
-              hx-confirm="Revoke invitation to {{ invite.email }}?">
+              hx-confirm="¿Revocar la invitación a {{ invite.email }}?">
             {% csrf_token %}
             <button type="submit"
                     class="btn-danger-soft-bg text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
                     style="color: #DC2626; background: transparent;">
-                Revoke
+                Revocar
             </button>
         </form>
     </div>

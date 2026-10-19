@@ -11,7 +11,7 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
     <div class="{% if not forloop.first %}mt-8{% endif %}">
         <!-- Date header -->
         <h3 class="text-base font-semibold text-app-strong mb-4">
-            {% timezone display_timezone %}{{ group.grouper|date:"l, j F" }}{% endtimezone %}
+            {% timezone display_timezone %}{{ group.grouper|date:"l, j \d\e F" }}{% endtimezone %}
         </h3>
 
         <div class="space-y-4">
@@ -20,11 +20,11 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
                 <!-- Left: time + source -->
                 <div class="w-20 shrink-0 pt-3 text-right">
                     <div class="text-sm font-semibold text-app-body tabular-nums">
-                        {% timezone display_timezone %}{{ pp.effective_at|date:"g:i A" }}{% endtimezone %}
+                        {% timezone display_timezone %}{{ pp.effective_at|date:"H:i" }}{% endtimezone %}
                     </div>
                     <div class="text-[11px] text-app-ghost mt-0.5 flex items-center justify-end gap-1">
                         {% icon "clock" css_class="w-3 h-3" %}
-                        {% if pp.post.queue_entries.exists %}Queue{% else %}Custom{% endif %}
+                        {% if pp.post.queue_entries.exists %}Cola{% else %}Personalizado{% endif %}
                     </div>
                 </div>
 
@@ -43,7 +43,7 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
 
                         <!-- Title / caption -->
                         <p class="text-sm text-app-secondary leading-relaxed">
-                            {{ pp.post.title|default:pp.post.caption_snippet|default:"(no caption)" }}
+                            {{ pp.post.title|default:pp.post.caption_snippet|default:"(sin texto)" }}
                         </p>
 
                         <!-- Media thumbnails -->
@@ -81,13 +81,13 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
                     <!-- Footer -->
                     <div class="flex items-center justify-between border-t border-app-subtle px-4 py-2.5">
                         <span class="text-xs text-app-ghost">
-                            {{ pp.post.created_at|timesince }} ago
+                            hace {{ pp.post.created_at|timesince }}
                         </span>
                         <div class="flex items-center gap-1.5">
                             <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}&action=publish_now"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border border-app text-app-secondary hover:border-app-hover hover:text-app-strong transition-colors">
                                 {% icon "paper-plane" css_class="w-3.5 h-3.5 rotate-90" %}
-                                Publish
+                                Publicar
                             </a>
                             {% include "calendar/partials/_post_actions_menu.html" with post_id=pp.post_id account_id=pp.social_account_id %}
                         </div>
@@ -106,12 +106,12 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
         <div class="w-16 h-16 mx-auto rounded-2xl bg-app-2 flex items-center justify-center mb-4">
             {% icon "clock" css_class="w-7 h-7 text-app-faint" %}
         </div>
-        <p class="text-sm font-medium text-app-tertiary mb-1">No queued posts</p>
-        <p class="text-xs text-app-ghost mb-5 max-w-[240px] mx-auto">Queued posts will appear here when you queue them</p>
+        <p class="text-sm font-medium text-app-tertiary mb-1">No hay publicaciones en cola</p>
+        <p class="text-xs text-app-ghost mb-5 max-w-[240px] mx-auto">Las publicaciones en cola aparecerán aquí cuando las agregues</p>
         <a href="{% url 'composer:compose' workspace_id=workspace.id %}"
            class="inline-flex items-center gap-1.5 px-5 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
             {% icon "plus" css_class="w-4 h-4" %}
-            Create Post
+            Crear publicación
         </a>
     </div>
     {% endif %}

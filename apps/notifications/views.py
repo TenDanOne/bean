@@ -184,6 +184,6 @@ def _save_preferences(request):
 
     from django.contrib import messages
 
-    messages.success(request, "Notification preferences saved.")
+    messages.success(request, "Preferencias de notificaciones guardadas.")
 
     return redirect("notifications:preferences")

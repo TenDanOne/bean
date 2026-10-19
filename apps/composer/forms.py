@@ -31,7 +31,7 @@ class PostForm(forms.ModelForm):
     selected_accounts = forms.CharField(
         widget=forms.HiddenInput(),
         required=False,
-        help_text="Comma-separated list of SocialAccount UUIDs.",
+        help_text="Lista de UUID de SocialAccount separados por comas.",
     )
 
     scheduled_date = forms.DateField(

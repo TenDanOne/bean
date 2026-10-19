@@ -26,7 +26,7 @@ Context: week_days, week_slots, workspace.
              @dragover.prevent="allowDrop($event)"
              @drop="dropOnSlot($event, '{{ cell.compose_date }}', '{{ cell.compose_time }}')">
             {% if cell.day > today or cell.day == today and hour >= current_hour %}
-            <a href="{% url 'composer:compose' workspace_id=workspace.id %}?scheduled_date={{ cell.compose_date }}&scheduled_time={{ cell.compose_time }}" class="cal-add-btn" title="Create post">
+            <a href="{% url 'composer:compose' workspace_id=workspace.id %}?scheduled_date={{ cell.compose_date }}&scheduled_time={{ cell.compose_time }}" class="cal-add-btn" title="Crear publicación">
                 {% icon "plus" css_class="w-3 h-3" %}
             </a>
             {% endif %}
@@ -42,11 +42,11 @@ Context: week_days, week_slots, workspace.
                     {% if not slot.is_past %}
                     <a href="{% url 'composer:compose' workspace_id=workspace.id %}?account={{ slot.account.id }}&scheduled_date={{ slot.compose_date }}&scheduled_time={{ slot.compose_time }}"
                        class="calendar-slot-add"
-                       title="Schedule post for {{ slot.account.account_name|default:slot.account.account_handle }} at {{ slot.time_label }}">
+                       title="Programar publicación para {{ slot.account.account_name|default:slot.account.account_handle }} a las {{ slot.time_label }}">
                         {% icon "plus" css_class="w-3 h-3" %}
                     </a>
                     {% else %}
-                    <span class="calendar-slot-state">Open</span>
+                    <span class="calendar-slot-state">Libre</span>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -73,7 +73,7 @@ Context: week_days, week_slots, workspace.
                 {% endwith %}
                 <span class="truncate">{{ pp.post.title|default:pp.post.caption_snippet|truncatechars:28 }}</span>
                 {% if pp.takes_calendar_slot %}
-                <span class="calendar-post-slot-check" title="Scheduled in a channel slot">
+                <span class="calendar-post-slot-check" title="Programada en un horario del canal">
                     {% icon "check" css_class="w-3 h-3" %}
                 </span>
                 {% endif %}

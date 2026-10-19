@@ -32,13 +32,13 @@ Expects context: workspace, csrf_token.
                     <div class="w-12 h-12 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-4">
                         {% icon "trash" css_class="w-6 h-6 text-red-500" %}
                     </div>
-                    <h3 class="text-base font-semibold text-app mb-1">Delete post?</h3>
-                    <p class="text-sm text-app-tertiary mb-6">This action cannot be undone. The post and all associated data will be permanently removed.</p>
+                    <h3 class="text-base font-semibold text-app mb-1">¿Eliminar publicación?</h3>
+                    <p class="text-sm text-app-tertiary mb-6">Esta acción no se puede deshacer. La publicación y todos sus datos se eliminarán de forma permanente.</p>
                 </div>
                 <div class="flex gap-3">
                     <button @click="showDeleteModal = false"
                             class="flex-1 px-4 py-2 text-sm font-semibold text-app-body bg-app-2 rounded-full hover:bg-app-3 transition-colors cursor-pointer">
-                        Cancel
+                        Cancelar
                     </button>
                     <button :disabled="deleting"
                             @click="
@@ -55,7 +55,7 @@ Expects context: workspace, csrf_token.
                             "
                             :class="deleting && 'opacity-50 cursor-not-allowed'"
                             class="flex-1 px-4 py-2 text-sm font-semibold text-app-inverse bg-red-500 rounded-full hover:bg-red-600 transition-colors cursor-pointer">
-                        <span x-text="deleting ? 'Deleting...' : 'Delete'"></span>
+                        <span x-text="deleting ? 'Eliminando...' : 'Eliminar'"></span>
                     </button>
                 </div>
             </div>

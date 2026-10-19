@@ -10,7 +10,7 @@ class ReplyForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 "rows": 3,
-                "placeholder": "Write a reply...",
+                "placeholder": "Escribe una respuesta...",
                 "class": "form-input w-full",
             }
         ),
@@ -22,7 +22,7 @@ class InternalNoteForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 "rows": 2,
-                "placeholder": "Add an internal note...",
+                "placeholder": "Agrega una nota interna...",
                 "class": "form-input w-full",
             }
         ),
@@ -45,10 +45,10 @@ class BulkActionForm(forms.Form):
     message_ids = forms.CharField()
     action = forms.ChoiceField(
         choices=[
-            ("mark_read", "Mark as Read"),
-            ("resolve", "Resolve"),
-            ("archive", "Archive"),
-            ("assign", "Assign"),
+            ("mark_read", "Marcar como leído"),
+            ("resolve", "Resolver"),
+            ("archive", "Archivar"),
+            ("assign", "Asignar"),
         ]
     )
     value = forms.CharField(required=False)
@@ -66,14 +66,14 @@ class SavedReplyForm(forms.ModelForm):
             "title": forms.TextInput(
                 attrs={
                     "class": "form-input w-full",
-                    "placeholder": "Reply title",
+                    "placeholder": "Título de la respuesta",
                 }
             ),
             "body": forms.Textarea(
                 attrs={
                     "class": "form-input w-full",
                     "rows": 4,
-                    "placeholder": "Reply body. Use {sender_name}, {account_name}, {post_url} for variables.",
+                    "placeholder": "Texto de la respuesta. Usa {sender_name}, {account_name}, {post_url} como variables.",
                 }
             ),
         }

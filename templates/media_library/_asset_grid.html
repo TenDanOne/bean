@@ -16,10 +16,10 @@
     <!-- List header -->
     <div class="grid grid-cols-12 gap-3 px-4 py-2 text-xs font-bold uppercase tracking-wider border-b"
          style="color: var(--text-tertiary, #78716C); border-color: var(--surface-2, #F5F5F4); background: var(--surface-1, #FAFAF9);">
-      <div class="col-span-5">Name</div>
-      <div class="col-span-2">Type</div>
-      <div class="col-span-2">Size</div>
-      <div class="col-span-2">Uploaded</div>
+      <div class="col-span-5">Nombre</div>
+      <div class="col-span-2">Tipo</div>
+      <div class="col-span-2">Tamaño</div>
+      <div class="col-span-2">Subido</div>
       <div class="col-span-1"></div>
     </div>
     {% for asset in page.object_list %}
@@ -38,12 +38,12 @@
      hx-get="{% url 'media_library:index' workspace_id=workspace.id %}?page={{ page.previous_page_number }}&q={{ query|urlencode }}&sort={{ current_sort|urlencode }}"
      hx-target="#asset-grid"
      hx-swap="innerHTML">
-    Previous
+   Anterior
   </a>
   {% endif %}
 
   <span class="text-xs px-3" style="color: var(--text-tertiary, #78716C);">
-    Page {{ page.number }} of {{ page.paginator.num_pages }}
+   Página {{ page.number }} de {{ page.paginator.num_pages }}
   </span>
 
   {% if page.has_next %}
@@ -53,7 +53,7 @@
      hx-get="{% url 'media_library:index' workspace_id=workspace.id %}?page={{ page.next_page_number }}&q={{ query|urlencode }}&sort={{ current_sort|urlencode }}"
      hx-target="#asset-grid"
      hx-swap="innerHTML">
-    Next
+   Siguiente
   </a>
   {% endif %}
 </div>

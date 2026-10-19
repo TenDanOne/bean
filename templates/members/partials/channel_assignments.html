@@ -23,15 +23,15 @@ looks like it does.
 
     {% if saved %}
     <p class="text-xs mb-3 px-3 py-2 rounded-lg" style="background: var(--success-50); color: var(--success-700);">
-        Saved. These are the channels they can reach now.
+        Guardado. Estos son los canales a los que ya tiene acceso.
     </p>
     {% endif %}
     <p class="text-sm mb-1 text-app">
-        Channel access for <strong>{{ target.user.name|default:target.user.email }}</strong>
+        Acceso a canales de <strong>{{ target.user.name|default:target.user.email }}</strong>
     </p>
     <p class="text-xs mb-4 text-app-tertiary">
-        They see only the channels ticked here. Everything else in this workspace stays hidden.
-        {% if target_role %}The boxes match their role of <strong>{{ target_role }}</strong>.{% endif %}
+        Solo verá los canales marcados aquí. Todo lo demás en este espacio de trabajo permanece oculto.
+        {% if target_role %}Las casillas corresponden a su rol de <strong>{{ target_role }}</strong>.{% endif %}
     </p>
 
     <div class="space-y-2 max-h-80 scroll-y -mx-1 px-1">
@@ -89,12 +89,12 @@ looks like it does.
                 {% endcomment %}
                 {% for key, label, help, granted in row.blocked %}
                 <div class="flex items-start gap-2 opacity-55"
-                     title="Their role of {{ target_role }} cannot do this. Change the role to offer it.">
+                     title="Su rol de {{ target_role }} no puede hacer esto. Cambia el rol para ofrecerlo.">
                     <input type="checkbox" class="mt-0.5" disabled {% if granted %}checked{% endif %}>
                     <span class="min-w-0">
                         <span class="block text-xs font-medium text-app-tertiary">{{ label }}</span>
                         <span class="block text-[11px] leading-snug text-app-ghost">
-                            {% if granted %}Granted before, inert while they are {{ target_role }}.{% else %}Not available to a {{ target_role }}.{% endif %}
+                            {% if granted %}Otorgado antes, sin efecto mientras sea {{ target_role }}.{% else %}No disponible para el rol {{ target_role }}.{% endif %}
                         </span>
                     </span>
                 </div>
@@ -103,8 +103,8 @@ looks like it does.
         </div>
         {% empty %}
         <p class="text-sm text-app-tertiary">
-            You have no channels to assign. A manager can only pass on channels they hold
-            themselves — ask the workspace owner to assign you one first.
+            No tienes canales para asignar. Un gestor solo puede pasar los canales que él mismo tiene;
+            pide al propietario del espacio de trabajo que te asigne uno primero.
         </p>
         {% endfor %}
     </div>
@@ -112,7 +112,7 @@ looks like it does.
     {% if rows %}
     <div class="flex justify-end gap-2 mt-4">
         <button type="submit" class="bbs-btn bbs-btn-primary text-sm px-4 py-2">
-            Save access
+            Guardar acceso
         </button>
     </div>
     {% endif %}

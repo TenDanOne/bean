@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}SLA Settings - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Configuración de SLA - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block content %}
 <div class="max-w-lg">
@@ -11,8 +11,8 @@
             {% icon "chevron-left" css_class="w-5 h-5" %}
         </a>
         <div>
-            <h2 class="text-xl font-semibold text-app tracking-tight">SLA Settings</h2>
-            <p class="text-sm text-app-tertiary mt-0.5">Set response time targets for your inbox.</p>
+            <h2 class="text-xl font-semibold text-app tracking-tight">Configuración de SLA</h2>
+            <p class="text-sm text-app-tertiary mt-0.5">Define tiempos objetivo de respuesta para tu bandeja.</p>
         </div>
     </div>
 
@@ -24,8 +24,8 @@
                 <!-- Enable toggle -->
                 <div class="flex items-center justify-between">
                     <div>
-                        <label class="text-[14px] font-semibold text-app-strong">Enable SLA Timer</label>
-                        <p class="text-[12px] text-app-tertiary mt-0.5">Show countdown timers and overdue badges on unresolved messages.</p>
+                        <label class="text-[14px] font-semibold text-app-strong">Activar cronómetro de SLA</label>
+                        <p class="text-[12px] text-app-tertiary mt-0.5">Muestra cuentas regresivas e insignias de retraso en los mensajes sin resolver.</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="is_active" {% if config.is_active %}checked{% endif %} class="sr-only peer">
@@ -35,16 +35,16 @@
 
                 <!-- Target time -->
                 <div>
-                    <label for="id_target_response_minutes" class="block text-[13px] font-semibold text-app-body mb-1.5">Target Response Time (minutes)</label>
+                    <label for="id_target_response_minutes" class="block text-[13px] font-semibold text-app-body mb-1.5">Tiempo objetivo de respuesta (minutos)</label>
                     {{ form.target_response_minutes }}
-                    <p class="text-[11px] text-app-ghost mt-1">Messages exceeding this time will show an "Overdue" badge.</p>
+                    <p class="text-[11px] text-app-ghost mt-1">Los mensajes que superen este tiempo mostrarán la insignia «Vencido».</p>
                 </div>
 
                 <!-- Auto-resolve -->
                 <div class="flex items-center justify-between pt-2 border-t border-app-subtle">
                     <div>
-                        <label class="text-[14px] font-semibold text-app-strong">Auto-resolve on Reply</label>
-                        <p class="text-[12px] text-app-tertiary mt-0.5">Automatically mark messages as resolved when a reply is sent.</p>
+                        <label class="text-[14px] font-semibold text-app-strong">Resolver automáticamente al responder</label>
+                        <p class="text-[12px] text-app-tertiary mt-0.5">Marca los mensajes como resueltos cuando se envía una respuesta.</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="auto_resolve_on_reply" {% if config.auto_resolve_on_reply %}checked{% endif %} class="sr-only peer">
@@ -57,10 +57,10 @@
                 <button type="submit"
                         class="inline-flex items-center gap-1.5 px-5 py-2 text-[13px] font-semibold text-app-inverse rounded-full transition-all duration-150 cursor-pointer"
                         style="background: var(--primary); box-shadow: var(--shadow-primary);">
-                    Save Settings
+                    Guardar configuración
                 </button>
                 <a href="{% url 'inbox:feed' workspace_id=workspace.id %}"
-                   class="text-[13px] font-medium text-app-tertiary hover:text-app-body transition-colors">Cancel</a>
+                   class="text-[13px] font-medium text-app-tertiary hover:text-app-body transition-colors">Cancelar</a>
             </div>
         </form>
     </div>

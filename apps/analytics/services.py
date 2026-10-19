@@ -70,7 +70,7 @@ def unavailable_reason(platform: str, enabled_platforms: list[str] | None = None
 
         enabled_platforms = AnalyticsPlatformConfig.enabled_platforms()
     if platform not in enabled_platforms:
-        return "Analytics is not currently enabled for this platform."
+        return "Las analíticas no están activadas por ahora para esta plataforma."
     return None
 
 

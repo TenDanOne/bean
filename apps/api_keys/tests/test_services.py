@@ -308,7 +308,7 @@ class TestIssuanceGuards:
     def test_rejects_account_from_foreign_workspace(
         self, workspace, workspace_owner, social_account, foreign_social_account
     ):
-        with pytest.raises(ValueError, match="does not belong to workspace"):
+        with pytest.raises(ValueError, match="no pertenece al espacio de trabajo"):
             services.issue_api_key(
                 workspace=workspace,
                 social_accounts=[social_account, foreign_social_account],
@@ -318,7 +318,7 @@ class TestIssuanceGuards:
             )
 
     def test_rejects_empty_allowlist(self, workspace, workspace_owner):
-        with pytest.raises(ValueError, match="at least one"):
+        with pytest.raises(ValueError, match="al menos una"):
             services.issue_api_key(
                 workspace=workspace,
                 social_accounts=[],
@@ -344,7 +344,7 @@ class TestIssuanceGuards:
             organization=organization,
             org_role=OrgMembership.OrgRole.ADMIN,
         )
-        with pytest.raises(ValueError, match="no membership"):
+        with pytest.raises(ValueError, match="no es miembro"):
             services.issue_api_key(
                 workspace=workspace,
                 social_accounts=[social_account],
@@ -355,7 +355,7 @@ class TestIssuanceGuards:
 
     def test_rejects_permission_outside_issuer_grants(self, workspace, workspace_viewer, social_account):
         """A viewer cannot grant ``create_posts`` even via tampered form data."""
-        with pytest.raises(ValueError, match="cannot grant permissions they don't hold"):
+        with pytest.raises(ValueError, match="No puedes otorgar permisos que no tienes"):
             services.issue_api_key(
                 workspace=workspace,
                 social_accounts=[social_account],
@@ -533,7 +533,7 @@ class TestUpdateApiKey:
         self, workspace, workspace_owner, social_account, foreign_social_account
     ):
         key = self._issue(workspace, workspace_owner.user, social_account, [])
-        with pytest.raises(ValueError, match="does not belong to workspace"):
+        with pytest.raises(ValueError, match="no pertenece al espacio de trabajo"):
             services.update_api_key(
                 key,
                 editor=workspace_owner.user,
@@ -544,7 +544,7 @@ class TestUpdateApiKey:
 
     def test_rejects_empty_allowlist(self, workspace, workspace_owner, social_account):
         key = self._issue(workspace, workspace_owner.user, social_account, [])
-        with pytest.raises(ValueError, match="at least one"):
+        with pytest.raises(ValueError, match="al menos una"):
             services.update_api_key(
                 key,
                 editor=workspace_owner.user,
@@ -606,7 +606,7 @@ class TestUpdateApiKey:
             org_role=OrgMembership.OrgRole.ADMIN,
         )
         key = self._issue(workspace, workspace_owner.user, social_account, [])
-        with pytest.raises(ValueError, match="no membership"):
+        with pytest.raises(ValueError, match="no es miembro"):
             services.update_api_key(
                 key,
                 editor=stranger,

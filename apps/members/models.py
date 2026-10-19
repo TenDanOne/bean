@@ -10,9 +10,9 @@ from apps.common.managers import OrgScopedManager
 
 class OrgMembership(models.Model):
     class OrgRole(models.TextChoices):
-        OWNER = "owner", "Owner"
-        ADMIN = "admin", "Admin"
-        MEMBER = "member", "Member"
+        OWNER = "owner", "Propietario"
+        ADMIN = "admin", "Administrador"
+        MEMBER = "member", "Miembro"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -73,17 +73,17 @@ def role_rank(role: str) -> int:
 
 class WorkspaceMembership(models.Model):
     class WorkspaceRole(models.TextChoices):
-        OWNER = "owner", "Owner"
-        MANAGER = "manager", "Manager"
+        OWNER = "owner", "Propietario"
+        MANAGER = "manager", "Gestor"
         EDITOR = "editor", "Editor"
         # Approves, and reads what it was given. Exists so the person who owns a
         # personal account can sign off on their own posts without being handed
         # the run of the workspace: reviewer plus a single assigned channel sees
         # and approves only their own.
-        REVIEWER = "reviewer", "Reviewer"
-        CONTRIBUTOR = "contributor", "Contributor"
-        CLIENT = "client", "Client"
-        VIEWER = "viewer", "Viewer"
+        REVIEWER = "reviewer", "Revisor"
+        CONTRIBUTOR = "contributor", "Colaborador"
+        CLIENT = "client", "Cliente"
+        VIEWER = "viewer", "Lector"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -236,11 +236,11 @@ def assignable_workspace_role_choices(granter_role=None):
 # overstates a role is worse than none, because it is how someone ends up handed
 # less access than the person granting it believed they were giving.
 WORKSPACE_ROLE_DESCRIPTIONS = {
-    "owner": "Everything, including connecting channels and handing out access.",
-    "manager": "Runs the brand: creates, approves, publishes and edits its settings. Cannot connect channels.",
-    "editor": "Creates and schedules posts, and answers the inbox. Cannot approve or publish.",
-    "reviewer": "Approves posts and reads the inbox. Creates nothing and does not reply.",
-    "viewer": "Reads everything they are given, inbox included. Does not reply and changes nothing.",
+    "owner": "Todo, incluido conectar canales y dar accesos.",
+    "manager": "Dirige la marca: crea, aprueba, publica y edita sus ajustes. No puede conectar canales.",
+    "editor": "Crea y programa publicaciones y responde la bandeja. No puede aprobar ni publicar.",
+    "reviewer": "Aprueba publicaciones y lee la bandeja. No crea nada ni responde.",
+    "viewer": "Lee todo lo que se le asigna, bandeja incluida. No responde ni cambia nada.",
 }
 
 
@@ -449,11 +449,11 @@ RETIRED_CHANNEL_CAPABILITIES = frozenset({"can_approve"})
 # handing out access, not for whoever wrote the model — "can_delete_comments"
 # says nothing about the fact that it cannot be undone.
 CHANNEL_CAPABILITY_LABELS = (
-    ("can_view_metrics", "See metrics", "Analytics for this channel."),
-    ("can_reply", "Reply", "Answer comments and messages as this channel."),
-    ("can_publish", "Publish", "Create and schedule posts on this channel."),
-    ("can_moderate", "Moderate", "Hide comments so nobody else sees them. Reversible."),
-    ("can_delete_comments", "Delete comments", "Permanent. Cannot be undone."),
+    ("can_view_metrics", "Ver métricas", "Analíticas de este canal."),
+    ("can_reply", "Responder", "Responder comentarios y mensajes como este canal."),
+    ("can_publish", "Publicar", "Crear y programar publicaciones en este canal."),
+    ("can_moderate", "Moderar", "Ocultar comentarios para que nadie más los vea. Es reversible."),
+    ("can_delete_comments", "Eliminar comentarios", "Permanente. No se puede deshacer."),
 )
 
 # What the *role* must already allow for a capability to mean anything.
@@ -586,4 +586,4 @@ class ChannelAssignment(models.Model):
             and self.social_account_id
             and self.membership.workspace_id != self.social_account.workspace_id
         ):
-            raise ValidationError("That channel belongs to a different workspace than this member.")
+            raise ValidationError("Ese canal pertenece a un espacio de trabajo distinto al de este miembro.")

@@ -17,9 +17,9 @@ reveal modal on top of the freshly-rendered list page.
                 {% csrf_token %}
                 <div class="flex items-start justify-between px-6 pt-6 pb-5 flex-shrink-0">
                     <div>
-                        <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Issue a new API key</h3>
+                        <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Emitir una nueva clave de API</h3>
                         <p class="text-xs mt-1" style="color: var(--text-tertiary);">
-                            The plaintext token is shown <strong>once</strong> immediately after creation.
+                            El token en texto plano se muestra <strong>una sola vez</strong> justo después de crearlo.
                         </p>
                     </div>
                     <button type="button" @click="showIssueModal = false"
@@ -29,15 +29,15 @@ reveal modal on top of the freshly-rendered list page.
 
                 <div class="space-y-4 px-6 overflow-y-auto flex-1 min-h-0">
                     <div>
-                        <label for="name" class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Name</label>
+                        <label for="name" class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Nombre</label>
                         <input type="text" id="name" name="name" required maxlength="100" autocomplete="off"
-                               placeholder="e.g. Zapier bot, content pipeline"
+                               placeholder="p. ej., bot de Zapier, flujo de contenido"
                                class="input-focus w-full px-3 py-2 text-sm outline-none transition-colors"
                                style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
                     </div>
 
                     <div>
-                        <label for="workspace_id" class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Workspace</label>
+                        <label for="workspace_id" class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Espacio de trabajo</label>
                         <select id="workspace_id" name="workspace_id" required
                                 hx-get="{% url 'api_keys:workspace_options' %}"
                                 hx-trigger="change"
@@ -45,7 +45,7 @@ reveal modal on top of the freshly-rendered list page.
                                 hx-include="this"
                                 class="input-focus w-full pl-3 pr-10 py-2 text-sm outline-none transition-colors"
                                 style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
-                            <option value="">Pick a workspace…</option>
+                            <option value="">Elige un espacio de trabajo…</option>
                             {% for ws in issuance.workspaces %}
                             <option value="{{ ws.id }}">{{ ws.name }}</option>
                             {% endfor %}
@@ -57,7 +57,7 @@ reveal modal on top of the freshly-rendered list page.
 
                     <div>
                         <label for="expires_at" class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
-                            Expires at <span class="font-normal" style="color: var(--text-tertiary);">(optional)</span>
+                            Vence el <span class="font-normal" style="color: var(--text-tertiary);">(opcional)</span>
                         </label>
                         <input type="date" id="expires_at" name="expires_at"
                                class="input-focus w-full px-3 py-2 text-sm outline-none transition-colors"
@@ -69,12 +69,12 @@ reveal modal on top of the freshly-rendered list page.
                     <button type="button" @click="showIssueModal = false"
                             class="btn-neutral px-4 py-2 text-sm font-medium rounded-full cursor-pointer"
                             style="background: var(--neutral-100); color: var(--text-primary);">
-                        Cancel
+                        Cancelar
                     </button>
                     <button type="submit"
                             class="btn-primary-hover px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                             style="background: var(--primary); color: var(--on-primary);">
-                        Generate
+                        Generar
                     </button>
                 </div>
             </form>

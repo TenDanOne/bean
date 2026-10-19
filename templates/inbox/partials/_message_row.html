@@ -50,7 +50,7 @@
             {% if message.sender_handle %}
             <span class="text-[11px] text-app-ghost truncate">@{{ message.sender_handle }}</span>
             {% endif %}
-            <span class="text-[11px] text-app-ghost ml-auto flex-shrink-0" title="{{ message.received_at|date:'N j, Y g:i A' }}">{{ message.received_at|timesince }} ago</span>
+            <span class="text-[11px] text-app-ghost ml-auto flex-shrink-0" title="{{ message.received_at|date:'j/m/Y H:i' }}">hace {{ message.received_at|timesince }}</span>
         </div>
         <p class="inbox-row-preview text-[12px] text-app-tertiary truncate leading-snug">{{ message.body|truncatewords:20 }}</p>
         <div class="flex items-center gap-1.5 mt-1.5">
@@ -62,10 +62,10 @@
                  whether it was actually dealt with, not that it's gone missing. -->
             {% if message.deleted_on_platform %}
             <span class="badge-pill" style="background: var(--surface-2); color: var(--text-tertiary);"
-                  title="Deleted on {{ message.deleted_on_platform|date:'N j, Y, H:i' }}{% if message.moderated_by %} by {{ message.moderated_by.display_name }}{% endif %}">Deleted</span>
+                  title="Eliminado el {{ message.deleted_on_platform|date:'j/m/Y H:i' }}{% if message.moderated_by %} por {{ message.moderated_by.display_name }}{% endif %}">Eliminado</span>
             {% elif message.is_hidden %}
             <span class="badge-pill" style="background: var(--warning-50); color: var(--warning-700);"
-                  title="Hidden{% if message.moderated_by %} by {{ message.moderated_by.display_name }}{% endif %}. The public cannot see it.">Hidden</span>
+                  title="Oculto{% if message.moderated_by %} por {{ message.moderated_by.display_name }}{% endif %}. El público no puede verlo.">Oculto</span>
             {% endif %}
             <!-- Sentiment badge -->
             {% include "inbox/partials/_sentiment_badge.html" %}

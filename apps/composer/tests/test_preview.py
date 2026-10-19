@@ -97,13 +97,13 @@ class YouTubeThumbnailPreviewTests(ComposerTestCase):
         response = self._post(**{f"yt_thumbnail_asset_id_{self.yt.id}": str(self.asset.id)})
 
         self.assertEqual(response.context["previews"][0]["thumbnail_url"], self.asset.file.url)
-        self.assertContains(response, "Custom thumbnail")
+        self.assertContains(response, "Miniatura personalizada")
 
     def test_no_thumbnail_leaves_the_video_frame_in_place(self):
         response = self._post()
 
         self.assertEqual(response.context["previews"][0]["thumbnail_url"], "")
-        self.assertNotContains(response, "Custom thumbnail")
+        self.assertNotContains(response, "Miniatura personalizada")
 
     def test_malformed_id_does_not_500_the_live_preview(self):
         """This runs on every keystroke; a half-typed value must not break it."""

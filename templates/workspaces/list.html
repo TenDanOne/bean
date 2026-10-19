@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block page_title %}Workspaces{% endblock %}
+{% block page_title %}Espacios de trabajo{% endblock %}
 {% block content %}
 <div style="max-width: 720px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
@@ -9,7 +9,7 @@
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.015em;
-        ">Workspaces</h2>
+        ">Espacios de trabajo</h2>
     </div>
 
     {% if workspaces %}
@@ -42,7 +42,7 @@
         border-radius: var(--radius-xl);
         margin-bottom: 24px;
     ">
-        <p style="font-size: 0.9375rem; color: var(--text-secondary); margin-bottom: 20px;">No workspaces yet. Create your first workspace to get started.</p>
+        <p style="font-size: 0.9375rem; color: var(--text-secondary); margin-bottom: 20px;">Aún no hay espacios de trabajo. Crea el primero para empezar.</p>
     </div>
     {% endif %}
 
@@ -54,20 +54,20 @@
         padding: 24px;
         box-shadow: var(--shadow-xs);
     ">
-        <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">New workspace</h3>
+        <h3 style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Nuevo espacio de trabajo</h3>
         <form method="post" action="{% url 'workspaces:create' %}" class="flex flex-col sm:flex-row gap-2.5 sm:items-end">
             {% csrf_token %}
             <div style="flex: 1;">
                 <input
                     type="text"
                     name="name"
-                    placeholder="Workspace name"
+                    placeholder="Nombre del espacio de trabajo"
                     required
                     class="form-input-styled"
                 >
             </div>
             <button type="submit" class="btn-brand" style="width: auto; white-space: nowrap;">
-                Create
+                Crear
             </button>
         </form>
     </div>

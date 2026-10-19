@@ -2,7 +2,7 @@
 {# HTMX partial - loaded into the notification drawer panel #}
 
 <div class="flex items-center justify-between px-5 pt-5 pb-3">
-    <h2 class="text-[15px] font-semibold text-app tracking-tight">Notifications</h2>
+    <h2 class="text-[15px] font-semibold text-app tracking-tight">Notificaciones</h2>
     {% if notifications %}
     <button
         hx-post="{% url 'notifications:mark_all_read' %}"
@@ -10,7 +10,7 @@
         hx-swap="innerHTML"
         class="text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors duration-150 cursor-pointer"
     >
-        Mark all read
+        Marcar todas como leídas
     </button>
     {% endif %}
 </div>
@@ -71,7 +71,7 @@
                     {% if n.body %}
                     <p class="text-[12px] text-app-tertiary leading-relaxed mt-0.5 line-clamp-2">{{ n.body }}</p>
                     {% endif %}
-                    <p class="text-[11px] text-app-ghost mt-1 font-medium tabular-nums">{{ n.created_at|timesince }} ago</p>
+                    <p class="text-[11px] text-app-ghost mt-1 font-medium tabular-nums">hace {{ n.created_at|timesince }}</p>
                 </div>
 
                 {% if not n.is_read %}
@@ -88,8 +88,8 @@
         <div class="w-12 h-12 rounded-xl bg-app-2 flex items-center justify-center mb-4">
             {% icon "bell" css_class="w-6 h-6 text-app-ghost" %}
         </div>
-        <p class="text-sm font-medium text-app-tertiary">All caught up</p>
-        <p class="text-xs text-app-ghost mt-1">No notifications yet</p>
+        <p class="text-sm font-medium text-app-tertiary">Estás al día</p>
+        <p class="text-xs text-app-ghost mt-1">Aún no hay notificaciones</p>
     </div>
     {% endif %}
 </div>
@@ -100,7 +100,7 @@
         href="{% url 'notifications:list' %}"
         class="block text-center text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors duration-150"
     >
-        View all notifications
+        Ver todas las notificaciones
     </a>
 </div>
 {% endif %}

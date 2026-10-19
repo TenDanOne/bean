@@ -39,7 +39,7 @@ def check_folder_depth(parent_folder):
         depth += 1
         current = current.parent_folder
         if depth >= 3:
-            raise ValidationError("Folders cannot be nested more than 3 levels deep.")
+            raise ValidationError("Las carpetas no pueden anidarse más de 3 niveles.")
     return depth
 
 

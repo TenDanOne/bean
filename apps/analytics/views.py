@@ -36,7 +36,7 @@ DEFAULT_RANGE = 30
 def _get_workspace(request, workspace_id):
     workspace = get_object_or_404(Workspace, id=workspace_id)
     if not WorkspaceMembership.objects.filter(user=request.user, workspace=workspace).exists():
-        raise PermissionDenied("You are not a member of this workspace.")
+        raise PermissionDenied("No eres miembro de este espacio de trabajo.")
     return workspace
 
 
@@ -95,7 +95,7 @@ def analytics_index(request: HttpRequest, workspace_id) -> HttpResponse:
     """Landing route: redirects to the first enabled connected account."""
     workspace = _get_workspace(request, workspace_id)
     if not AnalyticsPlatformConfig.enabled_platforms():
-        raise Http404("Analytics is disabled.")
+        raise Http404("Las analíticas están desactivadas.")
     accounts = _enabled_accounts(workspace, request.workspace_membership)  # type: ignore[attr-defined]
     if not accounts:
         return render(
@@ -114,7 +114,7 @@ def analytics_account(request: HttpRequest, workspace_id, account_id) -> HttpRes
     """Main analytics page for one connected SocialAccount."""
     workspace = _get_workspace(request, workspace_id)
     if not AnalyticsPlatformConfig.enabled_platforms():
-        raise Http404("Analytics is disabled.")
+        raise Http404("Las analíticas están desactivadas.")
 
     accounts = _enabled_accounts(workspace, request.workspace_membership)  # type: ignore[attr-defined]
     if not accounts:

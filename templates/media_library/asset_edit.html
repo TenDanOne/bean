@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Edit - {{ asset.original_filename }}{% endblock %}
+{% block title %}Editar - {{ asset.original_filename }}{% endblock %}
 
 {% block extra_head %}
 {% if asset.file_type == 'image' or asset.file_type == 'gif' %}
@@ -54,7 +54,7 @@
      style="color: var(--text-tertiary, #78716C);">
     {% icon "chevron-left" css_class="w-4 h-4" %}
   </a>
-  <h1 class="text-lg font-semibold" style="color: var(--text-primary, #1C1917);">Edit - {{ asset.original_filename }}</h1>
+  <h1 class="text-lg font-semibold" style="color: var(--text-primary, #1C1917);">Editar - {{ asset.original_filename }}</h1>
   
 </div>
 {% endblock %}
@@ -76,23 +76,23 @@
     <div class="flex items-center gap-1">
       <button @click="setMode('crop')" :class="mode === 'crop' ? 'active' : ''" class="ml-tool-btn">
         {% icon "crop-simple" css_class="w-5 h-5" %}
-        Crop
+       Recortar
       </button>
       <button @click="rotate(-90)" class="ml-tool-btn">
         {% icon "rotate-left" css_class="w-5 h-5" %}
-        Rotate Left
+       Girar a la izquierda
       </button>
       <button @click="rotate(90)" class="ml-tool-btn">
         {% icon "rotate-right" css_class="w-5 h-5" %}
-        Rotate Right
+       Girar a la derecha
       </button>
       <button @click="flip('horizontal')" class="ml-tool-btn">
         {% icon "arrow-right-arrow-left" css_class="w-5 h-5" %}
-        Flip H
+       Voltear horizontal
       </button>
       <button @click="flip('vertical')" class="ml-tool-btn">
         {% icon "arrow-right-arrow-left" css_class="w-5 h-5" %}
-        Flip V
+       Voltear vertical
       </button>
 
       <div class="flex-1"></div>
@@ -100,12 +100,12 @@
       <a href="{% url 'media_library:asset_detail' workspace_id=workspace.id asset_id=asset.id %}"
          class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full border transition-colors btn-surface-1"
          style="border-color: var(--border); color: var(--text-secondary);">
-        Cancel
+        Cancelar
       </a>
       <button @click="save()" class="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-app-inverse rounded-full transition-all btn-primary-hover"
               style="background: var(--primary, #657329); box-shadow: var(--shadow-primary);">
         {% icon "check" css_class="w-3.5 h-3.5" %}
-        Save as new version
+       Guardar como versión nueva
       </button>
     </div>
   </div>
@@ -138,22 +138,22 @@
   <div class="ml-edit-toolbar p-4">
     <div class="flex items-center gap-6 mb-3">
       <div class="flex items-center gap-2">
-        <label class="text-xs font-semibold" style="color: var(--text-tertiary);">Start</label>
+        <label class="text-xs font-semibold" style="color: var(--text-tertiary);">Inicio</label>
         <input type="number" x-model.number="trimStart" step="0.1" min="0" :max="trimEnd"
                class="input-focus w-24 text-xs px-2.5 py-1.5 text-center outline-none"
                style="font-variant-numeric: tabular-nums;">
-        <span class="text-xs" style="color: var(--text-ghost);">sec</span>
+        <span class="text-xs" style="color: var(--text-ghost);">s</span>
       </div>
       <div class="flex items-center gap-2">
-        <label class="text-xs font-semibold" style="color: var(--text-tertiary);">End</label>
+        <label class="text-xs font-semibold" style="color: var(--text-tertiary);">Fin</label>
         <input type="number" x-model.number="trimEnd" step="0.1" :min="trimStart" :max="duration"
                class="input-focus w-24 text-xs px-2.5 py-1.5 text-center outline-none"
                style="font-variant-numeric: tabular-nums;">
-        <span class="text-xs" style="color: var(--text-ghost);">sec</span>
+        <span class="text-xs" style="color: var(--text-ghost);">s</span>
       </div>
       <span class="text-xs font-semibold px-2.5 py-1 rounded-full"
             style="background: var(--primary-soft); color: var(--brand-700);"
-            x-text="'Duration: ' + (trimEnd - trimStart).toFixed(1) + 's'"></span>
+            x-text="'Duración: ' + (trimEnd - trimStart).toFixed(1) + 's'"></span>
     </div>
 
     <!-- Visual timeline -->
@@ -168,14 +168,14 @@
     <div class="flex items-center justify-between mt-3">
       <button @click="preview()" class="ml-tool-btn flex-row gap-1.5">
         {% icon "play" css_class="w-4 h-4" %}
-        Preview trim
+       Previsualizar recorte
       </button>
 
       <div class="flex items-center gap-2">
         <a href="{% url 'media_library:asset_detail' workspace_id=workspace.id asset_id=asset.id %}"
            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full border transition-colors"
            style="border-color: var(--border); color: var(--text-secondary);">
-          Cancel
+          Cancelar
         </a>
         <form method="POST" action="{% url 'media_library:asset_edit' workspace_id=workspace.id asset_id=asset.id %}">
           {% csrf_token %}
@@ -185,7 +185,7 @@
                   class="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-app-inverse rounded-full transition-all"
                   style="background: var(--primary); box-shadow: var(--shadow-primary);">
             {% icon "check" css_class="w-3.5 h-3.5" %}
-            Trim &amp; save
+           Recortar y guardar
           </button>
         </form>
       </div>
@@ -195,11 +195,11 @@
 
 {% else %}
 <div class="text-center py-20">
-  <p class="text-sm" style="color: var(--text-secondary);">Editing is not available for this file type.</p>
+  <p class="text-sm" style="color: var(--text-secondary);">La edición no está disponible para este tipo de archivo.</p>
   <a href="{% url 'media_library:index' workspace_id=workspace.id %}"
      class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 text-sm font-semibold rounded-full border"
      style="border-color: var(--border); color: var(--text-secondary);">
-    Back to library
+   Volver a la biblioteca
   </a>
 </div>
 {% endif %}

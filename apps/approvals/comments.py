@@ -34,7 +34,7 @@ def create_comment(post, author, body, visibility, parent_id=None, attachment=No
         The created PostComment.
     """
     if attachment and attachment.size > MAX_ATTACHMENT_SIZE:
-        raise ValueError("Attachment exceeds 5MB limit.")
+        raise ValueError("El adjunto excede el límite de 5 MB.")
 
     parent_comment = None
     if parent_id:
@@ -78,9 +78,9 @@ def update_comment(comment_id, user, body, *, workspace=None):
     comment = qs.first()
 
     if not comment:
-        raise ValueError("Comment not found.")
+        raise ValueError("Comentario no encontrado.")
     if comment.author_id != user.id:
-        raise PermissionError("Only the comment author can edit.")
+        raise PermissionError("Solo el autor del comentario puede editarlo.")
 
     comment.body = body
     comment.save(update_fields=["body", "updated_at"])
@@ -95,7 +95,7 @@ def delete_comment(comment_id, user, workspace):
     ).first()
 
     if not comment:
-        raise ValueError("Comment not found.")
+        raise ValueError("Comentario no encontrado.")
 
     # Check permission: author or user with approve_posts (manager+)
     membership = (
@@ -111,7 +111,7 @@ def delete_comment(comment_id, user, workspace):
     can_moderate = membership and membership.effective_permissions.get("approve_posts", False)
 
     if not is_author and not can_moderate:
-        raise PermissionError("You don't have permission to delete this comment.")
+        raise PermissionError("No tienes permiso para eliminar este comentario.")
 
     comment.deleted_at = timezone.now()
     comment.save(update_fields=["deleted_at", "updated_at"])
@@ -178,8 +178,8 @@ def _notify_mentions(mentions, post, author, workspace, body):
             notify(
                 user=target_user,
                 event_type=EventType.COMMENT_MENTION,
-                title=f"{author.display_name} mentioned you",
-                body=f'In a comment on a post: "{body[:100]}"',
+                title=f"{author.display_name} te mencionó",
+                body=f'En un comentario de una publicación: "{body[:100]}"',
                 data={
                     "post_id": str(post.id),
                     "workspace_id": str(workspace.id),

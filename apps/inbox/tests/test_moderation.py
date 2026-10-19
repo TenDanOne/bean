@@ -195,7 +195,7 @@ class TestHiding:
         )
 
         assert response.status_code == 422
-        assert b"quota" in response.content.lower()
+        assert b"cuota" in response.content.lower()
 
 
 @pytest.mark.django_db
@@ -259,7 +259,7 @@ class TestDeleting:
         )
 
         assert response.status_code == 422
-        assert b"hiding it instead" in response.content
+        assert b"Intenta ocultarlo" in response.content
         message.refresh_from_db()
         assert message.deleted_on_platform is None
 
@@ -327,8 +327,8 @@ class TestTheButtonsAreActuallyOnScreen:
 
         body = self._panel(client, workspace, message)
 
-        assert ">Hide" in body or "Hide\n" in body
-        assert "Delete" in body
+        assert ">Ocultar" in body or "Ocultar\n" in body
+        assert "Eliminar" in body
         assert reverse("inbox:delete_comment", kwargs={"workspace_id": workspace.id, "message_id": message.id}) in body
 
     def test_the_delete_button_says_delete_not_just_an_icon(self, client, django_user_model, workspace, channel):
@@ -339,7 +339,7 @@ class TestTheButtonsAreActuallyOnScreen:
 
         body = self._panel(client, workspace, message)
 
-        assert "Delete" in body
+        assert "Eliminar" in body
 
     def test_without_the_grant_the_buttons_stay_and_explain(self, client, django_user_model, workspace, channel):
         """Hiding the control teaches people the product cannot do it."""
@@ -350,7 +350,7 @@ class TestTheButtonsAreActuallyOnScreen:
 
         body = self._panel(client, workspace, message)
 
-        assert "Delete" in body
+        assert "Eliminar" in body
         assert "disabled" in body
 
     def test_a_video_notification_shows_no_moderation_at_all(self, client, django_user_model, workspace, channel):

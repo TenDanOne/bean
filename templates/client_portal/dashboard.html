@@ -1,15 +1,15 @@
 {% extends "client_portal/portal_base.html" %}
-{% block title %}Dashboard - {{ workspace.name }}{% endblock %}
+{% block title %}Inicio - {{ workspace.name }}{% endblock %}
 
 {% block content %}
 <div>
     <!-- Welcome -->
     <div class="mb-8">
         <h1 class="text-2xl font-bold tracking-tight" style="color: var(--text-primary); font-family: var(--font-display);">
-            Welcome back
+            Te damos la bienvenida
         </h1>
         <p class="text-[0.9375rem] mt-1" style="color: var(--text-secondary);">
-            Here's what's happening with {{ workspace.name }}
+            Esto es lo que pasa en {{ workspace.name }}
         </p>
     </div>
 
@@ -28,7 +28,7 @@
                 {% endif %}
             </div>
             <p class="text-2xl font-bold tracking-tight" style="color: var(--text-primary);">{{ pending_count }}</p>
-            <p class="text-[0.8125rem] mt-0.5" style="color: var(--text-secondary);">Posts awaiting your review</p>
+            <p class="text-[0.8125rem] mt-0.5" style="color: var(--text-secondary);">Publicaciones en espera de tu revisión</p>
         </a>
 
         <!-- Recently published -->
@@ -39,7 +39,7 @@
                 {% icon "circle-check" css_class="w-5 h-5" %}
             </div>
             <p class="text-2xl font-bold tracking-tight" style="color: var(--text-primary);">{{ recent_published|length }}</p>
-            <p class="text-[0.8125rem] mt-0.5" style="color: var(--text-secondary);">Recently published</p>
+            <p class="text-[0.8125rem] mt-0.5" style="color: var(--text-secondary);">Publicadas recientemente</p>
         </a>
 
         <!-- My actions -->
@@ -50,7 +50,7 @@
                 {% icon "list" css_class="w-5 h-5" %}
             </div>
             <p class="text-2xl font-bold tracking-tight" style="color: var(--text-primary);">{{ my_actions|length }}</p>
-            <p class="text-[0.8125rem] mt-0.5" style="color: var(--text-secondary);">Recent actions</p>
+            <p class="text-[0.8125rem] mt-0.5" style="color: var(--text-secondary);">Acciones recientes</p>
         </a>
     </div>
 
@@ -59,13 +59,13 @@
     <div class="rounded-xl border p-5" style="background: var(--primary-soft); border-color: var(--primary-muted);">
         <div class="flex items-center justify-between">
             <div>
-                <p class="font-semibold text-[0.9375rem]" style="color: var(--brand-800);">You have {{ pending_count }} post{{ pending_count|pluralize }} waiting for review</p>
-                <p class="text-[0.8125rem] mt-0.5" style="color: var(--brand-700);">Review and approve content before it's published</p>
+                <p class="font-semibold text-[0.9375rem]" style="color: var(--brand-800);">Tienes {{ pending_count }} publicaci{{ pending_count|pluralize:"ón,ones" }} en espera de revisión</p>
+                <p class="text-[0.8125rem] mt-0.5" style="color: var(--brand-700);">Revisa y aprueba el contenido antes de que se publique</p>
             </div>
             <a href="{% url 'client_portal:approval_queue' %}"
                class="px-4 py-2 text-[0.8125rem] font-semibold rounded-full text-app-inverse transition-all hover:-translate-y-0.5"
                style="background: var(--primary); box-shadow: var(--shadow-primary);">
-                Review Now
+                Revisar ahora
             </a>
         </div>
     </div>

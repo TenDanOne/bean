@@ -27,6 +27,15 @@ def json_attr(value):
 
 
 @register.filter
+def role_es(value):
+    """Etiqueta en español de un rol (owner, admin, manager...). Valores desconocidos pasan tal cual."""
+    from apps.members.models import OrgMembership, WorkspaceMembership
+
+    labels = {**dict(OrgMembership.OrgRole.choices), **dict(WorkspaceMembership.WorkspaceRole.choices)}
+    return labels.get(value, value)
+
+
+@register.filter
 def can(request, permission_key):
     """True when the current workspace membership grants ``permission_key``.
 

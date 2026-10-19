@@ -119,7 +119,7 @@ class TestGrantingIsBoundedByYourOwnRole:
         WorkspaceMembership.objects.create(user=manager, workspace=workspace, workspace_role="manager")
         WorkspaceMembership.objects.create(user=teammate, workspace=workspace, workspace_role="viewer")
 
-        with pytest.raises(ValueError, match="below your own"):
+        with pytest.raises(ValueError, match="inferior al tuyo"):
             set_member_role(organization, teammate, "manager", caller=manager)
 
         assert WorkspaceMembership.objects.get(user=teammate, workspace=workspace).workspace_role == "viewer"
@@ -152,7 +152,7 @@ class TestGrantingIsBoundedByYourOwnRole:
         WorkspaceMembership.objects.create(user=manager, workspace=workspace, workspace_role="manager")
         WorkspaceMembership.objects.create(user=teammate, workspace=workspace, workspace_role="manager")
 
-        with pytest.raises(ValueError, match="at or above your own"):
+        with pytest.raises(ValueError, match="igual o superior al tuyo"):
             set_member_role(organization, teammate, "viewer", caller=manager)
 
 
@@ -163,7 +163,7 @@ class TestOwnershipIsNotGranted:
 
     def test_granting_owner_is_refused_by_the_server(self, organization, owner, teammate, workspace):
         """The picker not offering it is convenience; this is the boundary."""
-        with pytest.raises(ValueError, match="Transfer ownership instead"):
+        with pytest.raises(ValueError, match="Transfiere la propiedad"):
             assign(organization, teammate, workspace, "owner", owner)
 
     def test_an_existing_owner_survives_a_resave(self, organization, owner, teammate, workspace):
@@ -180,7 +180,7 @@ class TestOwnershipIsNotGranted:
         """The case the exemption above must not open: they hold something
         else, so this is a promotion, not a resave."""
         WorkspaceMembership.objects.create(user=teammate, workspace=workspace, workspace_role="editor")
-        with pytest.raises(ValueError, match="Transfer ownership instead"):
+        with pytest.raises(ValueError, match="Transfiere la propiedad"):
             assign(organization, teammate, workspace, "owner", owner)
         membership = WorkspaceMembership.objects.get(user=teammate, workspace=workspace)
         assert membership.workspace_role == "editor"

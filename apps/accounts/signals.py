@@ -19,7 +19,7 @@ def provision_organization_and_workspace(user):
         return
 
     org = Organization.objects.create(
-        name="My Organization",
+        name="Mi organización",
         default_timezone="UTC",
     )
 
@@ -32,8 +32,8 @@ def provision_organization_and_workspace(user):
     # Create a default workspace so the user can start immediately
     workspace = Workspace.objects.create(
         organization=org,
-        name="My Workspace",
-        description="Your default workspace. Rename it anytime.",
+        name="Mi espacio de trabajo",
+        description="Tu espacio de trabajo predeterminado. Renómbralo cuando quieras.",
     )
 
     WorkspaceMembership.objects.create(

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static i18n account allauth %}
 
-{% block title %}Confirm Email - BEAN{% endblock %}
+{% block title %}Confirmar correo - BEAN{% endblock %}
 
 {% block auth_content %}
 <div class="w-full max-w-md px-4">
@@ -11,7 +11,7 @@
             {% icon "envelope" css_class="w-[24px] h-[24px]" %}
         </div>
         <h1 class="text-2xl font-bold tracking-tight" style="color: var(--text-primary);">
-            Confirm email address
+            Confirma tu correo electrónico
         </h1>
     </div>
 
@@ -21,36 +21,36 @@
             {% user_display confirmation.email_address.user as user_display %}
             {% if can_confirm %}
                 <p class="text-sm mb-6 leading-relaxed" style="color: var(--text-secondary);">
-                    Please confirm that
+                    Confirma que
                     <strong style="color: var(--text-primary);">{{ confirmation.email_address.email }}</strong>
-                    is your email address.
+                    es tu correo electrónico.
                 </p>
                 {% url 'account_confirm_email' confirmation.key as action_url %}
                 <form method="post" action="{{ action_url }}">
                     {% csrf_token %}
                     {{ redirect_field }}
                     <button type="submit" class="btn-brand">
-                        Confirm Email
+                        Confirmar correo
                     </button>
                 </form>
             {% else %}
                 <div class="alert-error">
-                    This email address has already been confirmed by a different account.
+                    Este correo ya fue confirmado por otra cuenta.
                 </div>
             {% endif %}
         {% else %}
             <div class="alert-error mb-4">
-                This confirmation link has expired or is invalid.
+                Este enlace de confirmación expiró o no es válido.
             </div>
             <a href="{% url 'account_login' %}" class="btn-brand">
-                Sign In
+                Iniciar sesión
             </a>
         {% endif %}
     </div>
 
     <!-- Footer link -->
     <p class="text-center text-sm mt-6" style="color: var(--text-secondary);">
-        <a href="{% url 'account_login' %}" class="font-semibold hover:underline" style="color: var(--primary);">Back to sign in</a>
+        <a href="{% url 'account_login' %}" class="font-semibold hover:underline" style="color: var(--primary);">Volver a iniciar sesión</a>
     </p>
 </div>
 {% endblock %}

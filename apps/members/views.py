@@ -477,7 +477,7 @@ def update_member_role(request, membership_id):
     """
     membership = get_object_or_404(OrgMembership, id=membership_id, organization=request.org)
     if not can_manage_member(request.user, request.org, membership.user):
-        raise PermissionDenied("You can only change the role of people ranked below you in the brands you manage.")
+        raise PermissionDenied("Solo puedes cambiar el rol de personas por debajo de ti en las marcas que administras.")
     new_role = request.POST.get("workspace_role") or request.POST.get("role")
 
     try:
@@ -550,7 +550,9 @@ def manage_workspaces(request, membership_id):
     """
     membership = get_object_or_404(OrgMembership, id=membership_id, organization=request.org)
     if not can_manage_member(request.user, request.org, membership.user):
-        raise PermissionDenied("You can only change the brands of people ranked below you in the brands you manage.")
+        raise PermissionDenied(
+            "Solo puedes cambiar las marcas de personas por debajo de ti en las marcas que administras."
+        )
     org = request.org
     org_workspaces = Workspace.objects.filter(organization=org, is_archived=False).order_by("name")
 
@@ -653,7 +655,7 @@ def manage_channels(request, workspace_id, membership_id):
 
     if not can_assign_to(assigner, target):
         raise PermissionDenied(
-            "You can only assign channels to members below your own role, and only channels you hold yourself."
+            "Solo puedes asignar canales a miembros con un rol inferior al tuyo, y solo canales que tú mismo tienes."
         )
 
     saved = False

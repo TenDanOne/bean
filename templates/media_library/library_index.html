@@ -1,7 +1,7 @@
 {% extends "layouts/workspace_settings.html" %}
 {% load static %}
 
-{% block title %}Media Library - {{ workspace.name }}{% endblock %}
+{% block title %}Biblioteca de medios - {{ workspace.name }}{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -96,7 +96,7 @@
 </style>
 {% endblock %}
 
-{% block page_title %}Media Library{% endblock %}
+{% block page_title %}Biblioteca de medios{% endblock %}
 
 {% block content %}
 <div x-data="{ ...mediaLibrary(), folderSidebarOpen: false }" class="flex flex-1 min-h-0 -m-3 sm:-m-4 lg:-m-6 -mb-3 sm:-mb-4 lg:-mb-6">
@@ -106,7 +106,7 @@
           class="lg:hidden fixed bottom-4 left-4 z-40 flex items-center gap-2 px-3 py-2.5 bg-app border border-app rounded-xl shadow-lg text-sm font-medium text-app-secondary hover:bg-app-1 transition-colors cursor-pointer"
           x-show="!detailOpen">
     {% icon "folder" css_class="w-4 h-4" %}
-    Folders
+   Carpetas
   </button>
 
   <!-- Mobile folder sidebar backdrop -->
@@ -123,11 +123,11 @@
        @click="if (window.innerWidth < 1024 && $event.target.closest('a')) { folderSidebarOpen = false }">
     <div class="p-4">
       <div class="flex items-center justify-between mb-3">
-        <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-tertiary, #78716C);">Folders</span>
+        <span class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-tertiary, #78716C);">Carpetas</span>
         <button @click="showNewFolder = true"
                 class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-app-2 cursor-pointer transition-colors"
                 style="color: var(--text-tertiary, #78716C);"
-                title="New folder">
+                title="Nueva carpeta">
           {% icon "plus" css_class="w-4 h-4" %}
         </button>
       </div>
@@ -136,14 +136,14 @@
       <a href="{% url 'media_library:index' workspace_id=workspace.id %}"
          class="ml-folder-item flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer {% if not current_folder %}active{% endif %}">
         {% icon "folder" css_class="w-4 h-4 flex-shrink-0" %}
-        All Media
+       Todos los archivos
       </a>
 
       <!-- Starred -->
       <a href="{% url 'media_library:index' workspace_id=workspace.id %}?starred=1"
          class="ml-folder-item flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer {% if is_starred %}active{% endif %}">
         {% icon "star" css_class="w-4 h-4 flex-shrink-0" %}
-        Starred
+       Destacados
       </a>
 
       <div class="my-3 border-t" style="border-color: var(--surface-2, #F5F5F4);"></div>
@@ -175,7 +175,7 @@
         <input type="search"
                name="q"
                value="{{ query }}"
-               placeholder="Search media..."
+               placeholder="Buscar archivos..."
                class="input-focus w-full pl-9 pr-4 py-2 text-sm outline-none"
                style="border-color: var(--border, #E7E5E4); background: var(--surface-0, #FFF);"
                hx-get="{% url 'media_library:index' workspace_id=workspace.id %}{% if current_folder %}?folder={{ current_folder }}{% endif %}"
@@ -187,7 +187,7 @@
       <!-- Type filters -->
       <div class="flex items-center gap-1.5 scroll-x-hidden flex-nowrap">
         <a href="{% url 'media_library:index' workspace_id=workspace.id %}{% if current_folder %}?folder={{ current_folder }}{% endif %}"
-           class="ml-filter-pill {% if not current_type %}active{% endif %}">All</a>
+           class="ml-filter-pill {% if not current_type %}active{% endif %}">Todos</a>
         {% for type_val, type_label in file_types %}
         <a href="{% url 'media_library:index' workspace_id=workspace.id %}?type={{ type_val }}{% if current_folder %}&folder={{ current_folder }}{% endif %}"
            class="ml-filter-pill {% if current_type == type_val %}active{% endif %}">{{ type_label }}</a>
@@ -204,12 +204,12 @@
               hx-trigger="change"
               hx-target="#asset-grid"
               hx-include="[name='q'], [name='sort']">
-        <option value="-date" {% if current_sort == '-date' %}selected{% endif %}>Newest first</option>
-        <option value="date" {% if current_sort == 'date' %}selected{% endif %}>Oldest first</option>
-        <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name A-Z</option>
-        <option value="-name" {% if current_sort == '-name' %}selected{% endif %}>Name Z-A</option>
-        <option value="-size" {% if current_sort == '-size' %}selected{% endif %}>Largest first</option>
-        <option value="size" {% if current_sort == 'size' %}selected{% endif %}>Smallest first</option>
+        <option value="-date" {% if current_sort == '-date' %}selected{% endif %}>Más recientes primero</option>
+        <option value="date" {% if current_sort == 'date' %}selected{% endif %}>Más antiguos primero</option>
+        <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Nombre A-Z</option>
+        <option value="-name" {% if current_sort == '-name' %}selected{% endif %}>Nombre Z-A</option>
+        <option value="-size" {% if current_sort == '-size' %}selected{% endif %}>Más grandes primero</option>
+        <option value="size" {% if current_sort == 'size' %}selected{% endif %}>Más pequeños primero</option>
       </select>
 
       <!-- View toggle -->
@@ -230,7 +230,7 @@
       <button @click="$refs.fileInput.click()"
               class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150 cursor-pointer">
         {% icon "plus" css_class="w-4 h-4" %}
-        Upload
+       Subir
       </button>
       <input type="file" x-ref="fileInput" @change="handleFiles($event.target.files)" multiple
              accept="{{ accepted_file_types }}" class="hidden">
@@ -252,8 +252,8 @@
         <template x-if="!uploading">
           <div>
             {% icon "cloud-arrow-up" css_class="w-10 h-10 mx-auto mb-3" %}
-            <p class="text-sm font-medium" style="color: var(--text-secondary, #57534E);">Drop files here to upload</p>
-            <p class="text-xs mt-1" style="color: var(--text-ghost, #A8A29E);">Images up to 20MB, videos up to 1GB</p>
+            <p class="text-sm font-medium" style="color: var(--text-secondary, #57534E);">Suelta los archivos aquí para subirlos</p>
+            <p class="text-xs mt-1" style="color: var(--text-ghost, #A8A29E);">Imágenes de hasta 20 MB, videos de hasta 1 GB</p>
           </div>
         </template>
         <template x-if="uploading">
@@ -270,8 +270,8 @@
                     <div class="ml-progress-fill" :style="'width: ' + (file.progress || 0) + '%'"></div>
                   </div>
                 </div>
-                <span x-show="file.status === 'complete'" class="text-xs font-semibold" style="color: var(--success-500, #22C55E);">Done</span>
-                <span x-show="file.status === 'error'" class="text-xs font-semibold" style="color: var(--error-500, #EF4444);" x-text="file.error || 'Failed'"></span>
+                <span x-show="file.status === 'complete'" class="text-xs font-semibold" style="color: var(--success-500, #22C55E);">Listo</span>
+                <span x-show="file.status === 'error'" class="text-xs font-semibold" style="color: var(--error-500, #EF4444);" x-text="file.error || 'Error'"></span>
               </div>
             </template>
           </div>
@@ -348,7 +348,7 @@ function mediaLibrary() {
     startUpload(files) {
       const maxFiles = {{ max_bulk_upload }};
       if (files.length > maxFiles) {
-        alert(`Maximum ${maxFiles} files per upload.`);
+        alert(`Máximo ${maxFiles} archivos por carga.`);
         files = files.slice(0, maxFiles);
       }
 
@@ -387,7 +387,7 @@ function mediaLibrary() {
             this.uploadQueue[index].progress = 100;
           } else {
             this.uploadQueue[index].status = 'error';
-            this.uploadQueue[index].error = 'Upload failed';
+            this.uploadQueue[index].error = 'Falló la carga';
           }
           if (completed === total) {
             setTimeout(() => {
@@ -401,7 +401,7 @@ function mediaLibrary() {
         xhr.addEventListener('error', () => {
           completed++;
           this.uploadQueue[index].status = 'error';
-          this.uploadQueue[index].error = 'Network error';
+          this.uploadQueue[index].error = 'Error de red';
           if (completed === total) {
             setTimeout(() => {
               this.uploading = false;

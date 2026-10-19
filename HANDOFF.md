@@ -95,3 +95,15 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - Railway necesita `PLATFORM_FACEBOOK_APP_SECRET` o los callbacks de Meta responden 503.
 - Siguiente: brechas de TikTok T1-T5 (docs/APP-REVIEW.md). Después: el resto del español (calendario, composer, aprobaciones, inbox, ajustes), el paso 3 (pulido visual), M1 (recortar scopes de Meta) y M5 (guardar el user id de Meta al conectar).
 - Tests locales: Postgres 17 con la credencial local de simu vía DB_USER/DB_PASSWORD (sin guardarla).
+
+### 2026-10-18 (cont.) — TikTok y español completo
+- TikTok:
+  - Hecho: T1 (abortar si falla creator_info; 401/403 sin reintento), T2 parcial (aviso de duración máxima), T3 (ya existía), T4 (consentimiento junto al botón).
+  - Pendiente: T5 «procesando→publicado», que necesita un estado en PlatformPost, una migración y sondeo en el engine.
+- UI completa en español sin i18n:
+  - Etiquetas de choices traducidas con 6 migraciones de solo AlterField: approvals 0004, composer 0021, inbox 0006, media_library 0004, members 0004, notifications 0005.
+  - Filtro `role_es` en common_extras.
+  - Sin traducir: CSVImportJob.Status (salvo `failed`), choices que solo ve el admin y las consultas de Unsplash.
+- Juez: PASA. pytest 1511 passed / 1 preexistente; ruff y mypy limpios.
+- Railway: el Custom Start Command de la UI tiene prioridad sobre el CMD del Dockerfile, así que no hay garantía de que corra migrate. Tras el deploy, revisar en Deploy Logs que aparezca «Applying ...»; si no, aplicar las migraciones a mano (ver sesión bean-a9).
+- Siguiente: paso 3 (pulido visual), M1/M5 de Meta y T5.

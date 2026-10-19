@@ -1,26 +1,26 @@
 {% extends "layouts/workspace_settings.html" %}
-{% block title %}Client Portal - {{ request.workspace.name }} - BEAN{% endblock %}
+{% block title %}Portal de clientes - {{ request.workspace.name }} - BEAN{% endblock %}
 {% block content %}
 <div x-data="{ showInviteModal: false }">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h2 class="text-xl font-semibold" style="color: var(--text-primary);">Client Portal</h2>
+            <h2 class="text-xl font-semibold" style="color: var(--text-primary);">Portal de clientes</h2>
             <p class="text-sm mt-1" style="color: var(--text-tertiary);">
-                Invite external clients to review and approve posts.
+                Invita a clientes externos a revisar y aprobar publicaciones.
             </p>
         </div>
         <button @click="showInviteModal = true"
                 class="btn-opacity px-5 py-2 text-sm font-medium rounded-full cursor-pointer transition-colors"
                 style="background: var(--primary); color: var(--on-primary);">
-            Invite Client
+            Invitar cliente
         </button>
     </div>
 
     <!-- Active Clients -->
     <div style="background: var(--surface-0); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden;" class="mb-8">
         <div class="px-6 py-4" style="border-bottom: 1px solid var(--border);">
-            <h3 class="text-sm font-semibold" style="color: var(--text-primary);">Clients ({{ clients_data|length }})</h3>
+            <h3 class="text-sm font-semibold" style="color: var(--text-primary);">Clientes ({{ clients_data|length }})</h3>
         </div>
         <div id="clients-list">
             {% for client in clients_data %}
@@ -30,8 +30,8 @@
                 <div class="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: var(--neutral-100);">
                     {% icon "user-group" css_class="w-[24px] h-[24px]" %}
                 </div>
-                <p class="text-sm font-medium" style="color: var(--text-secondary);">No clients yet</p>
-                <p class="text-xs mt-1" style="color: var(--text-tertiary);">Invite a client to give them portal access for reviewing and approving posts.</p>
+                <p class="text-sm font-medium" style="color: var(--text-secondary);">Aún no hay clientes</p>
+                <p class="text-xs mt-1" style="color: var(--text-tertiary);">Invita a un cliente para darle acceso al portal y que revise y apruebe publicaciones.</p>
             </div>
             {% endfor %}
         </div>
@@ -42,7 +42,7 @@
         {% include "client_portal/admin/partials/pending_invites_section.html" %}
     </div>
 
-    <!-- Invite Client Modal -->
+    <!-- Invitar cliente Modal -->
     {% include "client_portal/admin/partials/invite_client_modal.html" %}
 </div>
 {% endblock %}

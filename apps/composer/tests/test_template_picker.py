@@ -61,7 +61,7 @@ class TemplatePickerTests(TestCase):
         body = response.content.decode("utf-8")
         self.assertIn("Launch announcement", body)
         self.assertIn("Weekly digest", body)
-        self.assertNotIn("No templates yet.", body)
+        self.assertNotIn("Aún no hay plantillas.", body)
 
     def test_picker_excludes_other_workspace_templates(self):
         other_workspace = Workspace.objects.create(organization=self.org, name="Other Workspace")
@@ -90,4 +90,4 @@ class TemplatePickerTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8")
-        self.assertIn("No templates yet.", body)
+        self.assertIn("Aún no hay plantillas.", body)

@@ -9,12 +9,12 @@
         <span class="text-app-body">{{ message.assigned_to.get_short_name|default:message.assigned_to.email|truncatechars:12 }}</span>
         {% else %}
         {% icon "user-plus" css_class="w-4 h-4" %}
-        Assign
+        Asignar
         {% endif %}
     </button>
     <div x-show="assignOpen" @click.away="assignOpen = false" x-cloak x-transition
          class="absolute right-0 top-full mt-1 bg-app rounded-lg shadow-lg ring-1 ring-app py-1 z-50 min-w-[180px] max-h-[220px] overflow-y-auto">
-        <!-- Unassign option -->
+        <!-- Quitar asignación option -->
         {% if message.assigned_to %}
         <button hx-post="{% url 'inbox:assign' workspace_id=workspace.id message_id=message.id %}"
                 hx-vals='{"assigned_to": ""}'
@@ -23,7 +23,7 @@
                 @click="assignOpen = false"
                 class="w-full text-left px-3 py-2 text-[12px] text-app-tertiary hover:bg-app-1 transition-colors flex items-center gap-2">
             {% icon "xmark" css_class="w-3.5 h-3.5" %}
-            Unassign
+            Quitar asignación
         </button>
         <div class="border-t border-app-subtle my-0.5"></div>
         {% endif %}

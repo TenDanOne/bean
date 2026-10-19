@@ -2,7 +2,7 @@
 <div class="a-card a-card-hover" style="padding: 20px; display: flex; gap: 18px; flex-wrap: wrap; align-items: stretch; height: 100%;">
     <div style="flex: 1 1 150px; min-width: 140px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
         <div>
-            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Engagement rate</div>
+            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">Tasa de interacción</div>
             <div style="display: flex; align-items: flex-end; gap: 12px;">
                 <span style="font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); line-height: 0.95;">{{ engagement.rate.value|fmt_metric:"percent" }}</span>
                 <span class="a-delta {{ engagement.rate.delta|delta_color }}" style="font-size: 12.5px; padding: 3px 9px;">{{ engagement.rate.delta|fmt_signed }}</span>

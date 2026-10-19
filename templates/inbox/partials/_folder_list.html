@@ -25,7 +25,7 @@ publication, and putting it first would bury the real work.
         {% endcomment %}
         <label class="flex-shrink-0 flex items-center cursor-pointer"
                x-data="{ ids: {{ folder.message_ids|json_list }} }"
-               title="Select all {{ folder.message_ids|length }} comments in this publication">
+               title="Seleccionar los {{ folder.message_ids|length }} comentarios de esta publicación">
             {% comment %}
             Reassigning `selected` rather than mutating it: Alpine tracks the
             reference, so a Set mutated in place updates nothing and the bulk bar
@@ -67,17 +67,17 @@ publication, and putting it first would bury the real work.
                 class="flex-1 min-w-0 text-left py-3 px-1 -ml-1 rounded-lg cursor-pointer">
             <span class="block text-sm font-medium truncate text-app">{{ folder.label }}</span>
             <span class="block text-xs text-app-tertiary mt-0.5">
-                {{ folder.messages|length }} comment{{ folder.messages|length|pluralize }}
+                {{ folder.messages|length }} comentario{{ folder.messages|length|pluralize }}
                 {% if folder.published_at %}
                 {% comment %}
                 When the publication went out, not when someone commented. Two
                 comments on a video from last week means something different
                 from the same two on one from two years ago.
                 {% endcomment %}
-                · <span title="Published {{ folder.published_at|date:'N j, Y' }}">{{ folder.published_at|date:"M j, Y" }}</span>
+                · <span title="Publicado el {{ folder.published_at|date:'j/m/Y' }}">{{ folder.published_at|date:"j/m/Y" }}</span>
                 {% endif %}
                 {% if folder.unread %}
-                · <span class="font-semibold text-app-brand-deep">{{ folder.unread }} unread</span>
+                · <span class="font-semibold text-app-brand-deep">{{ folder.unread }} sin leer</span>
                 {% endif %}
             </span>
         </button>
@@ -85,14 +85,14 @@ publication, and putting it first would bury the real work.
         {% if folder.url %}
         <a href="{{ folder.url }}" target="_blank" rel="noopener"
            class="flex-shrink-0 p-1 rounded text-app-ghost hover:text-app-secondary transition-colors"
-           title="Open on the platform">
+           title="Abrir en la plataforma">
             {% icon "arrow-up-right-from-square" css_class="w-3.5 h-3.5" %}
         </a>
         {% endif %}
     </div>
     {% empty %}
     <div class="px-4 py-10 text-center">
-        <p class="text-sm text-app-tertiary">Nothing to answer right now.</p>
+        <p class="text-sm text-app-tertiary">No hay nada por responder por ahora.</p>
     </div>
     {% endfor %}
 </div>

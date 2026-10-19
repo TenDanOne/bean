@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}Inbox - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Bandeja social - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -131,7 +131,7 @@
     <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-3 border-b border-app flex-shrink-0">
         <div class="flex items-center gap-3 sm:gap-4">
-            <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Inbox</h1>
+            <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Bandeja social</h1>
             <div class="flex items-center gap-1 bg-app-1 rounded-full p-0.5">
                 <a href="{% url 'inbox:feed' workspace_id=workspace.id %}"
                    class="inbox-tab"
@@ -141,7 +141,7 @@
                    hx-target="#inbox-message-list"
                    hx-swap="innerHTML"
                    hx-include="[name='q'],[name='platform'],[name='type'],[name='status'],[name='sentiment']"
-                   hx-push-url="true">All</a>
+                   hx-push-url="true">Todos</a>
                 <a href="{% url 'inbox:feed' workspace_id=workspace.id %}?view=mine"
                    class="inbox-tab"
                    :class="{ active: currentView === 'mine' }"
@@ -150,7 +150,7 @@
                    hx-target="#inbox-message-list"
                    hx-swap="innerHTML"
                    hx-include="[name='q'],[name='platform'],[name='type'],[name='status'],[name='sentiment']"
-                   hx-push-url="true">My Queue</a>
+                   hx-push-url="true">Mi cola</a>
                 <a href="{% url 'inbox:feed' workspace_id=workspace.id %}?view=unassigned"
                    class="inbox-tab"
                    :class="{ active: currentView === 'unassigned' }"
@@ -159,20 +159,20 @@
                    hx-target="#inbox-message-list"
                    hx-swap="innerHTML"
                    hx-include="[name='q'],[name='platform'],[name='type'],[name='status'],[name='sentiment']"
-                   hx-push-url="true">Unassigned</a>
+                   hx-push-url="true">Sin asignar</a>
             </div>
         </div>
         <div class="flex items-center gap-2">
             <a href="{% url 'inbox:saved_replies' workspace_id=workspace.id %}"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-app-secondary bg-app border border-app rounded-full hover:border-app-hover hover:bg-app-1 transition-all duration-150"
-               title="Saved Replies">
+               title="Respuestas guardadas">
                 {% icon "bookmark" css_class="w-3.5 h-3.5" %}
-                <span class="hidden sm:inline">Saved Replies</span>
+                <span class="hidden sm:inline">Respuestas guardadas</span>
             </a>
             {% if sla_config %}
             <a href="{% url 'inbox:sla_config' workspace_id=workspace.id %}"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-app-secondary bg-app border border-app rounded-full hover:border-app-hover hover:bg-app-1 transition-all duration-150"
-               title="SLA Settings">
+               title="Configuración de SLA">
                 {% icon "clock" css_class="w-3.5 h-3.5" %}
                 <span class="hidden sm:inline">SLA</span>
             </a>
@@ -196,10 +196,10 @@
 
             <!-- Bulk action bar -->
             <div x-show="selectedCount > 0" x-cloak class="bulk-bar">
-                <span x-text="selectedCount + ' selected'"></span>
-                <button @click="bulkAction('mark_read')">Mark Read</button>
-                <button @click="bulkAction('resolve')">Resolve</button>
-                <button @click="bulkAction('archive')">Archive</button>
+                <span x-text="selectedCount + ' seleccionados'"></span>
+                <button @click="bulkAction('mark_read')">Marcar como leído</button>
+                <button @click="bulkAction('resolve')">Resolver</button>
+                <button @click="bulkAction('archive')">Archivar</button>
                 <button @click="closeBulk()" class="ml-auto" style="border: none;">
                     {% icon "xmark" css_class="w-4 h-4" %}
                 </button>
@@ -214,13 +214,13 @@
                 <button @click="activePanel = 'list'"
                         class="flex items-center gap-1.5 text-sm font-medium text-app-secondary hover:text-app transition-colors cursor-pointer">
                     {% icon "chevron-left" css_class="w-[16px] h-[16px]" %}
-                    Back
+                    Volver
                 </button>
             </div>
             <!-- Empty state shown when no message is selected -->
             <div class="inbox-empty-detail">
                 {% icon "comment" css_class="w-12 h-12" %}
-                <p class="text-sm font-medium" style="color: var(--text-tertiary);">Select a message to view details</p>
+                <p class="text-sm font-medium" style="color: var(--text-tertiary);">Selecciona un mensaje para ver los detalles</p>
             </div>
         </div>
 
@@ -317,12 +317,12 @@ function inboxController() {
             const diff = deadline - now;
             if (diff < 0) {
                 const mins = Math.floor(Math.abs(diff) / 60000);
-                if (mins < 60) return mins + 'm overdue';
-                return Math.floor(mins / 60) + 'h overdue';
+                if (mins < 60) return mins + ' min de retraso';
+                return Math.floor(mins / 60) + ' h de retraso';
             }
             const mins = Math.floor(diff / 60000);
-            if (mins < 60) return mins + 'm left';
-            return Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm left';
+            if (mins < 60) return mins + ' min restantes';
+            return Math.floor(mins / 60) + ' h ' + (mins % 60) + ' min restantes';
         }
     };
 }

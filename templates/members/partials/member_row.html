@@ -1,3 +1,4 @@
+{% load common_extras %}
 <div class="px-6 py-4 group" id="member-{{ member.membership.id }}"
      style="border-bottom: 1px solid var(--border);"
      x-data="{ showActions: false, showWorkspaces: false, showChannels: false, menuStyle: {} }">
@@ -16,7 +17,7 @@
                     {{ member.user.display_name }}
                 </span>
                 {% if member.user.id == current_user.id %}
-                <span class="text-xs px-1.5 py-0.5 rounded" style="background: var(--neutral-100); color: var(--text-tertiary);">you</span>
+                <span class="text-xs px-1.5 py-0.5 rounded" style="background: var(--neutral-100); color: var(--text-tertiary);">tú</span>
                 {% endif %}
             </div>
             <div class="text-xs truncate" style="color: var(--text-tertiary);">{{ member.user.email }}</div>
@@ -33,13 +34,13 @@
         {% endcomment %}
         <div class="flex-shrink-0">
             {% if member.membership.org_role == "owner" %}
-            <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: #FEF3C7; color: #92400E;">Owner</span>
+            <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background: #FEF3C7; color: #92400E;">Propietario</span>
             {% elif member.role %}
-            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-app-2 text-app-secondary">{{ member.role|capfirst }}</span>
+            <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-app-2 text-app-secondary">{{ member.role|role_es }}</span>
             {% else %}
             {% comment %} In the org, but not on any brand yet. {% endcomment %}
             <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-app-2 text-app-ghost"
-                  title="They are not on any brand yet. Add them under Brands to give them a role.">No access</span>
+                  title="Aún no está en ninguna marca. Agrégalo en Marcas para darle un rol.">Sin acceso</span>
             {% endif %}
         </div>
 
@@ -74,7 +75,7 @@
                       hx-swap="outerHTML"
                       class="px-3 py-2" style="border-bottom: 1px solid var(--border);">
                     {% csrf_token %}
-                    <label class="text-xs font-medium block mb-1" style="color: var(--text-secondary);">Role</label>
+                    <label class="text-xs font-medium block mb-1" style="color: var(--text-secondary);">Rol</label>
                     <div class="flex gap-2">
                         <select name="workspace_role" class="text-xs flex-1 px-2 py-1 rounded outline-none"
                                 style="border-color: var(--border); background: var(--surface-0); color: var(--text-primary);">
@@ -85,11 +86,11 @@
                         <button type="submit"
                                 class="text-xs px-2 py-1 rounded font-medium cursor-pointer"
                                 style="background: var(--neutral-100); color: var(--text-primary);">
-                            Save
+                            Guardar
                         </button>
                     </div>
                     <p class="text-[11px] mt-1.5 leading-snug" style="color: var(--text-tertiary);">
-                        {{ role_help|default:"Applies to every brand they work on." }}
+                        {{ role_help|default:"Se aplica a todas las marcas en las que trabaja." }}
                     </p>
                 </form>
 
@@ -100,7 +101,7 @@
                         hx-swap="innerHTML"
                         class="btn-neutral-surface w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors"
                         style="color: var(--text-primary);">
-                    Brands they work on
+                    Marcas en las que trabaja
                 </button>
 
                 {% comment %}
@@ -115,12 +116,12 @@
                 <form hx-post="{% url 'members:remove' membership_id=member.membership.id %}"
                       hx-target="#member-{{ member.membership.id }}"
                       hx-swap="delete"
-                      hx-confirm="Remove {{ member.user.display_name }} from the organization? This will also remove them from all workspaces.">
+                      hx-confirm="¿Quitar a {{ member.user.display_name }} de la organización? También se le quitará de todos los espacios de trabajo.">
                     {% csrf_token %}
                     <button type="submit"
                             class="btn-danger-soft-bg w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors"
                             style="color: #DC2626;">
-                        Remove from Organization
+                        Quitar de la organización
                     </button>
                 </form>
                 {% endif %}
@@ -150,7 +151,7 @@
                 hx-target="#channel-modal-body-{{ member.membership.id }}"
                 @click="showChannels = true"
                 class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-app-2 text-app-secondary hover:bg-app-3 transition-colors cursor-pointer"
-                title="Manage channel access in {{ wm.workspace.name }}">
+                title="Gestionar acceso a canales en {{ wm.workspace.name }}">
             {% if wm.workspace.icon %}
             <img src="{{ wm.workspace.icon.url }}" alt="" class="w-4 h-4 rounded-full object-cover">
             {% else %}
@@ -161,7 +162,7 @@
         </button>
         {% else %}
         <span class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-app-2 text-app-secondary"
-              title="{{ wm.workspace.name }} ({{ wm.workspace_role }})">
+              title="{{ wm.workspace.name }} ({{ wm.workspace_role|role_es }})">
             {% if wm.workspace.icon %}
             <img src="{{ wm.workspace.icon.url }}" alt="" class="w-4 h-4 rounded-full object-cover">
             {% else %}
@@ -187,16 +188,16 @@
             <div @click.outside="showChannels = false"
                  @keydown.escape.window="showChannels = false"
                  class="relief-float w-full max-w-lg p-5"
-                 role="dialog" aria-modal="true" aria-label="Channel access">
+                 role="dialog" aria-modal="true" aria-label="Acceso a canales">
                 <div class="flex items-start justify-between mb-4">
-                    <h3 class="text-base font-semibold text-app">Channel access</h3>
+                    <h3 class="text-base font-semibold text-app">Acceso a canales</h3>
                     <button type="button" @click="showChannels = false"
-                            class="bbs-btn bbs-btn-ghost p-1.5" aria-label="Close">
+                            class="bbs-btn bbs-btn-ghost p-1.5" aria-label="Cerrar">
                         {% icon "xmark" css_class="w-4 h-4" %}
                     </button>
                 </div>
                 <div id="channel-modal-body-{{ member.membership.id }}">
-                    <p class="text-sm text-app-tertiary">Loading…</p>
+                    <p class="text-sm text-app-tertiary">Cargando…</p>
                 </div>
             </div>
         </div>
@@ -213,14 +214,14 @@
                  style="background: var(--surface-0);">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base font-semibold" style="color: var(--text-primary);">
-                        Workspaces - {{ member.user.display_name }}
+                        Espacios de trabajo - {{ member.user.display_name }}
                     </h3>
                     <button @click="showWorkspaces = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                         {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                     </button>
                 </div>
                 <div id="ws-modal-content-{{ member.membership.id }}">
-                    <p class="text-sm" style="color: var(--text-tertiary);">Loading...</p>
+                    <p class="text-sm" style="color: var(--text-tertiary);">Cargando...</p>
                 </div>
             </div>
         </div>

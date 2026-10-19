@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}{{ message.sender_name }} - Inbox - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}{{ message.sender_name }} - Bandeja social - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -42,8 +42,8 @@
         const deadline = new Date(new Date(receivedAt).getTime() + this.slaTarget * 60000);
         const diff = deadline - new Date();
         const mins = Math.floor(Math.abs(diff) / 60000);
-        if (diff < 0) return mins < 60 ? mins + 'm overdue' : Math.floor(mins/60) + 'h overdue';
-        return mins < 60 ? mins + 'm left' : Math.floor(mins/60) + 'h ' + (mins%60) + 'm left';
+        if (diff < 0) return mins < 60 ? mins + ' min de retraso' : Math.floor(mins/60) + ' h de retraso';
+        return mins < 60 ? mins + ' min restantes' : Math.floor(mins/60) + ' h ' + (mins%60) + ' min restantes';
     }
 }">
     <!-- Back link -->
@@ -51,7 +51,7 @@
         <a href="{% url 'inbox:feed' workspace_id=workspace.id %}"
            class="inline-flex items-center gap-1.5 text-[13px] font-medium text-app-tertiary hover:text-app-body transition-colors">
             {% icon "chevron-left" css_class="w-4 h-4" %}
-            Back to Inbox
+            Volver a la bandeja
         </a>
     </div>
     <div id="inbox-detail-panel" class="flex-1" style="height: calc(100% - 41px);">

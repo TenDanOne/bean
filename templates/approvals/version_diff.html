@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Version History - {{ post.caption_snippet }}{% endblock %}
+{% block title %}Historial de versiones - {{ post.caption_snippet }}{% endblock %}
 
 {% block content %}
 <div>
@@ -8,7 +8,7 @@
             {% icon "chevron-left" css_class="w-5 h-5" %}
         </a>
         <div>
-            <h1 class="text-xl font-bold text-app tracking-tight">Version History</h1>
+            <h1 class="text-xl font-bold text-app tracking-tight">Historial de versiones</h1>
             <p class="text-sm text-app-tertiary mt-0.5">{{ post.caption_snippet }}</p>
         </div>
     </div>
@@ -16,19 +16,19 @@
     <div class="grid grid-cols-12 gap-6">
         <!-- Version list sidebar -->
         <div class="col-span-3">
-            <h3 class="text-[0.8125rem] font-semibold text-app-body mb-3">Versions</h3>
+            <h3 class="text-[0.8125rem] font-semibold text-app-body mb-3">Versiones</h3>
             <div class="space-y-1">
                 {% for v in versions %}
                 {% if v.version_number > 1 %}
                 <a href="{% url 'approvals:version_diff' workspace_id=workspace.id post_id=post.id %}?v1={{ v.version_number|add:"-1" }}&v2={{ v.version_number }}"
                    class="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors {% if version_new and v.version_number == version_new.version_number %}bg-app-2 font-semibold text-app{% else %}text-app-secondary hover:bg-app-1{% endif %}">
                     <span>v{{ v.version_number }}</span>
-                    <span class="text-[0.6875rem] text-app-ghost">{{ v.created_at|date:"M j, g:i A" }}</span>
+                    <span class="text-[0.6875rem] text-app-ghost">{{ v.created_at|date:"j M, H:i" }}</span>
                 </a>
                 {% else %}
                 <div class="flex items-center justify-between px-3 py-2 rounded-lg text-sm {% if version_new and v.version_number == version_new.version_number %}bg-app-2 font-semibold text-app{% else %}text-app-secondary{% endif %}">
-                    <span>v1 <span class="text-[0.6875rem] text-app-ghost">(initial)</span></span>
-                    <span class="text-[0.6875rem] text-app-ghost">{{ v.created_at|date:"M j, g:i A" }}</span>
+                    <span>v1 <span class="text-[0.6875rem] text-app-ghost">(inicial)</span></span>
+                    <span class="text-[0.6875rem] text-app-ghost">{{ v.created_at|date:"j M, H:i" }}</span>
                 </div>
                 {% endif %}
                 {% endfor %}
@@ -45,13 +45,13 @@
                 {% endif %}
                 {% if version_new %}
                 <span class="text-sm font-semibold text-app-strong">v{{ version_new.version_number }}</span>
-                <span class="text-[0.6875rem] text-app-ghost">by {{ version_new.created_by.display_name|default:"Unknown" }}</span>
+                <span class="text-[0.6875rem] text-app-ghost">por {{ version_new.created_by.display_name|default:"Desconocido" }}</span>
                 {% endif %}
             </div>
 
             {% include "approvals/partials/version_diff.html" %}
             {% else %}
-            <p class="text-sm text-app-ghost text-center py-8">No version history available</p>
+            <p class="text-sm text-app-ghost text-center py-8">No hay historial de versiones</p>
             {% endif %}
         </div>
     </div>

@@ -117,18 +117,18 @@ def validate_file(uploaded_file):
     if not sniffed or sniffed not in ALL_ALLOWED_MIMES:
         # Reject. We do not echo back the client-supplied content_type because
         # that's misleading when the magic doesn't match.
-        errors.append("Unsupported or unrecognised file type.")
+        errors.append("Tipo de archivo no admitido o no reconocido.")
         return None, errors
 
     file_type = determine_file_type(sniffed)
     if not file_type:
-        errors.append("Unsupported file type.")
+        errors.append("Tipo de archivo no admitido.")
         return None, errors
 
     max_size = MAX_FILE_SIZES.get(file_type, 20 * 1024 * 1024)
     if uploaded_file.size > max_size:
         max_mb = max_size / (1024 * 1024)
-        errors.append(f"File too large. Maximum size for {file_type} files is {max_mb:.0f}MB.")
+        errors.append(f"Archivo demasiado grande. El tamaño máximo para archivos de {file_type} es {max_mb:.0f} MB.")
 
     return file_type, errors
 

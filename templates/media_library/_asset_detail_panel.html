@@ -39,7 +39,7 @@
        class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-full border transition-all btn-surface-1"
        style="border-color: var(--border, #E7E5E4); color: var(--text-secondary, #57534E);">
       {% icon "download" css_class="w-3.5 h-3.5" %}
-      Download
+     Descargar
     </a>
     
     {% if not asset.is_shared %}
@@ -47,7 +47,7 @@
             style="color: var(--error-500, #EF4444);"
             @click="showDeleteConfirm = true">
       {% icon "trash" css_class="w-3.5 h-3.5" %}
-      Delete
+     Eliminar
     </button>
 
     <!-- Delete confirmation modal -->
@@ -60,13 +60,13 @@
              style="background: var(--error-50, #FEF2F2);">
           {% icon "trash" css_class="w-5 h-5" %}
         </div>
-        <h3 class="text-base font-semibold text-center mb-1" style="color: var(--text-primary, #1C1917);">Delete asset?</h3>
-        <p class="text-sm text-center mb-5" style="color: var(--text-secondary, #57534E);">This cannot be undone. The file will be permanently removed.</p>
+        <h3 class="text-base font-semibold text-center mb-1" style="color: var(--text-primary, #1C1917);">¿Eliminar recurso?</h3>
+        <p class="text-sm text-center mb-5" style="color: var(--text-secondary, #57534E);">Esta acción no se puede deshacer. El archivo se eliminará de forma permanente.</p>
         <div class="flex gap-2">
           <button type="button" @click="showDeleteConfirm = false"
                   class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer btn-surface-2"
                   style="color: var(--text-secondary, #57534E); border: 1px solid var(--border, #E7E5E4);">
-            Cancel
+           Cancelar
           </button>
           <button type="button"
                   class="flex-1 px-4 py-2 text-sm font-semibold text-app-inverse rounded-lg transition-colors cursor-pointer btn-error-darker"
@@ -77,7 +77,7 @@
                   hx-swap="innerHTML"
                   @htmx:after-request.camel="if ($event.detail.successful) { detailOpen = false; htmx.ajax('GET', window.location.href, {target: '#asset-grid', swap: 'innerHTML'}); }"
                   >
-            Delete
+           Eliminar
           </button>
         </div>
       </div>
@@ -90,35 +90,35 @@
 
     <!-- Metadata -->
     <div class="px-5 py-4">
-      <h3 class="text-xs font-bold uppercase tracking-wider mb-3" style="color: var(--text-tertiary, #78716C);">Details</h3>
+      <h3 class="text-xs font-bold uppercase tracking-wider mb-3" style="color: var(--text-tertiary, #78716C);">Detalles</h3>
       <dl class="space-y-2.5">
         <div class="flex justify-between">
-          <dt class="text-xs" style="color: var(--text-tertiary);">File size</dt>
+          <dt class="text-xs" style="color: var(--text-tertiary);">Tamaño del archivo</dt>
           <dd class="text-xs font-medium" style="color: var(--text-primary);">{{ asset.human_file_size }}</dd>
         </div>
         <div class="flex justify-between">
-          <dt class="text-xs" style="color: var(--text-tertiary);">Format</dt>
+          <dt class="text-xs" style="color: var(--text-tertiary);">Formato</dt>
           <dd class="text-xs font-medium" style="color: var(--text-primary);">{{ asset.mime_type }}</dd>
         </div>
         {% if asset.width and asset.height %}
         <div class="flex justify-between">
-          <dt class="text-xs" style="color: var(--text-tertiary);">Dimensions</dt>
+          <dt class="text-xs" style="color: var(--text-tertiary);">Dimensiones</dt>
           <dd class="text-xs font-medium" style="color: var(--text-primary);">{{ asset.width }} &times; {{ asset.height }}px</dd>
         </div>
         {% endif %}
         {% if asset.duration_seconds %}
         <div class="flex justify-between">
-          <dt class="text-xs" style="color: var(--text-tertiary);">Duration</dt>
+          <dt class="text-xs" style="color: var(--text-tertiary);">Duración</dt>
           <dd class="text-xs font-medium" style="color: var(--text-primary);">{{ asset.duration_seconds }}s</dd>
         </div>
         {% endif %}
         <div class="flex justify-between">
-          <dt class="text-xs" style="color: var(--text-tertiary);">Uploaded</dt>
+          <dt class="text-xs" style="color: var(--text-tertiary);">Subido</dt>
           <dd class="text-xs font-medium" style="color: var(--text-primary);">{{ asset.created_at|date:"M j, Y g:i A" }}</dd>
         </div>
         {% if asset.uploaded_by %}
         <div class="flex justify-between">
-          <dt class="text-xs" style="color: var(--text-tertiary);">Uploaded by</dt>
+          <dt class="text-xs" style="color: var(--text-tertiary);">Subido por</dt>
           <dd class="text-xs font-medium" style="color: var(--text-primary);">{{ asset.uploaded_by.display_name }}</dd>
         </div>
         {% endif %}
@@ -127,7 +127,7 @@
 
     <!-- Tags -->
     <div class="px-5 py-4 border-t" style="border-color: var(--surface-2, #F5F5F4);">
-      <h3 class="text-xs font-bold uppercase tracking-wider mb-3" style="color: var(--text-tertiary, #78716C);">Tags</h3>
+      <h3 class="text-xs font-bold uppercase tracking-wider mb-3" style="color: var(--text-tertiary, #78716C);">Etiquetas</h3>
       <div id="tag-editor-{{ asset.id }}">
         {% include "media_library/_tag_input.html" %}
       </div>
@@ -136,7 +136,7 @@
     <!-- Version History -->
     <div class="px-5 py-4 border-t" style="border-color: var(--surface-2, #F5F5F4);">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-tertiary, #78716C);">Version History</h3>
+        <h3 class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-tertiary, #78716C);">Historial de versiones</h3>
         {% if versions %}
         <span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background: var(--surface-2); color: var(--text-tertiary);">{{ versions|length }}</span>
         {% endif %}

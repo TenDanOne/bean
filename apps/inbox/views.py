@@ -203,13 +203,13 @@ def _get_workspace(request, workspace_id):
     """Resolve workspace and enforce membership check."""
     workspace = get_object_or_404(Workspace, id=workspace_id)
     if not request.user.is_authenticated:
-        raise PermissionDenied("Authentication required.")
+        raise PermissionDenied("Se requiere autenticación.")
     has_membership = WorkspaceMembership.objects.filter(
         user=request.user,
         workspace=workspace,
     ).exists()
     if not has_membership:
-        raise PermissionDenied("You are not a member of this workspace.")
+        raise PermissionDenied("No eres miembro de este espacio de trabajo.")
     return workspace
 
 
@@ -532,7 +532,7 @@ def send_reply(request, workspace_id, message_id):
 
     form = ReplyForm(request.POST)
     if not form.is_valid():
-        return HttpResponse("Invalid reply.", status=400)
+        return HttpResponse("Respuesta no válida.", status=400)
 
     body = form.cleaned_data["body"]
     account = message.social_account
@@ -558,10 +558,12 @@ def send_reply(request, workspace_id, message_id):
         return _reply_error(request, f"{account.get_platform_display()} doesn't support replying from the inbox.")
     except (ConnectionError, TimeoutError, OSError) as exc:
         logger.exception("Network error sending reply for message %s: %s", message.id, exc)
-        return _reply_error(request, "Couldn't reach the platform. Your reply was not sent — try again.")
+        return _reply_error(
+            request, "No se pudo contactar a la plataforma. Tu respuesta no se envió; inténtalo de nuevo."
+        )
     except Exception:
         logger.exception("Failed to send reply for message %s", message.id)
-        return _reply_error(request, "The platform rejected the reply. It was not sent.")
+        return _reply_error(request, "La plataforma rechazó la respuesta. No se envió.")
 
     InboxReply.objects.create(
         inbox_message=message,
@@ -608,7 +610,7 @@ def add_note(request, workspace_id, message_id):
 
     form = InternalNoteForm(request.POST)
     if not form.is_valid():
-        return HttpResponse("Invalid note.", status=400)
+        return HttpResponse("Nota no válida.", status=400)
 
     InternalNote.objects.create(
         inbox_message=message,
@@ -663,9 +665,11 @@ def toggle_hidden(request, workspace_id, message_id):
     message = get_object_or_404(InboxMessage, id=message_id, workspace=workspace)
 
     if message.deleted_on_platform:
-        return _moderation_error(request, "This comment was deleted, so it can no longer be hidden or restored.")
+        return _moderation_error(
+            request, "Este comentario fue eliminado, por lo que ya no se puede ocultar ni restaurar."
+        )
     if not message.is_moderatable:
-        return _moderation_error(request, "This isn't a comment, so there is nothing to hide on the platform.")
+        return _moderation_error(request, "Esto no es un comentario, así que no hay nada que ocultar en la plataforma.")
 
     account = message.social_account
     hide = not message.is_hidden
@@ -680,10 +684,12 @@ def toggle_hidden(request, workspace_id, message_id):
     except NotImplementedError:
         return _moderation_error(request, f"{account.get_platform_display()} doesn't support hiding comments.")
     except RateLimitError:
-        return _moderation_error(request, "The platform's quota is used up for now. Try again later.")
+        return _moderation_error(request, "La cuota de la plataforma está agotada por ahora. Inténtalo más tarde.")
     except (ConnectionError, TimeoutError, OSError):
         logger.exception("Network error hiding comment %s", message.id)
-        return _moderation_error(request, "Couldn't reach the platform. Nothing was changed — try again.")
+        return _moderation_error(
+            request, "No se pudo contactar a la plataforma. No se cambió nada; inténtalo de nuevo."
+        )
     except APIError as exc:
         logger.exception("Platform refused the moderation change for %s: %s", message.id, exc)
         # The hardest failure to explain is unhiding a comment that had been
@@ -694,12 +700,12 @@ def toggle_hidden(request, workspace_id, message_id):
         if not hide and message.platform == "youtube":
             return _moderation_error(
                 request,
-                "This comment can't be restored through the app. If it was rejected "
-                "(rather than merely hidden for review), YouTube does not let apps bring "
-                "a rejected comment back — restore it at youtube.com/comments in YouTube "
+                "Este comentario no se puede restaurar desde la app. Si fue rechazado "
+                "(y no solo retenido para revisión), YouTube no permite que las apps lo "
+                "recuperen; restáuralo en youtube.com/comments, dentro de YouTube "
                 "Studio.",
             )
-        return _moderation_error(request, f"{account.get_platform_display()} refused: {exc}")
+        return _moderation_error(request, f"{account.get_platform_display()} lo rechazó: {exc}")
 
     # Written only after the platform agreed. Storing it first would show the
     # comment as hidden here while it stayed visible to everyone else, which is
@@ -732,9 +738,11 @@ def delete_comment(request, workspace_id, message_id):
     message = get_object_or_404(InboxMessage, id=message_id, workspace=workspace)
 
     if message.deleted_on_platform:
-        return _moderation_error(request, "This comment was already deleted.")
+        return _moderation_error(request, "Este comentario ya fue eliminado.")
     if not message.is_moderatable:
-        return _moderation_error(request, "This isn't a comment, so there is nothing to delete on the platform.")
+        return _moderation_error(
+            request, "Esto no es un comentario, así que no hay nada que eliminar en la plataforma."
+        )
 
     account = message.social_account
 
@@ -744,16 +752,18 @@ def delete_comment(request, workspace_id, message_id):
     except NotImplementedError:
         return _moderation_error(request, f"{account.get_platform_display()} doesn't support deleting comments.")
     except RateLimitError:
-        return _moderation_error(request, "The platform's quota is used up for now. Try again later.")
+        return _moderation_error(request, "La cuota de la plataforma está agotada por ahora. Inténtalo más tarde.")
     except (ConnectionError, TimeoutError, OSError):
         logger.exception("Network error deleting comment %s", message.id)
-        return _moderation_error(request, "Couldn't reach the platform. Nothing was deleted — try again.")
+        return _moderation_error(
+            request, "No se pudo contactar a la plataforma. No se eliminó nada; inténtalo de nuevo."
+        )
     except APIError as exc:
         logger.exception("Platform refused the deletion of %s: %s", message.id, exc)
         return _moderation_error(
             request,
-            f"{account.get_platform_display()} would not delete this one: {exc} "
-            "Try hiding it instead — it stops being publicly visible and can be undone.",
+            f"{account.get_platform_display()} no permitió eliminarlo: {exc} "
+            "Intenta ocultarlo: deja de ser visible al público y se puede deshacer.",
         )
 
     message.deleted_on_platform = timezone.now()
@@ -782,7 +792,7 @@ def assign_message(request, workspace_id, message_id):
 
     form = AssignForm(request.POST)
     if not form.is_valid():
-        return HttpResponse("Invalid assignment.", status=400)
+        return HttpResponse("Asignación no válida.", status=400)
 
     assigned_to_id = form.cleaned_data.get("assigned_to")
     if assigned_to_id:
@@ -793,13 +803,13 @@ def assign_message(request, workspace_id, message_id):
             .first()
         )
         if not membership:
-            return HttpResponse("User is not a workspace member.", status=400)
+            return HttpResponse("El usuario no es miembro del espacio de trabajo.", status=400)
         # And they must hold this channel. Being in the workspace is not enough:
         # assigning work to someone who cannot open it produces a notification
         # that leads to a 403, which reads as a broken app rather than as a
         # permission boundary. The channel dialog is where access is granted.
         if not can_on_channel(membership, message.social_account, "can_reply"):
-            return HttpResponse("That member isn't assigned to this channel.", status=400)
+            return HttpResponse("Ese miembro no está asignado a este canal.", status=400)
         message.assigned_to = membership.user
     else:
         message.assigned_to = None
@@ -811,8 +821,8 @@ def assign_message(request, workspace_id, message_id):
         notify(
             user=message.assigned_to,
             event_type=EventType.NEW_INBOX_MESSAGE,
-            title=f"You were assigned a {message.get_message_type_display()}",
-            body=f"From {message.sender_name}: {message.body[:100]}",
+            title=f"Se te asignó un {message.get_message_type_display()}",
+            body=f"De {message.sender_name}: {message.body[:100]}",
             data={
                 "message_id": str(message.id),
                 "workspace_id": str(workspace.id),
@@ -842,7 +852,7 @@ def change_status(request, workspace_id, message_id):
 
     form = StatusForm(request.POST)
     if not form.is_valid():
-        return HttpResponse("Invalid status.", status=400)
+        return HttpResponse("Estado no válido.", status=400)
 
     message.status = form.cleaned_data["status"]
     message.save(update_fields=["status"])
@@ -875,7 +885,7 @@ def change_sentiment(request, workspace_id, message_id):
 
     form = SentimentForm(request.POST)
     if not form.is_valid():
-        return HttpResponse("Invalid sentiment.", status=400)
+        return HttpResponse("Sentimiento no válido.", status=400)
 
     message.sentiment = form.cleaned_data["sentiment"]
     message.sentiment_source = InboxMessage.SentimentSource.MANUAL
@@ -900,7 +910,7 @@ def bulk_action(request, workspace_id):
 
     form = BulkActionForm(request.POST)
     if not form.is_valid():
-        return HttpResponse("Invalid bulk action.", status=400)
+        return HttpResponse("Acción masiva no válida.", status=400)
 
     message_ids = form.cleaned_data["message_ids"]
     action = form.cleaned_data["action"]

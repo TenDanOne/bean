@@ -7,7 +7,7 @@
 
     <textarea name="body" rows="2" required
               class="w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent resize-none"
-              placeholder="Write a comment... Use @name to mention someone"></textarea>
+              placeholder="Escribe un comentario... Usa @nombre para mencionar a alguien"></textarea>
 
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -16,12 +16,12 @@
                 <button type="button" @click="visibility = 'external'"
                         :class="visibility === 'external' ? 'bg-stone-900 text-app-inverse' : 'bg-app-2 text-app-tertiary hover:bg-app-3'"
                         class="px-2.5 py-1 text-[0.6875rem] font-semibold rounded-full transition-colors">
-                    Visible to Client
+                    Visible para el cliente
                 </button>
                 <button type="button" @click="visibility = 'internal'"
                         :class="visibility === 'internal' ? 'bg-amber-500 text-app-inverse' : 'bg-app-2 text-app-tertiary hover:bg-app-3'"
                         class="px-2.5 py-1 text-[0.6875rem] font-semibold rounded-full transition-colors">
-                    Internal Only
+                    Solo interno
                 </button>
             </div>
             <input type="hidden" name="visibility" :value="visibility">
@@ -36,7 +36,7 @@
         <button type="submit"
                 class="px-3.5 py-1.5 text-[0.8125rem] font-semibold rounded-full text-app-inverse transition-colors"
                 style="background: var(--primary);">
-            Comment
+            Comentar
         </button>
     </div>
 </form>

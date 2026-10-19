@@ -1,7 +1,7 @@
 {% extends "oauth2_provider/base.html" %}
 {% load i18n static %}
 
-{% block title %}Authorize {{ application.name|default:"an app" }} · BEAN{% endblock title %}
+{% block title %}Autorizar {{ application.name|default:"una aplicación" }} · BEAN{% endblock title %}
 
 {% block content %}
     <div class="bb-head">
@@ -11,8 +11,8 @@
 
     <div class="bb-card">
         {% if not error %}
-            <h1>{% blocktrans with name=application.name|default:"This application" %}Authorize {{ name }}?{% endblocktrans %}</h1>
-            <p>{% blocktrans with name=application.name|default:"This application" %}{{ name }} wants to connect to your BEAN workspace with the following permissions:{% endblocktrans %}</p>
+            <h1>¿Autorizar {{ application.name|default:"esta aplicación" }}?</h1>
+            <p>{{ application.name|default:"Esta aplicación" }} quiere conectarse a tu espacio de trabajo en BEAN con los siguientes permisos:</p>
 
             <form id="authorizationForm" method="post">
                 {% csrf_token %}
@@ -36,15 +36,15 @@
 
                 <div class="bb-actions">
                     {# Cancel must NOT carry name="allow" — its absence signals denial to DOT. #}
-                    <input type="submit" class="bb-btn bb-btn-ghost" value="{% trans 'Cancel' %}"/>
+                    <input type="submit" class="bb-btn bb-btn-ghost" value="Cancelar"/>
                     {# Authorize MUST keep name="allow" — DOT checks for it to detect approval. #}
-                    <input type="submit" class="bb-btn bb-btn-primary" name="allow" value="{% trans 'Authorize' %}"/>
+                    <input type="submit" class="bb-btn bb-btn-primary" name="allow" value="Autorizar"/>
                 </div>
             </form>
 
-            <p class="bb-foot">{% trans "You can revoke this access at any time from BEAN." %}</p>
+            <p class="bb-foot">Puedes revocar este acceso en cualquier momento desde BEAN.</p>
         {% else %}
-            <h1>{% trans "Something went wrong" %}</h1>
+            <h1>Algo salió mal</h1>
             <p>{{ error.error }}</p>
             <p>{{ error.description }}</p>
         {% endif %}

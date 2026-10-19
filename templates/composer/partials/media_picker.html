@@ -40,7 +40,7 @@ Context: assets, workspace, post (optional).
         {% endif %}
         {% if asset.is_shared %}
         <span class="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[10px] font-bold text-app-inverse"
-              style="background: rgba(20,184,166,0.9); letter-spacing: 0.06em;">SHARED</span>
+              style="background: rgba(20,184,166,0.9); letter-spacing: 0.06em;">COMPARTIDO</span>
         {% endif %}
         <div class="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             <span class="text-[10px] text-app-inverse font-medium truncate block">{{ asset.filename }}</span>
@@ -53,7 +53,7 @@ Context: assets, workspace, post (optional).
     <div class="w-14 h-14 mx-auto rounded-2xl bg-app-2 flex items-center justify-center mb-3">
         {% icon "image" css_class="w-6 h-6 text-app-faint" %}
     </div>
-    <p class="text-sm font-medium text-app-tertiary mb-1">No media yet</p>
-    <p class="text-xs text-app-ghost">Upload files to your media library to use them here</p>
+    <p class="text-sm font-medium text-app-tertiary mb-1">Aún no hay archivos</p>
+    <p class="text-xs text-app-ghost">Sube archivos a tu biblioteca de medios para usarlos aquí</p>
 </div>
 {% endif %}

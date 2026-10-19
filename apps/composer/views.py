@@ -51,20 +51,22 @@ logger = logging.getLogger(__name__)
 MAX_CSV_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB cap on CSV planner imports
 
 # Shown when every posting slot within the lookahead horizon is already taken.
-_QUEUE_FULL_MSG = "No open posting slot within the scheduling horizon — add posting slots or free one up."
+_QUEUE_FULL_MSG = (
+    "No hay un horario de publicación libre dentro del periodo de programación: agrega horarios o libera uno."
+)
 
 
 def _get_workspace(request, workspace_id):
     """Resolve workspace and enforce membership check."""
     workspace = get_object_or_404(Workspace, id=workspace_id)
     if not request.user.is_authenticated:
-        raise PermissionDenied("Authentication required.")
+        raise PermissionDenied("Se requiere autenticación.")
     has_membership = WorkspaceMembership.objects.filter(
         user=request.user,
         workspace=workspace,
     ).exists()
     if not has_membership:
-        raise PermissionDenied("You are not a member of this workspace.")
+        raise PermissionDenied("No eres miembro de este espacio de trabajo.")
     return workspace
 
 
@@ -89,7 +91,7 @@ def may_edit_post(request, post):
 
 def _require_may_edit(request, post):
     if not may_edit_post(request, post):
-        raise PermissionDenied("You can only change posts you wrote yourself.")
+        raise PermissionDenied("Solo puedes modificar publicaciones que escribiste tú.")
 
 
 def _is_valid_uuid(value):
@@ -858,7 +860,7 @@ def save_post(request, workspace_id, post_id=None):
         if aware_dt:
             if aware_dt <= timezone.now():
                 return JsonResponse(
-                    {"errors": {"schedule": "Scheduled time must be in the future."}},
+                    {"errors": {"schedule": "La fecha programada debe ser futura."}},
                     status=400,
                 )
             post.scheduled_at = aware_dt
@@ -870,13 +872,13 @@ def save_post(request, workspace_id, post_id=None):
             pending_target = "scheduled"
             initial_status = "scheduled"
         else:
-            return JsonResponse({"errors": {"schedule": "Date and time required."}}, status=400)
+            return JsonResponse({"errors": {"schedule": "Se requiere fecha y hora."}}, status=400)
     elif action == "publish_now":
         # Server-side permission check - only roles with publish_directly can bypass approval
         membership = request.workspace_membership
         perms = membership.effective_permissions if membership else {}
         if not perms.get("publish_directly", False):
-            raise PermissionDenied("You do not have permission to publish directly.")
+            raise PermissionDenied("No tienes permiso para publicar directamente.")
         now_dt = timezone.now()
         post.scheduled_at = now_dt
         post.proposed_publish_at = None
@@ -891,7 +893,9 @@ def save_post(request, workspace_id, post_id=None):
         queue_id = request.POST.get("queue_id")
         queues = _resolve_queues_for_post(queue_id, workspace, request.POST)
         if not queues:
-            return JsonResponse({"errors": {"queue": "No active queue found for the selected channel."}}, status=400)
+            return JsonResponse(
+                {"errors": {"queue": "No se encontró una cola activa para el canal seleccionado."}}, status=400
+            )
         # Queueing assigns real per-platform slots below — drop any proposal.
         post.proposed_publish_at = None
         post.save()
@@ -932,7 +936,9 @@ def save_post(request, workspace_id, post_id=None):
         queue_id = request.POST.get("queue_id")
         queues = _resolve_queues_for_post(queue_id, workspace, request.POST)
         if not queues:
-            return JsonResponse({"errors": {"queue": "No active queue found for the selected channel."}}, status=400)
+            return JsonResponse(
+                {"errors": {"queue": "No se encontró una cola activa para el canal seleccionado."}}, status=400
+            )
         # Queueing assigns real per-platform slots below — drop any proposal.
         post.proposed_publish_at = None
         post.save()
@@ -1141,15 +1147,15 @@ def transition_platform_post(request, workspace_id, post_id, platform_post_id):
     )
     target = (request.POST.get("target_status") or "").strip()
     if not target:
-        return JsonResponse({"error": "target_status required"}, status=400)
+        return JsonResponse({"error": "Se requiere target_status"}, status=400)
 
     membership = request.workspace_membership
     perms = membership.effective_permissions if membership else {}
     approval_states = {"approved", "pending_review", "pending_client", "changes_requested", "rejected"}
     if target in ("scheduled", "publishing") and not perms.get("publish_directly", False):
-        raise PermissionDenied("You do not have permission to schedule this post.")
+        raise PermissionDenied("No tienes permiso para programar esta publicación.")
     if target in approval_states and not perms.get("approve_posts", False) and target != "pending_review":
-        raise PermissionDenied("You do not have permission to make approval decisions.")
+        raise PermissionDenied("No tienes permiso para tomar decisiones de aprobación.")
 
     if pp.status == target:
         return JsonResponse({"ok": True, "status": pp.status, "noop": True})
@@ -1406,11 +1412,11 @@ def thumbnail_upload(request, workspace_id):
     uploaded_file = request.FILES.get("file")
 
     if not uploaded_file:
-        return JsonResponse({"error": "No file provided"}, status=400)
+        return JsonResponse({"error": "No se envió ningún archivo"}, status=400)
 
     content_type = uploaded_file.content_type or ""
     if not content_type.startswith("image/"):
-        return JsonResponse({"error": "Only image files are allowed"}, status=400)
+        return JsonResponse({"error": "Solo se permiten archivos de imagen"}, status=400)
 
     from apps.media_library.models import MediaAsset
 
@@ -1586,7 +1592,7 @@ def media_filmstrip(request, workspace_id, asset_id):
     try:
         duration = asset.duration or extract_video_metadata(tmp_path).get("duration_seconds") or 0
         if not duration:
-            return JsonResponse({"error": "Could not read video duration."}, status=502)
+            return JsonResponse({"error": "No se pudo leer la duración del video."}, status=502)
 
         count = 8
         timestamps = [round(duration * (i + 0.5) / count, 3) for i in range(count)]
@@ -1601,14 +1607,14 @@ def media_filmstrip(request, workspace_id, asset_id):
         if jpg
     ]
     if not frames:
-        return JsonResponse({"error": "Could not extract frames."}, status=502)
+        return JsonResponse({"error": "No se pudieron extraer los fotogramas."}, status=502)
     return JsonResponse({"frames": frames, "duration": duration})
 
 
 UNSPLASH_API_BASE = "https://api.unsplash.com"
 UNSPLASH_IMAGE_HOST = "https://images.unsplash.com/"
 UNSPLASH_NOT_CONFIGURED = (
-    "Unsplash is not configured. Add UNSPLASH_ACCESS_KEY to your environment to enable stock-photo search."
+    "Unsplash no está configurado. Agrega UNSPLASH_ACCESS_KEY al entorno para habilitar la búsqueda de fotos."
 )
 UNSPLASH_MAX_IMPORT = 10
 UNSPLASH_MAX_IMAGE_BYTES = 15 * 1024 * 1024
@@ -1640,7 +1646,7 @@ def unsplash_search(request, workspace_id):
 
     query = request.GET.get("q", "").strip()
     if not query:
-        return JsonResponse({"error": "Missing search query"}, status=400)
+        return JsonResponse({"error": "Falta el término de búsqueda"}, status=400)
 
     try:
         resp = httpx.get(
@@ -1653,14 +1659,16 @@ def unsplash_search(request, workspace_id):
             timeout=10.0,
         )
     except httpx.RequestError:
-        return JsonResponse({"error": "Could not reach Unsplash. Try again."}, status=502)
+        return JsonResponse({"error": "No se pudo conectar con Unsplash. Inténtalo de nuevo."}, status=502)
 
     if resp.status_code in (401, 403):
-        return JsonResponse({"error": "Unsplash rejected the API key. Check UNSPLASH_ACCESS_KEY."}, status=502)
+        return JsonResponse({"error": "Unsplash rechazó la clave de API. Revisa UNSPLASH_ACCESS_KEY."}, status=502)
     if resp.status_code == 429:
-        return JsonResponse({"error": "Unsplash rate limit reached. Try again in a few minutes."}, status=429)
+        return JsonResponse(
+            {"error": "Se alcanzó el límite de Unsplash. Inténtalo de nuevo en unos minutos."}, status=429
+        )
     if resp.status_code != 200:
-        return JsonResponse({"error": "Unsplash search failed. Try again."}, status=502)
+        return JsonResponse({"error": "La búsqueda en Unsplash falló. Inténtalo de nuevo."}, status=502)
 
     # A 200 with a malformed body or an unexpected result shape (e.g. a bare
     # list or null instead of an object) must surface as a friendly 502, not
@@ -1687,7 +1695,7 @@ def unsplash_search(request, workspace_id):
         ]
         total = data.get("total", 0)
     except (ValueError, KeyError, TypeError, AttributeError):
-        return JsonResponse({"error": "Unexpected response from Unsplash. Try again."}, status=502)
+        return JsonResponse({"error": "Respuesta inesperada de Unsplash. Inténtalo de nuevo."}, status=502)
     return JsonResponse({"results": results, "total": total})
 
 
@@ -1710,12 +1718,12 @@ def unsplash_import(request, workspace_id, post_id=None):
         payload = json.loads(request.body)
         photos = payload["photos"]
     except (json.JSONDecodeError, KeyError, TypeError):
-        return JsonResponse({"error": "Invalid request body"}, status=400)
+        return JsonResponse({"error": "Cuerpo de la solicitud no válido"}, status=400)
 
     if not isinstance(photos, list) or not photos:
-        return JsonResponse({"error": "No photos selected"}, status=400)
+        return JsonResponse({"error": "No se seleccionaron fotos"}, status=400)
     if len(photos) > UNSPLASH_MAX_IMPORT:
-        return JsonResponse({"error": f"Select at most {UNSPLASH_MAX_IMPORT} photos per import."}, status=400)
+        return JsonResponse({"error": f"Selecciona máximo {UNSPLASH_MAX_IMPORT} fotos por importación."}, status=400)
 
     from django.core.files.base import ContentFile
 
@@ -1821,10 +1829,10 @@ def unsplash_import(request, workspace_id, post_id=None):
     if not new_assets:
         if quota_exceeded:
             return JsonResponse(
-                {"error": "Storage quota exceeded. Free up space or upgrade your plan."},
+                {"error": "Se excedió la cuota de almacenamiento. Libera espacio o mejora tu plan."},
                 status=413,
             )
-        return JsonResponse({"error": "Could not import the selected photos."}, status=502)
+        return JsonResponse({"error": "No se pudieron importar las fotos seleccionadas."}, status=502)
 
     if post is not None:
         html = render_to_string(
@@ -1869,12 +1877,12 @@ def pinterest_boards(request, workspace_id, account_id):
         try:
             access_token = account.refresh_oauth_token(provider)
         except Exception:
-            return JsonResponse({"error": "Token refresh failed"}, status=502)
+            return JsonResponse({"error": "Falló la renovación del token"}, status=502)
 
     try:
         boards = provider.get_boards(access_token)
     except Exception:
-        return JsonResponse({"error": "Failed to fetch boards"}, status=502)
+        return JsonResponse({"error": "No se pudieron obtener los tableros"}, status=502)
 
     return JsonResponse({"boards": [{"id": b.get("id"), "name": b.get("name")} for b in boards]})
 
@@ -1922,12 +1930,12 @@ def tiktok_creator_info(request, workspace_id, account_id):
         try:
             access_token = account.refresh_oauth_token(provider)
         except Exception:
-            return _unavailable("Token refresh failed")
+            return _unavailable("Falló la renovación del token")
 
     try:
         info = provider.query_creator_info(access_token)
     except Exception:
-        return _unavailable("Failed to fetch creator info")
+        return _unavailable("No se pudo obtener la información del creador")
 
     return JsonResponse(
         {
@@ -1952,7 +1960,7 @@ def attach_media(request, workspace_id, post_id):
     media_asset_id = request.POST.get("media_asset_id")
 
     if not media_asset_id:
-        return JsonResponse({"error": "media_asset_id required"}, status=400)
+        return JsonResponse({"error": "Se requiere media_asset_id"}, status=400)
 
     from apps.media_library.models import MediaAsset
 
@@ -1995,7 +2003,7 @@ def attach_pending_media(request, workspace_id):
     media_asset_id = request.POST.get("media_asset_id")
 
     if not media_asset_id:
-        return JsonResponse({"error": "media_asset_id required"}, status=400)
+        return JsonResponse({"error": "Se requiere media_asset_id"}, status=400)
 
     from apps.media_library.models import MediaAsset
 
@@ -2072,7 +2080,7 @@ def upload_media(request, workspace_id, post_id=None):
     uploaded_file = request.FILES.get("file")
 
     if not uploaded_file:
-        return JsonResponse({"error": "No file provided"}, status=400)
+        return JsonResponse({"error": "No se envió ningún archivo"}, status=400)
 
     from apps.media_library.models import MediaAsset
 
@@ -2294,7 +2302,7 @@ def clone_post_view(request, workspace_id, post_id):
     membership = request.workspace_membership
     perms = membership.effective_permissions if membership else {}
     if not perms.get("create_posts", False):
-        raise PermissionDenied("You do not have permission to create posts.")
+        raise PermissionDenied("No tienes permiso para crear publicaciones.")
 
     new_post = clone_post(post, author=request.user)
     target = reverse("composer:compose_edit", kwargs={"workspace_id": workspace.id, "post_id": new_post.id})
@@ -2321,8 +2329,8 @@ def _idea_columns(workspace, tag=None):
         Idea.objects.create(
             workspace=workspace,
             group=created_groups["Unassigned"],
-            title="This is a place to plan \u270d\ufe0f your content",
-            description="Save your Ideas before converting them into posts. Brainstorm, plan ahead, and keep everything organized in one place.",
+            title="Aquí planeas \u270d\ufe0f tu contenido",
+            description="Guarda tus ideas antes de convertirlas en publicaciones. Piensa, planea y mantén todo organizado en un solo lugar.",
             status=Idea.Status.UNASSIGNED,
             position=0,
         )
@@ -2586,7 +2594,7 @@ def idea_upload_media(request, workspace_id):
     workspace = _get_workspace(request, workspace_id)
     uploaded_file = request.FILES.get("file") or request.FILES.get("media")
     if not uploaded_file:
-        return JsonResponse({"error": "No file provided"}, status=400)
+        return JsonResponse({"error": "No se envió ningún archivo"}, status=400)
 
     asset = _create_idea_media_asset(workspace, request.user, uploaded_file)
     return JsonResponse(
@@ -2611,7 +2619,7 @@ def idea_create(request, workspace_id):
     tags = parse_and_truncate_tag_string(request.POST.get("tags", ""))
 
     if not title:
-        return HttpResponse("Title is required.", status=400)
+        return HttpResponse("El título es obligatorio.", status=400)
 
     # Assign to the specified group or default to the first group
     group_id = request.POST.get("group")
@@ -2931,8 +2939,8 @@ def idea_group_create(request, workspace_id):
     name = request.POST.get("name", "").strip()
     if not name:
         if _wants_json_response(request):
-            return JsonResponse({"error": "Name is required."}, status=400)
-        return HttpResponse("Name is required.", status=400)
+            return JsonResponse({"error": "El nombre es obligatorio."}, status=400)
+        return HttpResponse("El nombre es obligatorio.", status=400)
 
     max_pos = IdeaGroup.objects.for_workspace(workspace.id).aggregate(models.Max("position"))["position__max"] or 0
     group = IdeaGroup.objects.create(workspace=workspace, name=name, position=max_pos + 1)
@@ -2960,8 +2968,8 @@ def idea_group_delete(request, workspace_id, group_id):
 
     if group.ideas.exists():
         if _wants_json_response(request):
-            return JsonResponse({"error": "Column must be empty before deleting."}, status=400)
-        return HttpResponse("Column must be empty before deleting.", status=400)
+            return JsonResponse({"error": "La columna debe estar vacía antes de eliminarla."}, status=400)
+        return HttpResponse("La columna debe estar vacía antes de eliminarla.", status=400)
 
     deleted_group_id = str(group.id)
     group.delete()
@@ -2980,7 +2988,7 @@ def idea_group_reorder(request, workspace_id):
         data = json.loads(request.body)
         order = data.get("order", [])
     except (json.JSONDecodeError, AttributeError):
-        return HttpResponse("Invalid JSON.", status=400)
+        return HttpResponse("JSON no válido.", status=400)
 
     if not order:
         return HttpResponse(status=204)
@@ -3027,7 +3035,7 @@ def category_create(request, workspace_id):
     form = ContentCategoryForm(request.POST)
 
     if not form.is_valid():
-        return HttpResponse("Invalid data.", status=400)
+        return HttpResponse("Datos no válidos.", status=400)
 
     category = form.save(commit=False)
     category.workspace = workspace
@@ -3051,7 +3059,7 @@ def category_edit(request, workspace_id, category_id):
     form = ContentCategoryForm(request.POST, instance=category)
 
     if not form.is_valid():
-        return HttpResponse("Invalid data.", status=400)
+        return HttpResponse("Datos no válidos.", status=400)
 
     form.save()
     return HttpResponse(
@@ -3106,7 +3114,7 @@ def save_as_template(request, workspace_id, post_id):
 
     name = request.POST.get("template_name", "").strip()
     if not name:
-        name = f"Template from {post.caption_snippet or 'post'}"
+        name = f"Plantilla de {post.caption_snippet or 'publicación'}"
 
     description = request.POST.get("template_description", "").strip()
 
@@ -3200,7 +3208,7 @@ def csv_upload(request, workspace_id):
             return render(
                 request,
                 "composer/csv_import.html",
-                {"workspace": workspace, "error": "CSV file too large (max 5 MB)."},
+                {"workspace": workspace, "error": "El archivo CSV es demasiado grande (máx. 5 MB)."},
             )
         decoded = csv_file.read().decode("utf-8-sig")
         reader = csv.reader(io.StringIO(decoded))
@@ -3210,7 +3218,7 @@ def csv_upload(request, workspace_id):
             return render(
                 request,
                 "composer/csv_import.html",
-                {"workspace": workspace, "error": "CSV file is empty."},
+                {"workspace": workspace, "error": "El archivo CSV está vacío."},
             )
 
         headers = rows[0]
@@ -3271,7 +3279,7 @@ def csv_preview(request, workspace_id):
     csv_data = request.session.get(f"csv_import_{workspace.id}")
 
     if not csv_data:
-        return HttpResponse("No CSV data found. Please upload again.", status=400)
+        return HttpResponse("No se encontraron datos del CSV. Vuelve a subir el archivo.", status=400)
 
     # Parse column mapping from POST
     mapping = {}
@@ -3360,7 +3368,7 @@ def csv_confirm_import(request, workspace_id):
     mapping = request.session.get(f"csv_mapping_{workspace.id}")
 
     if not csv_data or not mapping:
-        return HttpResponse("No CSV data found. Please upload again.", status=400)
+        return HttpResponse("No se encontraron datos del CSV. Vuelve a subir el archivo.", status=400)
 
     from apps.social_accounts.models import SocialAccount
 
@@ -3502,6 +3510,6 @@ def tag_create(request, workspace_id):
     workspace = _get_workspace(request, workspace_id)
     name = request.POST.get("name", "").strip()
     if not name:
-        return JsonResponse({"error": "Tag name is required."}, status=400)
+        return JsonResponse({"error": "El nombre de la etiqueta es obligatorio."}, status=400)
     tag, created = Tag.objects.get_or_create(workspace=workspace, name=name)
     return JsonResponse({"id": str(tag.id), "name": tag.name, "created": created})

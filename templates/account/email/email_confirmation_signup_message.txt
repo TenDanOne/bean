@@ -1,10 +1,10 @@
-{% load account %}{% autoescape off %}{% user_display user as user_display %}Hi {{ user_display }},
+{% load account %}{% autoescape off %}{% user_display user as user_display %}Hola {{ user_display }},
 
-Thanks for signing up for BEAN. Please confirm your email address by clicking the link below:
+Gracias por registrarte en BEAN. Confirma tu correo electrónico haciendo clic en el siguiente enlace:
 
 {{ activate_url }}
 
-If you didn't sign up, you can safely ignore this email.
+Si no te registraste, puedes ignorar este correo.
 
-— The BEAN team
+— El equipo de BEAN
 {% endautoescape %}

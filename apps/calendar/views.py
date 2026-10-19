@@ -11,8 +11,10 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import QuerySet
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.dateformat import format as date_format
 from django.views.decorators.http import require_POST
 
+from apps.approvals.templatetags.approval_extras import STATUS_META
 from apps.common.validators import is_valid_hex_color
 from apps.composer.models import ContentCategory, PlatformPost, Post
 from apps.members.decorators import require_permission
@@ -49,6 +51,9 @@ COMMON_TIMEZONES = [
 ]
 
 
+DAY_NAMES_ES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+
 def _slots_updated_response(account_id):
     """Return a 204 response with an HX-Trigger header for slot grid refresh."""
     return HttpResponse(
@@ -77,13 +82,13 @@ def _get_workspace(request, workspace_id):
     """Resolve workspace and enforce membership check."""
     workspace = get_object_or_404(Workspace, id=workspace_id)
     if not request.user.is_authenticated:
-        raise PermissionDenied("Authentication required.")
+        raise PermissionDenied("Se requiere iniciar sesión.")
     has_membership = WorkspaceMembership.objects.filter(
         user=request.user,
         workspace=workspace,
     ).exists()
     if not has_membership:
-        raise PermissionDenied("You are not a member of this workspace.")
+        raise PermissionDenied("No eres miembro de este espacio de trabajo.")
     return workspace
 
 
@@ -641,7 +646,9 @@ def calendar_view(request, workspace_id):
         "authors": authors,
         "categories": categories,
         "active_filters": active_filters,
-        "status_choices": Post.Status.choices,
+        "status_choices": [
+            (value, STATUS_META.get(value, {}).get("label", label)) for value, label in Post.Status.choices
+        ],
         "show_holidays": show_holidays,
         **publish_ctx,
     }
@@ -788,11 +795,11 @@ def _month_view_data(request, workspace, target_date, context):
     context.update(
         {
             "calendar_weeks": calendar_weeks,
-            "period_label": date(year, month, 1).strftime("%B %Y"),
+            "period_label": date_format(date(year, month, 1), "F Y").capitalize(),
             "prev_date": prev_month.isoformat(),
             "next_date": next_month.isoformat(),
             "unscheduled_drafts": drafts,
-            "day_names": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            "day_names": DAY_NAMES_ES,
         }
     )
 
@@ -871,7 +878,7 @@ def _week_view_data(request, workspace, target_date, context):
             "current_hour": now.hour,
             "prev_date": (monday - timedelta(weeks=1)).isoformat(),
             "next_date": (monday + timedelta(weeks=1)).isoformat(),
-            "period_label": f"{week_days[0].strftime('%b %d')} – {week_days[6].strftime('%b %d, %Y')}",
+            "period_label": f"{date_format(week_days[0], 'j M')} – {date_format(week_days[6], 'j M Y')}",
         }
     )
 
@@ -940,7 +947,7 @@ def _day_view_data(request, workspace, target_date, context):
             "current_hour": now.hour,
             "prev_date": (target_date - timedelta(days=1)).isoformat(),
             "next_date": (target_date + timedelta(days=1)).isoformat(),
-            "period_label": target_date.strftime("%A, %B %d, %Y"),
+            "period_label": date_format(target_date, r"l, j \d\e F \d\e Y").capitalize(),
         }
     )
 
@@ -964,7 +971,7 @@ def _list_view(request, workspace, target_date, context):
     context.update(
         {
             "posts": posts,
-            "period_label": "All Posts",
+            "period_label": "Todas las publicaciones",
             "prev_date": target_date.isoformat(),
             "next_date": target_date.isoformat(),
             "has_connected_accounts": has_connected_accounts,
@@ -1026,7 +1033,7 @@ def reschedule_post(request, workspace_id):
     new_datetime_str = request.POST.get("new_datetime")
 
     if not platform_post_id or not new_datetime_str:
-        return JsonResponse({"error": "platform_post_id and new_datetime required"}, status=400)
+        return JsonResponse({"error": "Faltan platform_post_id y new_datetime."}, status=400)
 
     pp = get_object_or_404(
         PlatformPost.objects.select_related("post__workspace", "post__author"),
@@ -1037,14 +1044,14 @@ def reschedule_post(request, workspace_id):
 
     # Check permissions - only editable statuses can be rescheduled
     if pp.status not in ("draft", "approved", "scheduled"):
-        return JsonResponse({"error": "Post cannot be rescheduled in its current status."}, status=400)
+        return JsonResponse({"error": "La publicación no se puede reprogramar en su estado actual."}, status=400)
 
     # Same rule as the composer, read from the same place — a drag that lands
     # somewhere the composer would refuse to open is the same refusal.
     from apps.composer.views import may_edit_post
 
     if not may_edit_post(request, post):
-        return JsonResponse({"error": "You can only move posts you wrote yourself."}, status=403)
+        return JsonResponse({"error": "Solo puedes mover publicaciones que tú escribiste."}, status=403)
 
     try:
         import zoneinfo
@@ -1068,7 +1075,7 @@ def reschedule_post(request, workspace_id):
         )
         sync_post_scheduled_at(post)
     except (ValueError, TypeError) as e:
-        return JsonResponse({"error": f"Invalid datetime: {e}"}, status=400)
+        return JsonResponse({"error": f"Fecha y hora no válidas: {e}"}, status=400)
 
     return HttpResponse(
         status=204,
@@ -1101,7 +1108,7 @@ def posting_slots(request, workspace_id):
         "workspace": workspace,
         "accounts": accounts,
         "slots_by_account": dict(slots_by_account),
-        "day_choices": PostingSlot.DayOfWeek.choices,
+        "day_choices": [(v, DAY_NAMES_ES[v]) for v, _ in PostingSlot.DayOfWeek.choices],
     }
     return render(request, "calendar/posting_slots.html", context)
 
@@ -1117,7 +1124,7 @@ def save_posting_slot(request, workspace_id):
     time_str = request.POST.get("time")
 
     if not all([account_id, day, time_str]):
-        return JsonResponse({"error": "All fields required."}, status=400)
+        return JsonResponse({"error": "Todos los campos son obligatorios."}, status=400)
 
     account = get_object_or_404(
         SocialAccount,
@@ -1128,7 +1135,7 @@ def save_posting_slot(request, workspace_id):
     try:
         slot_time = time.fromisoformat(time_str)
     except (ValueError, TypeError):
-        return JsonResponse({"error": "Invalid time format."}, status=400)
+        return JsonResponse({"error": "Formato de hora no válido."}, status=400)
 
     slot, created = PostingSlot.objects.get_or_create(
         social_account=account,
@@ -1200,13 +1207,13 @@ def toggle_posting_slot_day(request, workspace_id):
     day = request.POST.get("day_of_week")
 
     if not account_id or day is None:
-        return JsonResponse({"error": "Missing fields."}, status=400)
+        return JsonResponse({"error": "Faltan campos."}, status=400)
 
     account = get_object_or_404(SocialAccount, id=account_id, workspace=workspace)
     try:
         day_int = int(day)
     except (ValueError, TypeError):
-        return JsonResponse({"error": "Invalid day_of_week."}, status=400)
+        return JsonResponse({"error": "Día de la semana no válido."}, status=400)
     slots = PostingSlot.objects.filter(social_account=account, day_of_week=day_int)
 
     if not slots.exists():
@@ -1240,12 +1247,12 @@ def update_posting_slot(request, workspace_id, slot_id):
 
     time_str = request.POST.get("time")
     if not time_str:
-        return JsonResponse({"error": "Time is required."}, status=400)
+        return JsonResponse({"error": "La hora es obligatoria."}, status=400)
 
     try:
         new_time = time.fromisoformat(time_str)
     except (ValueError, TypeError):
-        return JsonResponse({"error": "Invalid time format."}, status=400)
+        return JsonResponse({"error": "Formato de hora no válido."}, status=400)
 
     # Check for duplicate
     if (
@@ -1257,7 +1264,7 @@ def update_posting_slot(request, workspace_id, slot_id):
         .exclude(id=slot.id)
         .exists()
     ):
-        return JsonResponse({"error": "A slot at that time already exists."}, status=409)
+        return JsonResponse({"error": "Ya existe un horario a esa hora."}, status=409)
 
     slot.time = new_time
     slot.save(update_fields=["time", "updated_at"])
@@ -1306,7 +1313,7 @@ def queue_create(request, workspace_id):
     category_id = request.POST.get("category_id") or None
 
     if not name or not account_id:
-        return JsonResponse({"error": "Name and account required."}, status=400)
+        return JsonResponse({"error": "El nombre y la cuenta son obligatorios."}, status=400)
 
     account = get_object_or_404(SocialAccount, id=account_id, workspace=workspace)
 
@@ -1431,7 +1438,7 @@ def queue_entry_reslot(request, workspace_id, queue_id, entry_id):
     try:
         reslot_to_next_available(entry)
     except QueueFullError:
-        return JsonResponse({"error": "No open slot within the scheduling horizon."}, status=409)
+        return JsonResponse({"error": "No hay horarios libres dentro del periodo de programación."}, status=409)
 
     if request.htmx:
         return HttpResponse(status=204, headers={"HX-Trigger": "queueReordered"})
@@ -1456,16 +1463,16 @@ def event_create(request, workspace_id):
     description = request.POST.get("description", "").strip()
 
     if not title or not start_date_str or not end_date_str:
-        return JsonResponse({"error": "Title, start date, and end date required."}, status=400)
+        return JsonResponse({"error": "El título, la fecha de inicio y la fecha de fin son obligatorios."}, status=400)
 
     if not is_valid_hex_color(color):
-        return JsonResponse({"error": "Color must be a 6-digit hex value like #3B82F6."}, status=400)
+        return JsonResponse({"error": "El color debe ser un valor hexadecimal de 6 dígitos, como #3B82F6."}, status=400)
 
     try:
         start = date.fromisoformat(start_date_str)
         end = date.fromisoformat(end_date_str)
     except (ValueError, TypeError):
-        return JsonResponse({"error": "Invalid date format."}, status=400)
+        return JsonResponse({"error": "Formato de fecha no válido."}, status=400)
 
     if end < start:
         end = start
@@ -1497,7 +1504,7 @@ def event_edit(request, workspace_id, event_id):
     event.description = request.POST.get("description", event.description).strip()
     new_color = request.POST.get("color", event.color)
     if not is_valid_hex_color(new_color):
-        return JsonResponse({"error": "Color must be a 6-digit hex value like #3B82F6."}, status=400)
+        return JsonResponse({"error": "El color debe ser un valor hexadecimal de 6 dígitos, como #3B82F6."}, status=400)
     event.color = new_color
 
     import contextlib

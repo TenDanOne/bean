@@ -1,6 +1,6 @@
 {% extends "client_portal/portal_base.html" %}
 {% load tz %}
-{% block title %}Approve Posts - {{ workspace.name }}{% endblock %}
+{% block title %}Aprobar publicaciones - {{ workspace.name }}{% endblock %}
 
 {% block content %}
 <div hx-trigger="portalAction from:body"
@@ -8,15 +8,15 @@
      hx-target="#portal-posts" hx-select="#portal-posts" hx-swap="outerHTML">
 
     <div class="mb-6">
-        <h1 class="text-[1.375rem] font-bold tracking-tight" style="color: var(--text-primary);">Posts for your review</h1>
-        <p class="text-[0.875rem] mt-0.5" style="color: var(--text-secondary);">Approve or request changes before anything goes live.</p>
+        <h1 class="text-[1.375rem] font-bold tracking-tight" style="color: var(--text-primary);">Publicaciones para tu revisión</h1>
+        <p class="text-[0.875rem] mt-0.5" style="color: var(--text-secondary);">Aprueba o solicita cambios antes de que algo salga publicado.</p>
     </div>
 
     <div id="portal-posts" class="max-w-[680px]">
         {% if pending_posts %}
         <div class="mb-8">
             <div class="flex items-center gap-2 mb-3">
-                <h2 class="text-[0.75rem] font-bold uppercase tracking-wider" style="color: var(--text-tertiary);">Needs your approval</h2>
+                <h2 class="text-[0.75rem] font-bold uppercase tracking-wider" style="color: var(--text-tertiary);">Requiere tu aprobación</h2>
                 <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[0.6875rem] font-bold">{{ pending_posts|length }}</span>
             </div>
             <div class="space-y-4">
@@ -27,7 +27,7 @@
 
         {% if decided_posts %}
         <div>
-            <h2 class="text-[0.75rem] font-bold uppercase tracking-wider mb-3" style="color: var(--text-tertiary);">Approved &amp; scheduled</h2>
+            <h2 class="text-[0.75rem] font-bold uppercase tracking-wider mb-3" style="color: var(--text-tertiary);">Aprobadas y programadas</h2>
             <div class="space-y-4">
                 {% for post in decided_posts %}{% include "client_portal/_client_card.html" %}{% endfor %}
             </div>
@@ -39,12 +39,12 @@
             <div class="mx-auto w-12 h-12 mb-3" style="color: var(--neutral-300, #D6D3D1);">
                 {% icon "circle-check" size="" %}
             </div>
-            <p class="font-medium" style="color: var(--text-secondary);">All caught up</p>
-            <p class="text-sm mt-1" style="color: var(--text-tertiary);">No posts are waiting for your review right now</p>
+            <p class="font-medium" style="color: var(--text-secondary);">Todo al día</p>
+            <p class="text-sm mt-1" style="color: var(--text-tertiary);">Ninguna publicación espera tu revisión por ahora</p>
         </div>
         {% endif %}
     </div>
 
-    <p class="text-center text-[0.6875rem] mt-10 w-full" style="color: var(--text-tertiary);">Powered by BEAN by ITHOS · Secure approval link</p>
+    <p class="text-center text-[0.6875rem] mt-10 w-full" style="color: var(--text-tertiary);">Con tecnología de BEAN by ITHOS · Enlace de aprobación seguro</p>
 </div>
 {% endblock %}

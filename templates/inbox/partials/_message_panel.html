@@ -23,7 +23,7 @@
                             {% platform_icon message.social_account.platform size="4" %}
                             <span class="text-[11px] text-app-tertiary">{{ message.social_account.account_name|default:message.social_account.account_handle }}</span>
                         </div>
-                        <span class="text-[11px] text-app-ghost">{{ message.received_at|date:"N j, Y g:i A" }}</span>
+                        <span class="text-[11px] text-app-ghost">{{ message.received_at|date:"j/m/Y H:i" }}</span>
                     </div>
                 </div>
             </div>
@@ -68,11 +68,11 @@
                 {% endcomment %}
                 <div x-data="{ sentimentOpen: false }" class="relative">
                     <button @click="{% if request|can:'reply_from_inbox' %}sentimentOpen = !sentimentOpen{% endif %}"
-                            {% if not request|can:"reply_from_inbox" %}disabled title="Your role cannot change sentiment"{% endif %}
+                            {% if not request|can:"reply_from_inbox" %}disabled title="Tu rol no puede cambiar el sentimiento"{% endif %}
                             class="badge-pill badge-sentiment-{{ message.sentiment }} cursor-pointer hover:opacity-80 transition-opacity disabled:cursor-not-allowed disabled:opacity-60">
                         {{ message.get_sentiment_display }}
                         {% if message.sentiment_source == "manual" %}
-                        <span title="Set by a person, not the automatic guess">·</span>
+                        <span title="Definido por una persona, no por la detección automática">·</span>
                         {% endif %}
                         {% if request|can:"reply_from_inbox" %}
                         {% icon "chevron-down" css_class="w-2.5 h-2.5 ml-0.5" %}

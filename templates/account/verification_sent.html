@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static i18n %}
 
-{% block title %}Verify Your Email - BEAN{% endblock %}
+{% block title %}Verifica tu correo - BEAN{% endblock %}
 
 {% block auth_content %}
 <div class="w-full max-w-md px-4">
@@ -11,10 +11,10 @@
             {% icon "envelope" css_class="w-[24px] h-[24px]" %}
         </div>
         <h1 class="text-2xl font-bold tracking-tight" style="color: var(--text-primary);">
-            Verify your email
+            Verifica tu correo
         </h1>
         <p class="text-sm mt-2 max-w-xs mx-auto leading-relaxed" style="color: var(--text-secondary);">
-            We've sent a verification email to your address. Please follow the link in the email to activate your account.
+            Te enviamos un correo de verificación. Sigue el enlace del correo para activar tu cuenta.
         </p>
     </div>
 
@@ -23,17 +23,17 @@
         <div class="py-2">
             {% icon "envelope" css_class="w-[48px] h-[48px] mx-auto mb-4" %}
             <p class="text-sm mb-1" style="color: var(--text-secondary);">
-                Check your inbox for the verification link.
+                Busca el enlace de verificación en tu bandeja de entrada.
             </p>
             <p class="text-xs" style="color: var(--text-tertiary);">
-                If you don't see it, check your spam folder.
+                Si no lo ves, revisa tu carpeta de spam.
             </p>
         </div>
     </div>
 
     <!-- Footer link -->
     <p class="text-center text-sm mt-6" style="color: var(--text-secondary);">
-        <a href="{% url 'account_login' %}" class="font-semibold hover:underline" style="color: var(--primary);">Back to sign in</a>
+        <a href="{% url 'account_login' %}" class="font-semibold hover:underline" style="color: var(--primary);">Volver a iniciar sesión</a>
     </p>
 </div>
 {% endblock %}

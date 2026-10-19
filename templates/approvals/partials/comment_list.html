@@ -11,15 +11,15 @@
             <div class="flex items-center gap-2 mb-0.5">
                 <span class="text-[0.8125rem] font-semibold text-app-strong">{{ comment.author.display_name }}</span>
                 {% if comment.visibility == 'internal' %}
-                <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">Internal</span>
+                <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">Interno</span>
                 {% endif %}
-                <span class="text-[0.6875rem] text-app-ghost ml-auto">{{ comment.created_at|timesince }} ago</span>
+                <span class="text-[0.6875rem] text-app-ghost ml-auto">hace {{ comment.created_at|timesince }}</span>
             </div>
             <p class="text-sm text-app-secondary leading-relaxed whitespace-pre-wrap">{{ comment.body }}</p>
 
             {% if comment.attachment %}
             <div class="mt-2">
-                <img src="{{ comment.attachment.url }}" alt="Attachment" class="max-w-xs rounded-lg border border-app">
+                <img src="{{ comment.attachment.url }}" alt="Adjunto" class="max-w-xs rounded-lg border border-app">
             </div>
             {% endif %}
 
@@ -34,7 +34,7 @@
                 <div>
                     <div class="flex items-center gap-1.5">
                         <span class="text-[0.75rem] font-semibold text-app-body">{{ reply.author.display_name }}</span>
-                        <span class="text-[0.6875rem] text-app-ghost">{{ reply.created_at|timesince }} ago</span>
+                        <span class="text-[0.6875rem] text-app-ghost">hace {{ reply.created_at|timesince }}</span>
                     </div>
                     <p class="text-[0.8125rem] text-app-secondary leading-relaxed">{{ reply.body }}</p>
                 </div>
@@ -44,6 +44,6 @@
         </div>
     </div>
     {% empty %}
-    <p class="text-sm text-app-ghost text-center py-4">No comments yet</p>
+    <p class="text-sm text-app-ghost text-center py-4">Aún no hay comentarios</p>
     {% endfor %}
 </div>

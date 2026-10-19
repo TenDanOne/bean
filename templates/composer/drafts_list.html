@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% load tz %}
 
-{% block title %}Drafts - {{ workspace.name }} - BEAN{% endblock %}
-{% block page_title %}Drafts{% endblock %}
+{% block title %}Borradores - {{ workspace.name }} - BEAN{% endblock %}
+{% block page_title %}Borradores{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl">
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h2 class="text-lg font-semibold text-app">Drafts</h2>
-            <p class="text-sm text-app-tertiary mt-0.5">{{ drafts|length }} draft{{ drafts|length|pluralize }}</p>
+            <h2 class="text-lg font-semibold text-app">Borradores</h2>
+            <p class="text-sm text-app-tertiary mt-0.5">{{ drafts|length }} borrador{{ drafts|length|pluralize:",es" }}</p>
         </div>
         <a href="{% url 'composer:compose' workspace_id=workspace.id %}"
            class="inline-flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-app-inverse bg-orange-500 rounded-full shadow-[0_4px_14px_rgba(249,115,22,0.28)] hover:bg-orange-600 hover:shadow-[0_6px_20px_rgba(249,115,22,0.35)] hover:-translate-y-px transition-all duration-150">
             {% icon "plus" css_class="w-4 h-4" %}
-            New Post
+           Nueva publicación
         </a>
     </div>
 
@@ -26,20 +26,20 @@
             <div class="flex items-start gap-4">
                 <div class="flex-1 min-w-0">
                     <p class="text-sm text-app-body line-clamp-2 group-hover:text-app transition-colors">
-                        {{ draft.caption_snippet|default:"(No caption)" }}
+                        {{ draft.caption_snippet|default:"(Sin texto)" }}
                     </p>
                     <div class="flex items-center gap-3 mt-2">
                         <span class="inline-flex items-center gap-1 text-xs text-app-ghost">
                             {% icon "clock" css_class="w-3 h-3" %}
-                            {{ draft.updated_at|timesince }} ago
+                            hace {{ draft.updated_at|timesince }}
                         </span>
                         {% if draft.author %}
-                        <span class="text-xs text-app-ghost">by {{ draft.author.display_name }}</span>
+                        <span class="text-xs text-app-ghost">por {{ draft.author.display_name }}</span>
                         {% endif %}
                         {% if draft.proposed_publish_at %}
-                        <span class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full" title="Proposed publishing time">
+                        <span class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full" title="Fecha de publicación propuesta">
                             {% icon "clock" css_class="w-3 h-3" %}
-                            Proposed Publishing {% timezone workspace.effective_timezone|default:"UTC" %}{{ draft.proposed_publish_at|date:"M j, g:i A" }}{% endtimezone %}
+                            Publicación propuesta {% timezone workspace.effective_timezone|default:"UTC" %}{{ draft.proposed_publish_at|date:"M j, g:i A" }}{% endtimezone %}
                         </span>
                         {% endif %}
                     </div>
@@ -60,11 +60,11 @@
         <div class="w-16 h-16 mx-auto rounded-2xl bg-app-2 flex items-center justify-center mb-4">
             {% icon "pencil" css_class="w-7 h-7 text-app-faint" %}
         </div>
-        <p class="text-sm font-medium text-app-tertiary mb-1">No drafts</p>
-        <p class="text-xs text-app-ghost mb-4">Start composing to create your first draft</p>
+        <p class="text-sm font-medium text-app-tertiary mb-1">No hay borradores</p>
+        <p class="text-xs text-app-ghost mb-4">Empieza a redactar para crear tu primer borrador</p>
         <a href="{% url 'composer:compose' workspace_id=workspace.id %}"
            class="inline-flex items-center gap-1.5 px-5 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
-            Create Post
+           Crear publicación
         </a>
     </div>
     {% endif %}

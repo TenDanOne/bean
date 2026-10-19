@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Publish - {{ workspace.name }} - Brightbean{% endblock %}
+{% block title %}Publicar - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block page_header %}
 <div class="flex flex-wrap items-center justify-between gap-3 mb-4 lg:mb-[25px]">
-    <h1 class="text-xl sm:text-2xl font-semibold text-app" style="letter-spacing: -0.01em;">Publish</h1>
+    <h1 class="text-xl sm:text-2xl font-semibold text-app" style="letter-spacing: -0.01em;">Publicar</h1>
 
     <div class="flex items-center gap-3">
         <!-- List / Calendar toggle -->
@@ -17,7 +17,7 @@
                     hx-swap="innerHTML"
                     hx-push-url="{% url 'calendar:calendar' workspace_id=workspace.id %}?mode=list&tab={{ active_tab|default:'queue' }}">
                 {% icon "bars" css_class="w-3.5 h-3.5 inline -mt-px mr-1" %}
-                List
+                Lista
             </button>
             <button class="view-btn{% if mode == 'calendar' %} active{% endif %}" :class="{ active: activeMode === 'calendar' }"
                     @click="activeMode = 'calendar'"
@@ -26,7 +26,7 @@
                     hx-swap="innerHTML"
                     hx-push-url="{% url 'calendar:calendar' workspace_id=workspace.id %}?mode=calendar&view={{ view_type|default:'month' }}">
                 {% icon "calendar-days" css_class="w-3.5 h-3.5 inline -mt-px mr-1" %}
-                Calendar
+                Calendario
             </button>
         </div>
 

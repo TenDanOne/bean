@@ -73,7 +73,7 @@ def workspace_settings(request, workspace_id):
         # Read once, up front: every branch below is a write, and a POST from
         # someone without the permission must not reach any of them.
         if not is_owner_or_manager:
-            raise PermissionDenied("Your role cannot change this brand's settings.")
+            raise PermissionDenied("Tu rol no puede cambiar los ajustes de esta marca.")
 
         action = request.POST.get("action")
 
@@ -85,17 +85,17 @@ def workspace_settings(request, workspace_id):
                     .count()
                 )
                 if active_count <= 1:
-                    messages.error(request, "Cannot archive the last workspace in the organization.")
+                    messages.error(request, "No se puede archivar el último espacio de trabajo de la organización.")
                     return redirect("workspaces:settings", workspace_id=workspace.id)
                 workspace.is_archived = True
                 workspace.save(update_fields=["is_archived"])
-            messages.success(request, f'Workspace "{workspace.name}" has been archived.')
+            messages.success(request, f'El espacio de trabajo "{workspace.name}" se archivó.')
             return redirect("organizations:workspaces")
 
         if action == "unarchive_workspace":
             workspace.is_archived = False
             workspace.save(update_fields=["is_archived"])
-            messages.success(request, f'Workspace "{workspace.name}" has been restored.')
+            messages.success(request, f'El espacio de trabajo "{workspace.name}" se restauró.')
             return redirect("workspaces:settings", workspace_id=workspace.id)
 
         if action == "delete_workspace":
@@ -106,11 +106,11 @@ def workspace_settings(request, workspace_id):
                     .count()
                 )
                 if active_count <= 1 and not workspace.is_archived:
-                    messages.error(request, "Cannot delete the last workspace in the organization.")
+                    messages.error(request, "No se puede eliminar el último espacio de trabajo de la organización.")
                     return redirect("workspaces:settings", workspace_id=workspace.id)
                 workspace_name = workspace.name
                 workspace.delete()
-            messages.success(request, f'Workspace "{workspace_name}" has been permanently deleted.')
+            messages.success(request, f'El espacio de trabajo "{workspace_name}" se eliminó de forma permanente.')
             return redirect("organizations:workspaces")
 
         name = request.POST.get("name", "").strip()
@@ -129,13 +129,13 @@ def workspace_settings(request, workspace_id):
             # Validate file type
             allowed_types = ("image/jpeg", "image/png", "image/webp", "image/gif")
             if icon.content_type not in allowed_types:
-                messages.error(request, "Logo must be a JPEG, PNG, WebP, or GIF image.")
+                messages.error(request, "El logo debe ser una imagen JPEG, PNG, WebP o GIF.")
                 return redirect("workspaces:settings", workspace_id=workspace.id)
 
             # Validate file size (2 MB max)
             max_size = 2 * 1024 * 1024
             if icon.size > max_size:
-                messages.error(request, "Logo must be under 2 MB.")
+                messages.error(request, "El logo debe pesar menos de 2 MB.")
                 return redirect("workspaces:settings", workspace_id=workspace.id)
 
             # Delete old icon before saving new one
@@ -144,7 +144,7 @@ def workspace_settings(request, workspace_id):
             workspace.icon = icon
 
         workspace.save()
-        messages.success(request, "Workspace settings updated.")
+        messages.success(request, "Ajustes del espacio de trabajo actualizados.")
         return redirect("workspaces:settings", workspace_id=workspace.id)
 
     active_count = Workspace.objects.filter(organization=workspace.organization, is_archived=False).count()
@@ -184,17 +184,17 @@ def approvals_settings(request, workspace_id):
         # PermissionDenied, not Http404: the page exists and they are looking at
         # it. A 404 here told them the wrong thing and produced the wrong page.
         if not is_owner_or_manager:
-            raise PermissionDenied("Your role cannot change the approval workflow.")
+            raise PermissionDenied("Tu rol no puede cambiar el flujo de aprobación.")
 
         mode = request.POST.get("approval_workflow_mode", "")
         valid_modes = Workspace.ApprovalWorkflowMode.values
         if mode not in valid_modes:
-            messages.error(request, "Invalid approval workflow mode.")
+            messages.error(request, "Modo de flujo de aprobación no válido.")
             return redirect("workspaces:approvals_settings", workspace_id=workspace.id)
 
         workspace.approval_workflow_mode = mode
         workspace.save(update_fields=["approval_workflow_mode", "updated_at"])
-        messages.success(request, "Approval workflow updated.")
+        messages.success(request, "Flujo de aprobación actualizado.")
         return redirect("workspaces:approvals_settings", workspace_id=workspace.id)
 
     return render(

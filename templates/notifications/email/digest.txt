@@ -1,12 +1,12 @@
-Daily Notification Digest - {{ date|date:"N j, Y" }}
-{{ notifications|length }} notification{{ notifications|length|pluralize }}
+Resumen diario de notificaciones - {{ date|date:"j \d\e F \d\e Y" }}
+{{ notifications|length }} notificación{{ notifications|length|pluralize:"es" }}
 
 {% for n in notifications %}
-- {{ n.title }}{% if n.body %}: {{ n.body|truncatewords:20 }}{% endif %} ({{ n.created_at|timesince }} ago)
+- {{ n.title }}{% if n.body %}: {{ n.body|truncatewords:20 }}{% endif %} (hace {{ n.created_at|timesince }})
 {% endfor %}
 
-View all: {{ app_url }}/notifications/
+Ver todas: {{ app_url }}/notifications/
 
 ---
-You're receiving this daily digest.
-Manage preferences: {{ app_url }}/notifications/preferences/
+Recibes este resumen diario.
+Administrar preferencias: {{ app_url }}/notifications/preferences/

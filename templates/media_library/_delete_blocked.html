@@ -4,9 +4,9 @@
   <div class="flex items-start gap-3">
     {% icon "triangle-exclamation" css_class="w-5 h-5 flex-shrink-0 mt-0.5" %}
     <div>
-      <h4 class="text-sm font-semibold" style="color: var(--warning-700, #A16207);">Cannot delete this asset</h4>
+      <h4 class="text-sm font-semibold" style="color: var(--warning-700, #A16207);">No se puede eliminar este recurso</h4>
       <p class="text-xs mt-1" style="color: var(--warning-700, #A16207);">
-        This media is referenced by {{ referencing_posts|length }} scheduled post{{ referencing_posts|pluralize }}. Remove it from those posts first.
+        Este archivo se usa en {{ referencing_posts|length }} publicaci{{ referencing_posts|length|pluralize:"ón programada,ones programadas" }}. Quítalo primero de esas publicaciones.
       </p>
       {% if referencing_posts %}
       <ul class="mt-2 space-y-1">

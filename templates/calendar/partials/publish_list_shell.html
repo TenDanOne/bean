@@ -11,19 +11,19 @@ Tab switching is HTMX partial swaps only - no full page reload.
         <div class="flex items-center gap-1 -mb-px scroll-x-hidden flex-nowrap">
             <button class="publish-tab" :class="activeTab === 'queue' && 'active'"
                     @click="switchTab('queue')">
-                Queue {% if queue_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ queue_count }}</span>{% endif %}
+                Cola {% if queue_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ queue_count }}</span>{% endif %}
             </button>
             <button class="publish-tab" :class="activeTab === 'drafts' && 'active'"
                     @click="switchTab('drafts')">
-                Drafts {% if drafts_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ drafts_count }}</span>{% endif %}
+                Borradores {% if drafts_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ drafts_count }}</span>{% endif %}
             </button>
             <button class="publish-tab" :class="activeTab === 'approvals' && 'active'"
                     @click="switchTab('approvals')">
-                Approvals {% if approvals_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ approvals_count }}</span>{% endif %}
+                Aprobaciones {% if approvals_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ approvals_count }}</span>{% endif %}
             </button>
             <button class="publish-tab" :class="activeTab === 'sent' && 'active'"
                     @click="switchTab('sent')">
-                Sent {% if sent_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ sent_count }}</span>{% endif %}
+                Enviadas {% if sent_count %}<span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-medium text-app-tertiary bg-app-2 rounded-full">{{ sent_count }}</span>{% endif %}
             </button>
         </div>
 
@@ -33,7 +33,7 @@ Tab switching is HTMX partial swaps only - no full page reload.
             <div class="relative">
                 {% icon "at" css_class="publish-filter-icon" %}
                 <select class="publish-filter-select has-icon" x-model="activeChannel" @change="reloadTab()">
-                    <option value="">All Channels</option>
+                    <option value="">Todos los canales</option>
                     {% for channel in channels_with_posts %}
                     <option value="{{ channel.id }}">{{ channel.account_name|default:channel.account_handle }} ({{ channel.get_platform_display }})</option>
                     {% endfor %}
@@ -44,7 +44,7 @@ Tab switching is HTMX partial swaps only - no full page reload.
             <div class="relative">
                 {% icon "tag" css_class="publish-filter-icon" %}
                 <select class="publish-filter-select has-icon" x-model="activeTag" @change="reloadTab()">
-                    <option value="">All Tags</option>
+                    <option value="">Todas las etiquetas</option>
                     {% for tag in all_tags %}
                     <option value="{{ tag }}">#{{ tag }}</option>
                     {% endfor %}
@@ -56,7 +56,7 @@ Tab switching is HTMX partial swaps only - no full page reload.
                 {% icon "clock" css_class="publish-filter-icon" %}
                 <select class="publish-filter-select has-icon" x-model="displayTimezone" @change="reloadTab()">
                     {% for tz in timezone_choices %}
-                    <option value="{{ tz }}" {% if tz == display_timezone %}selected{% endif %}>{{ tz|cut:"America/"|cut:"Europe/"|cut:"Asia/"|cut:"US/"|cut:"Pacific/"|cut:"Australia/" }}{% if tz == workspace_timezone %} (workspace){% endif %}</option>
+                    <option value="{{ tz }}" {% if tz == display_timezone %}selected{% endif %}>{{ tz|cut:"America/"|cut:"Europe/"|cut:"Asia/"|cut:"US/"|cut:"Pacific/"|cut:"Australia/" }}{% if tz == workspace_timezone %} (espacio de trabajo){% endif %}</option>
                     {% endfor %}
                 </select>
             </div>

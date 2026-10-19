@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Content Categories - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Categorías de contenido - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block page_header %}
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Content Categories</h1>
-        <p class="text-sm text-app-tertiary mt-1">Organize posts by category for calendar filtering and queue scheduling.</p>
+        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Categorías de contenido</h1>
+        <p class="text-sm text-app-tertiary mt-1">Organiza tus publicaciones por categoría para filtrar el calendario y programar la cola.</p>
     </div>
     <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}" class="text-sm text-app-tertiary hover:text-app-body flex items-center gap-1">
         {% icon "chevron-left" css_class="w-4 h-4" %}
-        Back to Calendar
+        Volver al calendario
     </a>
 </div>
 {% endblock %}
@@ -18,11 +18,11 @@
 {% block content %}
 <div class="max-w-2xl" x-data="{ showForm: false, editId: null }">
 
-    <!-- Add Category Form -->
+    <!-- Agregar categoría Form -->
     <div class="mb-6">
         <button @click="showForm = !showForm" class="btn-brand text-sm py-2 px-4 flex items-center gap-1.5">
             {% icon "plus" css_class="w-4 h-4" %}
-            Add Category
+            Agregar categoría
         </button>
 
         <form x-show="showForm" x-cloak
@@ -33,15 +33,15 @@
               class="mt-3 p-4 bg-app-1 rounded-xl border border-app flex items-end gap-3">
             {% csrf_token %}
             <div class="flex-1">
-                <label class="block text-xs font-semibold text-app-body mb-1">Name</label>
-                <input type="text" name="name" placeholder="e.g., Educational" required class="form-input w-full text-sm">
+                <label class="block text-xs font-semibold text-app-body mb-1">Nombre</label>
+                <input type="text" name="name" placeholder="p. ej., Educativo" required class="form-input w-full text-sm">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-app-body mb-1">Color</label>
                 <input type="color" name="color" value="#3B82F6" class="w-10 h-[38px] rounded-lg border border-app cursor-pointer p-0.5">
             </div>
-            <button type="submit" class="btn-brand text-sm py-2 px-4">Save</button>
-            <button type="button" @click="showForm = false" class="text-sm text-app-tertiary hover:text-app-body py-2 px-3">Cancel</button>
+            <button type="submit" class="btn-brand text-sm py-2 px-4">Guardar</button>
+            <button type="button" @click="showForm = false" class="text-sm text-app-tertiary hover:text-app-body py-2 px-3">Cancelar</button>
         </form>
     </div>
 
@@ -61,14 +61,14 @@
                     <div class="flex items-center gap-3 w-full">
                         <span class="w-4 h-4 rounded-full flex-shrink-0" style="background: {{ cat.color }};"></span>
                         <span class="flex-1 text-sm font-medium text-app-strong">{{ cat.name }}</span>
-                        <span class="text-xs text-app-ghost">{{ cat.posts.count }} post{{ cat.posts.count|pluralize }}</span>
+                        <span class="text-xs text-app-ghost">{{ cat.posts.count }}publicaci{{ cat.posts.count|pluralize:"ón,ones" }}</span>
                         <button @click="editing = true" class="opacity-0 group-hover:opacity-100 text-app-ghost hover:text-app-secondary transition-all p-1">
                             {% icon "pencil" css_class="w-4 h-4" %}
                         </button>
                         <form x-data hx-post="{% url 'composer:category_delete' workspace_id=workspace.id category_id=cat.id %}"
                               hx-swap="none"
                               class="opacity-0 group-hover:opacity-100 transition-all"
-                              @submit="if(!confirm('Delete this category?')) $event.preventDefault()">
+                              @submit="if(!confirm('¿Eliminar esta categoría?')) $event.preventDefault()">
                             {% csrf_token %}
                             <button type="submit" class="text-app-ghost hover:text-red-500 transition-colors p-1">
                                 {% icon "trash" css_class="w-4 h-4" %}
@@ -86,8 +86,8 @@
                         {% csrf_token %}
                         <input type="color" name="color" value="{{ cat.color }}" class="w-8 h-8 rounded border border-app cursor-pointer p-0.5">
                         <input type="text" name="name" value="{{ cat.name }}" class="form-input flex-1 text-sm" required>
-                        <button type="submit" class="text-sm font-semibold" style="color: var(--primary);">Save</button>
-                        <button type="button" @click="editing = false" class="text-sm text-app-tertiary">Cancel</button>
+                        <button type="submit" class="text-sm font-semibold" style="color: var(--primary);">Guardar</button>
+                        <button type="button" @click="editing = false" class="text-sm text-app-tertiary">Cancelar</button>
                     </form>
                 </template>
             </div>
@@ -96,8 +96,8 @@
                 <div class="w-12 h-12 rounded-full bg-app-2 flex items-center justify-center mx-auto mb-3">
                     {% icon "tag" css_class="w-6 h-6 text-app-ghost" %}
                 </div>
-                <p class="text-sm font-medium text-app-body">No categories yet</p>
-                <p class="text-xs text-app-tertiary mt-1">Create categories to organize your posts.</p>
+                <p class="text-sm font-medium text-app-body">Aún no hay categorías</p>
+                <p class="text-xs text-app-tertiary mt-1">Crea categorías para organizar tus publicaciones.</p>
             </div>
             {% endfor %}
         </div>

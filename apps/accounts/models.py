@@ -9,7 +9,7 @@ from apps.common.encryption import EncryptedJSONField, EncryptedTextField
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError("Email is required")
+            raise ValueError("El correo electrónico es obligatorio")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         if password:

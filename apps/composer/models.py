@@ -115,10 +115,10 @@ class Idea(models.Model):
     """A content idea on the Kanban board, scoped to a workspace."""
 
     class Status(models.TextChoices):
-        UNASSIGNED = "unassigned", "Unassigned"
-        TODO = "todo", "To Do"
-        IN_PROGRESS = "in_progress", "In Progress"
-        DONE = "done", "Done"
+        UNASSIGNED = "unassigned", "Sin asignar"
+        TODO = "todo", "Por hacer"
+        IN_PROGRESS = "in_progress", "En curso"
+        DONE = "done", "Hecho"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace = models.ForeignKey(
@@ -336,17 +336,17 @@ class PlatformPost(models.Model):
     """
 
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
-        PENDING_REVIEW = "pending_review", "Pending Review"
-        PENDING_CLIENT = "pending_client", "Pending Client"
-        APPROVED = "approved", "Approved"
-        CHANGES_REQUESTED = "changes_requested", "Changes Requested"
-        REJECTED = "rejected", "Rejected"
-        SCHEDULED = "scheduled", "Scheduled"
-        PUBLISHING = "publishing", "Publishing"
-        PUBLISHED = "published", "Published"
-        FAILED = "failed", "Failed"
-        ON_HOLD = "on_hold", "On Hold"
+        DRAFT = "draft", "Borrador"
+        PENDING_REVIEW = "pending_review", "En revisión"
+        PENDING_CLIENT = "pending_client", "Pendiente del cliente"
+        APPROVED = "approved", "Aprobado"
+        CHANGES_REQUESTED = "changes_requested", "Cambios solicitados"
+        REJECTED = "rejected", "Rechazado"
+        SCHEDULED = "scheduled", "Programado"
+        PUBLISHING = "publishing", "Publicando"
+        PUBLISHED = "published", "Publicado"
+        FAILED = "failed", "Falló"
+        ON_HOLD = "on_hold", "En pausa"
 
     # Statuses that must never be removed by *accidental* deletion paths
     # (composer account deselection, autosave sync): a published or
@@ -649,7 +649,7 @@ class CSVImportJob(models.Model):
         PENDING = "pending", "Pending"
         PROCESSING = "processing", "Processing"
         COMPLETED = "completed", "Completed"
-        FAILED = "failed", "Failed"
+        FAILED = "failed", "Falló"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace = models.ForeignKey(

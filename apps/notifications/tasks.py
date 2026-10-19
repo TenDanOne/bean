@@ -52,7 +52,7 @@ def send_daily_digests():
             html_content = render_to_string("notifications/email/digest.html", context)
 
             msg = EmailMultiAlternatives(
-                subject=f"Daily Digest - {len(notifications)} notification{'s' if len(notifications) != 1 else ''}",
+                subject=f"Resumen diario - {len(notifications)} notificaci{'ones' if len(notifications) != 1 else 'ón'}",
                 body=text_content,
                 from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@localhost"),
                 to=[user.email],

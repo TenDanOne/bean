@@ -1,9 +1,9 @@
 Hi {{ client_user.display_name }},
 
-{{ created_by.display_name }} has shared content for your review in {{ workspace.name }}.
+{{ created_by.display_name }} compartió contenido para tu revisión en {{ workspace.name }}.
 
-Click the link below to access your portal and approve or provide feedback on scheduled posts:
+Haz clic en el siguiente enlace para entrar a tu portal y aprobar o comentar las publicaciones programadas:
 
 {{ magic_url }}
 
-This link is valid for 30 days. If it expires, ask your account manager for a new one.
+Este enlace es válido por 30 días. Si vence, pide uno nuevo a tu gestor de cuenta.

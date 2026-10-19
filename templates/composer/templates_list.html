@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Post Templates - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Plantillas de publicación - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block page_header %}
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Post Templates</h1>
-        <p class="text-sm text-app-tertiary mt-1">Reusable templates to speed up content creation.</p>
+        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Plantillas de publicación</h1>
+        <p class="text-sm text-app-tertiary mt-1">Plantillas reutilizables para crear contenido más rápido.</p>
     </div>
     <a href="{% url 'composer:compose' workspace_id=workspace.id %}" class="text-sm text-app-tertiary hover:text-app-body flex items-center gap-1">
         {% icon "chevron-left" css_class="w-4 h-4" %}
-        Back to Composer
+        Volver al compositor
     </a>
 </div>
 {% endblock %}
@@ -31,7 +31,7 @@
                 <h3 class="text-sm font-semibold text-app-strong line-clamp-1">{{ tpl.name }}</h3>
                 <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ml-2">
                     <form x-data hx-post="{% url 'composer:template_delete' workspace_id=workspace.id template_id=tpl.id %}" hx-swap="none"
-                          @submit="if(!confirm('Delete this template?')) $event.preventDefault()">
+                          @submit="if(!confirm('¿Eliminar esta plantilla?')) $event.preventDefault()">
                         {% csrf_token %}
                         <button type="submit" class="text-app-ghost hover:text-red-500 p-1">
                             {% icon "trash" css_class="w-3.5 h-3.5" %}
@@ -47,11 +47,11 @@
             {% endif %}
             <div class="flex items-center justify-between">
                 <span class="text-[11px] text-app-ghost">
-                    {% if tpl.created_by %}by {{ tpl.created_by.name|default:tpl.created_by.email }}{% endif %}
+                    {% if tpl.created_by %}por {{ tpl.created_by.name|default:tpl.created_by.email }}{% endif %}
                 </span>
                 <a href="{% url 'composer:use_template' workspace_id=workspace.id template_id=tpl.id %}"
                    class="text-xs font-semibold py-1.5 px-3 rounded-full border border-app hover:border-app-hover text-app-body hover:text-app transition-colors">
-                    Use Template
+                   Usar plantilla
                 </a>
             </div>
         </div>
@@ -60,8 +60,8 @@
             <div class="w-12 h-12 rounded-full bg-app-2 flex items-center justify-center mx-auto mb-3">
                 {% icon "file-lines" css_class="w-6 h-6 text-app-ghost" %}
             </div>
-            <p class="text-sm font-medium text-app-body">No templates yet</p>
-            <p class="text-xs text-app-tertiary mt-1">Save a post as a template from the composer to get started.</p>
+            <p class="text-sm font-medium text-app-body">Aún no hay plantillas</p>
+            <p class="text-xs text-app-tertiary mt-1">Guarda una publicación como plantilla desde el compositor para empezar.</p>
         </div>
         {% endfor %}
     </div>

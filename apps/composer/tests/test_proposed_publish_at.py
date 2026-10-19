@@ -227,8 +227,8 @@ class ProposedPublishAtSaveTests(TestCase):
         body = resp.content.decode("utf-8")
         # The proposed-time badge renders with its distinguishing title + accent
         # and the "Proposed Publishing <datetime>" copy.
-        self.assertIn('title="Proposed publishing time"', body)
-        self.assertIn("Proposed Publishing", body)
+        self.assertIn('title="Fecha de publicación propuesta"', body)
+        self.assertIn("Publicación propuesta", body)
         # Rendered in the workspace timezone (Europe/Berlin, UTC+2 on this date),
         # not server/UTC time.
         self.assertIn("Sep 1, 9:00", body)

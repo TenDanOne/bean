@@ -47,7 +47,7 @@ that consistency is worth more than the pixels.
                 <span class="text-[11px] text-app-tertiary truncate">@{{ turn.handle }}</span>
                 {% endif %}
                 {% if turn.side == "none" %}
-                <span class="badge-pill" style="background: var(--surface-0); color: var(--warning-700);">Internal note</span>
+                <span class="badge-pill" style="background: var(--surface-0); color: var(--warning-700);">Nota interna</span>
                 {% endif %}
                 {% if turn.pending %}
                 {% comment %}
@@ -56,11 +56,11 @@ that consistency is worth more than the pixels.
                 acknowledges it reads as a second, different message.
                 {% endcomment %}
                 <span class="badge-pill inline-flex items-center gap-1" style="background: var(--surface-0); color: var(--text-tertiary);">
-                    {% icon "clock" css_class="w-2.5 h-2.5" %} Sending
+                    {% icon "clock" css_class="w-2.5 h-2.5" %} Enviando
                 </span>
                 {% endif %}
                 <time datetime="{{ turn.at|date:'c' }}"
-                      class="text-[11px] ml-auto text-app-ghost">{{ turn.at|timesince }} ago</time>
+                      class="text-[11px] ml-auto text-app-ghost">hace {{ turn.at|timesince }}</time>
             </div>
 
             {% if turn.side == "right" %}
@@ -81,7 +81,7 @@ that consistency is worth more than the pixels.
                 {% else %}
                     {% comment %} No local record: written straight on the platform. {% endcomment %}
                     {% icon "arrow-up-right-from-square" css_class="w-3 h-3 flex-shrink-0 text-app-ghost" %}
-                    <span class="text-[11px] text-app-tertiary">Written on {{ turn.platform|default:"the platform" }}</span>
+                    <span class="text-[11px] text-app-tertiary">Escrito en {{ turn.platform|default:"la plataforma" }}</span>
                 {% endif %}
             </div>
             {% endif %}

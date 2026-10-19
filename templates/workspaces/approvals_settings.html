@@ -1,10 +1,10 @@
 {% extends "layouts/workspace_settings.html" %}
-{% block title %}Approvals - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Aprobaciones - {{ workspace.name }} - BEAN{% endblock %}
 {% block content %}
 <div class="max-w-2xl">
-    <h2 class="text-xl font-semibold mb-2" style="color: var(--text-primary);">Approvals</h2>
+    <h2 class="text-xl font-semibold mb-2" style="color: var(--text-primary);">Aprobaciones</h2>
     <p class="text-sm mb-8" style="color: var(--text-secondary);">
-        Control whether posts need to be reviewed before they can be scheduled or published.
+        Define si las publicaciones deben revisarse antes de programarse o publicarse.
     </p>
 
     <form method="POST" x-data="{ mode: '{{ workspace.approval_workflow_mode }}' }">
@@ -26,22 +26,22 @@
                        {% if workspace.approval_workflow_mode == value %}checked{% endif %}>
                 <div class="flex-1">
                     <div class="text-sm font-semibold mb-0.5" style="color: var(--text-primary);">
-                        {% if value == 'none' %}No approvals
-                        {% elif value == 'optional' %}Optional approvals
-                        {% elif value == 'required_internal' %}Internal review required
-                        {% elif value == 'required_internal_and_client' %}Internal review + client approval
+                        {% if value == 'none' %}Sin aprobaciones
+                        {% elif value == 'optional' %}Aprobaciones opcionales
+                        {% elif value == 'required_internal' %}Revisión interna obligatoria
+                        {% elif value == 'required_internal_and_client' %}Revisión interna + aprobación del cliente
                         {% else %}{{ label }}
                         {% endif %}
                     </div>
                     <div class="text-xs" style="color: var(--text-secondary);">
                         {% if value == 'none' %}
-                            Anyone with publishing rights can schedule or publish directly.
+                            Cualquiera con permiso de publicar puede programar o publicar directamente.
                         {% elif value == 'optional' %}
-                            Creators can choose to submit a post for review, but it's not required.
+                            Quien crea la publicación puede enviarla a revisión, pero no es obligatorio.
                         {% elif value == 'required_internal' %}
-                            Every post must be approved by a team member with review rights before it can go out.
+                            Toda publicación debe ser aprobada por un miembro del equipo con permiso de revisión antes de salir.
                         {% elif value == 'required_internal_and_client' %}
-                            Posts go through internal review, then are sent to the client portal for final sign-off.
+                            Las publicaciones pasan por revisión interna y luego se envían al portal de clientes para la aprobación final.
                         {% endif %}
                     </div>
                 </div>
@@ -53,14 +53,14 @@
         <button type="submit"
                 class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap"
                 style="background: var(--neutral-100); color: var(--text-primary);">
-            Save Changes
+            Guardar cambios
         </button>
         {% endif %}
     </form>
 
     <p class="text-xs mt-6" style="color: var(--text-tertiary);">
-        Reviewers are workspace members with the "Approve posts" permission.
-        Manage them on the <a href="{% url 'members:list' %}" class="underline" style="color: var(--text-secondary);">Members</a> page.
+        Los revisores son miembros del espacio de trabajo con el permiso «Aprobar publicaciones».
+        Gestiónalos en la página de <a href="{% url 'members:list' %}" class="underline" style="color: var(--text-secondary);">Miembros</a>.
     </p>
 </div>
 {% endblock %}

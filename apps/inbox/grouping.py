@@ -196,7 +196,7 @@ def _folder_label(group) -> str:
             return title
     if group["platform_post_id"]:
         return group["platform_post_id"]
-    return "Not from a post we can identify"
+    return "No proviene de una publicación identificable"
 
 
 def resolve_related_post_for(account, provider_message, cache: dict | None = None):

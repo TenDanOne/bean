@@ -1,3 +1,4 @@
+{% load common_extras %}
 <!-- Workspace header -->
 <div class="flex items-center gap-3">
     <!-- Workspace icon -->
@@ -17,11 +18,11 @@
                 {{ item.workspace.name }}
             </span>
             {% if item.workspace.is_archived %}
-            <span class="text-xs px-2 py-0.5 rounded-full" style="background: #FEF3C7; color: #92400E;">Archived</span>
+            <span class="text-xs px-2 py-0.5 rounded-full" style="background: #FEF3C7; color: #92400E;">Archivado</span>
             {% endif %}
         </div>
         <div class="text-xs" style="color: var(--text-tertiary);">
-            {{ item.member_count }} member{{ item.member_count|pluralize }}
+            {{ item.member_count }} miembro{{ item.member_count|pluralize }}
         </div>
     </div>
 
@@ -31,7 +32,7 @@
        class="btn-neutral inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full"
        style="background: var(--neutral-100); color: var(--text-secondary);">
         {% icon "gear" css_class="w-[14px] h-[14px]" %}
-        Settings
+        Ajustes
     </a>
     {% endif %}
 </div>
@@ -42,7 +43,7 @@
     {% for membership in item.members %}
     <span class="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full"
           style="background: var(--neutral-100); color: var(--text-secondary);"
-          title="{{ membership.user.display_name }} ({{ membership.get_workspace_role_display }})">
+          title="{{ membership.user.display_name }} ({{ membership.workspace_role|role_es }})">
         <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0"
               style="background: var(--neutral-200); color: var(--text-tertiary);">
             {{ membership.user.display_name|first|upper }}
@@ -52,5 +53,5 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="mt-3 text-xs" style="color: var(--text-tertiary);">No members assigned</div>
+<div class="mt-3 text-xs" style="color: var(--text-tertiary);">Sin miembros asignados</div>
 {% endif %}

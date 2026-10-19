@@ -191,7 +191,7 @@ class TestModelIntegrity:
         member = make_member(django_user_model, workspace, "editor", "e@example.com")
         foreign = make_channel(other_workspace, "other-brand")
         assignment = ChannelAssignment(membership=member, social_account=foreign)
-        with pytest.raises(ValidationError, match="different workspace"):
+        with pytest.raises(ValidationError, match="espacio de trabajo distinto"):
             assignment.clean()
 
     def test_one_assignment_per_member_and_channel(self, django_user_model, workspace):

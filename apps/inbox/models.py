@@ -10,21 +10,21 @@ from apps.common.managers import WorkspaceScopedManager
 
 class InboxMessage(models.Model):
     class MessageType(models.TextChoices):
-        COMMENT = "comment", "Comment"
-        MENTION = "mention", "Mention"
-        DM = "dm", "Direct Message"
-        REVIEW = "review", "Review"
+        COMMENT = "comment", "Comentario"
+        MENTION = "mention", "Mención"
+        DM = "dm", "Mensaje directo"
+        REVIEW = "review", "Reseña"
 
     class Status(models.TextChoices):
-        UNREAD = "unread", "Unread"
-        OPEN = "open", "Open"
-        RESOLVED = "resolved", "Resolved"
-        ARCHIVED = "archived", "Archived"
+        UNREAD = "unread", "No leído"
+        OPEN = "open", "Abierto"
+        RESOLVED = "resolved", "Resuelto"
+        ARCHIVED = "archived", "Archivado"
 
     class Sentiment(models.TextChoices):
-        POSITIVE = "positive", "Positive"
+        POSITIVE = "positive", "Positivo"
         NEUTRAL = "neutral", "Neutral"
-        NEGATIVE = "negative", "Negative"
+        NEGATIVE = "negative", "Negativo"
 
     class SentimentSource(models.TextChoices):
         AUTO = "auto", "Auto"

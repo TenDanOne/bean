@@ -37,7 +37,7 @@ def generate_magic_link(workspace, client_user, created_by):
     ).first()
 
     if not membership:
-        raise ValueError("User does not have client role in this workspace.")
+        raise ValueError("El usuario no tiene el rol de cliente en este espacio de trabajo.")
 
     # Invalidate any existing non-expired tokens for this user+workspace
     MagicLinkToken.objects.filter(
@@ -66,7 +66,7 @@ def generate_magic_link(workspace, client_user, created_by):
         "app_url": app_url,
     }
 
-    subject = f"{workspace.name} - Posts ready for your review"
+    subject = f"{workspace.name} - Publicaciones listas para tu revisión"
     text_content = render_to_string("client_portal/email/magic_link.txt", context)
     html_content = render_to_string("client_portal/email/magic_link.html", context)
 

@@ -32,14 +32,14 @@ Toolbar: nav arrows + period + Today + view dropdown | right: filter dropdowns.
 
         <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}?mode=calendar&view={{ view_type }}"
            class="px-3 py-1 text-xs font-semibold text-app-secondary border border-app rounded-md hover:bg-app-1 transition-all duration-150 no-underline">
-            Today
+            Hoy
         </a>
 
         <!-- View dropdown (Month/Week/Day) -->
         <div class="relative" @click.away="viewOpen = false">
             <button @click="viewOpen = !viewOpen"
                     class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-app-secondary border border-app rounded-md hover:bg-app-1 transition-all duration-150">
-                <span x-text="activeView.charAt(0).toUpperCase() + activeView.slice(1)">{{ view_type|title }}</span>
+                <span x-text="{ month: 'Mes', week: 'Semana', day: 'Día', list: 'Lista' }[activeView] || activeView">{% if view_type == 'week' %}Semana{% elif view_type == 'day' %}Día{% elif view_type == 'list' %}Lista{% else %}Mes{% endif %}</span>
                 {% icon "chevron-down" css_class="w-3 h-3 text-app-ghost" %}
             </button>
             <div x-show="viewOpen" x-cloak
@@ -49,15 +49,15 @@ Toolbar: nav arrows + period + Today + view dropdown | right: filter dropdowns.
                  class="absolute left-0 top-full mt-1 bg-app rounded-lg shadow-lg ring-1 ring-app py-1 z-50 min-w-[100px]">
                 <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}?mode=calendar&view=month&date={{ target_date|date:'Y-m-d' }}"
                    class="block w-full text-left px-3 py-1.5 text-xs font-medium text-app-secondary hover:bg-app-1 transition-colors no-underline {% if view_type == 'month' %}text-orange-600 bg-orange-50{% endif %}">
-                    Month
+                    Mes
                 </a>
                 <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}?mode=calendar&view=week&date={{ target_date|date:'Y-m-d' }}"
                    class="block w-full text-left px-3 py-1.5 text-xs font-medium text-app-secondary hover:bg-app-1 transition-colors no-underline {% if view_type == 'week' %}text-orange-600 bg-orange-50{% endif %}">
-                    Week
+                    Semana
                 </a>
                 <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}?mode=calendar&view=day&date={{ target_date|date:'Y-m-d' }}"
                    class="block w-full text-left px-3 py-1.5 text-xs font-medium text-app-secondary hover:bg-app-1 transition-colors no-underline {% if view_type == 'day' %}text-orange-600 bg-orange-50{% endif %}">
-                    Day
+                    Día
                 </a>
             </div>
         </div>
@@ -68,7 +68,7 @@ Toolbar: nav arrows + period + Today + view dropdown | right: filter dropdowns.
             <div class="relative flex-shrink-0">
                 {% icon "clipboard" css_class="cal-filter-icon" %}
                 <select class="cal-filter-select has-icon" name="status" x-model="calendarFilters.status" @change="reloadCalendar()">
-                    <option value="">All Posts</option>
+                    <option value="">Todas las publicaciones</option>
                     {% for value, label in status_choices %}
                     <option value="{{ value }}" {% if value in active_filters.statuses %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
@@ -79,7 +79,7 @@ Toolbar: nav arrows + period + Today + view dropdown | right: filter dropdowns.
             <div class="relative flex-shrink-0">
                 {% icon "at" css_class="cal-filter-icon" %}
                 <select class="cal-filter-select has-icon" name="channel" x-model="calendarFilters.channel" @change="reloadCalendar()">
-                    <option value="">Channels</option>
+                    <option value="">Canales</option>
                     {% for acc in social_accounts %}
                     <option value="{{ acc.id }}">{{ acc.account_name|default:acc.account_handle }}</option>
                     {% endfor %}
@@ -90,7 +90,7 @@ Toolbar: nav arrows + period + Today + view dropdown | right: filter dropdowns.
             <div class="relative flex-shrink-0">
                 {% icon "tag" css_class="cal-filter-icon" %}
                 <select class="cal-filter-select has-icon" name="tag" x-model="calendarFilters.tag" @change="reloadCalendar()">
-                    <option value="">Tags</option>
+                    <option value="">Etiquetas</option>
                     {% for tag in all_tags %}
                     <option value="{{ tag }}" {% if tag in active_filters.tags %}selected{% endif %}>#{{ tag }}</option>
                     {% endfor %}
@@ -102,7 +102,7 @@ Toolbar: nav arrows + period + Today + view dropdown | right: filter dropdowns.
                 {% icon "clock" css_class="cal-filter-icon" %}
                 <select class="cal-filter-select has-icon" name="tz" x-model="calendarFilters.tz" @change="reloadCalendar()">
                     {% for tz in timezone_choices %}
-                    <option value="{{ tz }}" {% if tz == display_timezone %}selected{% endif %}>{{ tz|cut:"America/"|cut:"Europe/"|cut:"Asia/"|cut:"US/"|cut:"Pacific/"|cut:"Australia/" }}{% if tz == workspace_timezone %} (workspace){% endif %}</option>
+                    <option value="{{ tz }}" {% if tz == display_timezone %}selected{% endif %}>{{ tz|cut:"America/"|cut:"Europe/"|cut:"Asia/"|cut:"US/"|cut:"Pacific/"|cut:"Australia/" }}{% if tz == workspace_timezone %} (espacio de trabajo){% endif %}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -136,14 +136,14 @@ Toolbar: nav arrows + period + Today + view dropdown | right: filter dropdowns.
     <!-- Status legend -->
     <div class="px-3 sm:px-4 lg:px-6 pt-4 lg:pt-6">
         <div class="flex flex-wrap items-center justify-end gap-x-1.5 gap-y-2 text-[11px]">
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#A8A29E"></span><span style="color:#57534E">Draft</span></span>
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#F97316"></span><span style="color:#C2410C">Pending Review</span></span>
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#14B8A6"></span><span style="color:#0F766E">Approved</span></span>
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#3B82F6"></span><span style="color:#1D4ED8">Scheduled</span></span>
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#6366F1"></span><span style="color:#4338CA">Publishing</span></span>
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#22C55E"></span><span style="color:#15803D">Published</span></span>
-            <!-- <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#EAB308"></span><span style="color:#A16207">Partially Published</span></span> -->
-            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#EF4444"></span><span style="color:#B91C1C">Failed</span></span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#A8A29E"></span><span style="color:#57534E">Borrador</span></span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#F97316"></span><span style="color:#C2410C">En revisión</span></span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#14B8A6"></span><span style="color:#0F766E">Aprobado</span></span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#3B82F6"></span><span style="color:#1D4ED8">Programado</span></span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#6366F1"></span><span style="color:#4338CA">Publicando</span></span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#22C55E"></span><span style="color:#15803D">Publicado</span></span>
+            <!-- <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#EAB308"></span><span style="color:#A16207">Parcialmente publicado</span></span> -->
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md"><span class="w-3 h-3 rounded-full" style="background:#EF4444"></span><span style="color:#B91C1C">Falló</span></span>
         </div>
     </div>
 </div>

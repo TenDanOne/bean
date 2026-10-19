@@ -1,6 +1,6 @@
 {% extends "layouts/workspace_settings.html" %}
 {% load common_extras %}
-{% block title %}Settings - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Ajustes - {{ workspace.name }} - BEAN{% endblock %}
 {% block content %}
 {% with can_manage=request|can:"manage_workspace_settings" %}
 <div class="max-w-2xl">
@@ -11,19 +11,19 @@
         {% csrf_token %}
         <div class="flex items-end gap-4">
             <div class="flex-1">
-                <label for="name" class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">Workspace Name</label>
+                <label for="name" class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">Nombre del espacio de trabajo</label>
                 {% comment %} Visible either way — the name is context a reader needs — but
                    only editable with the permission. {% endcomment %}
                 <input type="text" id="name" name="name" value="{{ workspace.name }}" required maxlength="100"
-                       {% if not can_manage %}disabled title="Only a workspace owner can rename this workspace."{% endif %}
+                       {% if not can_manage %}disabled title="Solo un propietario del espacio de trabajo puede renombrarlo."{% endif %}
                        class="input-focus w-full px-3 py-2 text-sm outline-none transition-colors {% if not can_manage %}opacity-60 cursor-not-allowed{% endif %}"
                        style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
             </div>
             <button type="submit"
-                    {% if not can_manage %}disabled title="Only a workspace owner can rename this workspace."{% endif %}
+                    {% if not can_manage %}disabled title="Solo un propietario del espacio de trabajo puede renombrarlo."{% endif %}
                     class="btn-neutral px-5 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if can_manage %}cursor-pointer{% else %}opacity-60 cursor-not-allowed{% endif %}"
                     style="background: var(--neutral-100); color: var(--text-primary);">
-                Save Changes
+                Guardar cambios
             </button>
         </div>
     </form>
@@ -43,12 +43,12 @@
                 <!-- Logo preview or default placeholder -->
                 <template x-if="preview">
                     <div class="relative">
-                        <img :src="preview" alt="Workspace logo" class="w-16 h-16 rounded-lg object-cover border" style="border-color: var(--border);">
+                        <img :src="preview" alt="Logo del espacio de trabajo" class="w-16 h-16 rounded-lg object-cover border" style="border-color: var(--border);">
                         <button type="button"
                                 @click="preview = ''; $refs.fileInput.value = ''; fileName = ''"
                                 class="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center cursor-pointer"
                                 style="background: var(--neutral-200); color: var(--text-secondary);"
-                                title="Remove logo">
+                                title="Quitar logo">
                             {% icon "xmark" css_class="w-[10px] h-[10px]" %}
                         </button>
                     </div>
@@ -61,7 +61,7 @@
 
                 <div>
                     <p class="text-sm font-semibold" style="color: var(--text-primary);">Logo</p>
-                    <p class="text-xs mt-0.5" style="color: var(--text-tertiary);">JPEG, PNG, WebP, or GIF. Max 2 MB.</p>
+                    <p class="text-xs mt-0.5" style="color: var(--text-tertiary);">JPEG, PNG, WebP o GIF. Máx. 2 MB.</p>
                 </div>
             </div>
 
@@ -75,16 +75,16 @@
             <label class="btn-surface-neutral-50 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full cursor-pointer"
                    style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
                 {% icon "upload" css_class="w-[16px] h-[16px]" %}
-                Upload Logo
+                Subir logo
                 <input type="file" name="icon" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" x-ref="fileInput"
                        @change="if ($el.files[0]) { preview = URL.createObjectURL($el.files[0]); fileName = $el.files[0].name; hasExisting = true; $el.closest('form').requestSubmit(); }">
             </label>
             {% else %}
             <span class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full opacity-60 cursor-not-allowed"
                   style="border: 1px solid var(--border); color: var(--text-tertiary); background: var(--surface-0);"
-                  title="Your role can't change this brand's logo. Ask a workspace owner or manager.">
+                  title="Tu rol no puede cambiar el logo de esta marca. Pídeselo a un propietario o gestor del espacio de trabajo.">
                 {% icon "upload" css_class="w-[16px] h-[16px]" %}
-                Upload Logo
+                Subir logo
             </span>
             {% endif %}
         </div>
@@ -93,20 +93,20 @@
     {% if is_owner_or_manager %}
     <hr class="my-10" style="border-color: var(--border);">
 
-    <!-- Archive / Restore Workspace section -->
+    <!-- Archive / Restaurar espacio de trabajo section -->
     <div x-data="{ showArchiveModal: false }">
         <div class="flex items-start justify-between gap-4 mb-10">
             <div>
                 <h3 class="text-base font-semibold mb-1" style="color: var(--text-primary);">
-                    {% if workspace.is_archived %}Restore this workspace{% else %}Archive this workspace{% endif %}
+                    {% if workspace.is_archived %}Restaurar este espacio de trabajo{% else %}Archivar este espacio de trabajo{% endif %}
                 </h3>
                 <p class="text-sm" style="color: var(--text-secondary); max-width: 480px;">
                     {% if workspace.is_archived %}
-                    This workspace is currently archived. Restoring it will make it visible in the sidebar and accessible to all members again.
+                    Este espacio de trabajo está archivado. Al restaurarlo volverá a mostrarse en la barra lateral y todos los miembros podrán acceder a él.
                     {% elif can_archive %}
-                    Archiving hides this workspace from the sidebar and prevents new posts. All existing data is preserved and the workspace can be restored at any time.
+                    Al archivarlo, el espacio de trabajo se oculta de la barra lateral y no se pueden crear publicaciones nuevas. Todos los datos se conservan y puedes restaurarlo cuando quieras.
                     {% else %}
-                    You cannot archive the last active workspace in the organization. Create another workspace first.
+                    No puedes archivar el último espacio de trabajo activo de la organización. Crea otro primero.
                     {% endif %}
                 </p>
             </div>
@@ -118,14 +118,14 @@
                 <button type="submit"
                         class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap shrink-0"
                         style="background: var(--neutral-100); color: var(--text-primary);">
-                    Restore Workspace
+                    Restaurar espacio de trabajo
                 </button>
             </form>
             {% elif can_archive %}
             <button type="button" @click="showArchiveModal = true"
                     class="btn-amber px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap shrink-0"
                     style="background: #FEF3C7; color: #92400E;">
-                Archive Workspace
+                Archivar espacio de trabajo
             </button>
 
             <!-- Archive confirmation modal -->
@@ -140,21 +140,21 @@
                          class="w-full max-w-md rounded-xl shadow-xl"
                          style="background: var(--surface-0);">
                         <div class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid var(--border);">
-                            <h3 class="text-base font-semibold" style="color: var(--text-primary);">Archive this workspace</h3>
+                            <h3 class="text-base font-semibold" style="color: var(--text-primary);">Archivar este espacio de trabajo</h3>
                             <button type="button" @click="showArchiveModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                                 {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                             </button>
                         </div>
                         <div class="px-6 py-5">
                             <p class="text-sm" style="color: var(--text-secondary);">
-                                Are you sure you want to archive <strong>{{ workspace.name }}</strong>? The workspace will be hidden from the sidebar and no new posts can be created. All existing data will be preserved.
+                                ¿Seguro que quieres archivar <strong>{{ workspace.name }}</strong>? Se ocultará de la barra lateral y no se podrán crear publicaciones nuevas. Todos los datos se conservarán.
                             </p>
                         </div>
                         <div class="flex justify-end gap-3 px-6 py-4" style="border-top: 1px solid var(--border);">
                             <button type="button" @click="showArchiveModal = false"
                                     class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                                     style="background: var(--neutral-100); color: var(--text-primary);">
-                                Cancel
+                                Cancelar
                             </button>
                             <form method="POST">
                                 {% csrf_token %}
@@ -162,7 +162,7 @@
                                 <button type="submit"
                                         class="btn-opacity px-5 py-2 text-sm font-semibold rounded-full cursor-pointer whitespace-nowrap"
                                         style="background: #92400E; color: white;">
-                                    Yes, archive this workspace
+                                    Sí, archivar este espacio de trabajo
                                 </button>
                             </form>
                         </div>
@@ -173,16 +173,16 @@
         </div>
     </div>
 
-    <!-- Delete Workspace section -->
+    <!-- Eliminar espacio de trabajo section -->
     <div x-data="{ showDeleteModal: false }">
         <div class="flex items-start justify-between gap-4">
             <div>
-                <h3 class="text-base font-semibold mb-1" style="color: var(--text-primary);">Delete this workspace</h3>
+                <h3 class="text-base font-semibold mb-1" style="color: var(--text-primary);">Eliminar este espacio de trabajo</h3>
                 <p class="text-sm" style="color: var(--text-secondary); max-width: 480px;">
                     {% if can_delete %}
-                    Permanently delete this workspace and all of its data. This includes all posts, connected social accounts, media assets, and workspace memberships. This action cannot be undone.
+                    Elimina de forma permanente este espacio de trabajo y todos sus datos. Incluye todas las publicaciones, cuentas sociales conectadas, medios y membresías. Esta acción no se puede deshacer.
                     {% else %}
-                    You cannot delete the last active workspace in the organization. Create another workspace first.
+                    No puedes eliminar el último espacio de trabajo activo de la organización. Crea otro primero.
                     {% endif %}
                 </p>
             </div>
@@ -191,7 +191,7 @@
             <button type="button" @click="showDeleteModal = true"
                     class="btn-danger-soft px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap shrink-0"
                     style="background: var(--error-soft, #FEE2E2); color: var(--error-500, #EF4444);">
-                Delete Workspace
+                Eliminar espacio de trabajo
             </button>
             {% endif %}
         </div>
@@ -209,30 +209,30 @@
                      class="w-full max-w-md rounded-xl shadow-xl"
                      style="background: var(--surface-0);">
                     <div class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid var(--border);">
-                        <h3 class="text-base font-semibold" style="color: var(--text-primary);">Delete this workspace</h3>
+                        <h3 class="text-base font-semibold" style="color: var(--text-primary);">Eliminar este espacio de trabajo</h3>
                         <button type="button" @click="showDeleteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                             {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                         </button>
                     </div>
                     <div class="px-6 py-5">
                         <p class="text-sm mb-3" style="color: var(--text-secondary);">
-                            Are you sure you want to permanently delete <strong>{{ workspace.name }}</strong>? This action cannot be undone.
+                            ¿Seguro que quieres eliminar <strong>{{ workspace.name }}</strong> de forma permanente? Esta acción no se puede deshacer.
                         </p>
                         <p class="text-sm" style="color: var(--text-secondary);">
-                            All of the following will be permanently removed:
+                            Se borrará de forma permanente lo siguiente:
                         </p>
                         <ul class="text-sm mt-2 ml-4 list-disc space-y-1" style="color: var(--text-secondary);">
-                            <li>All scheduled and published posts</li>
-                            <li>Connected social accounts</li>
-                            <li>Media assets and files</li>
-                            <li>Workspace memberships</li>
+                            <li>Todas las publicaciones programadas y publicadas</li>
+                            <li>Cuentas sociales conectadas</li>
+                            <li>Medios y archivos</li>
+                            <li>Membresías del espacio de trabajo</li>
                         </ul>
                     </div>
                     <div class="flex justify-end gap-3 px-6 py-4" style="border-top: 1px solid var(--border);">
                         <button type="button" @click="showDeleteModal = false"
                                 class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                                 style="background: var(--neutral-100); color: var(--text-primary);">
-                            Cancel
+                            Cancelar
                         </button>
                         <form method="POST">
                             {% csrf_token %}
@@ -240,7 +240,7 @@
                             <button type="submit"
                                     class="btn-opacity px-5 py-2 text-sm font-semibold rounded-full cursor-pointer whitespace-nowrap"
                                     style="background: var(--error-500, #EF4444); color: white;">
-                                Yes, delete this workspace
+                                Sí, eliminar este espacio de trabajo
                             </button>
                         </form>
                     </div>

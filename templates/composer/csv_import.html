@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Import from CSV - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Importar desde CSV - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block page_header %}
 <div class="flex items-center justify-between mb-6">
     <div>
-        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Import from CSV</h1>
-        <p class="text-sm text-app-tertiary mt-1">Bulk import posts from a CSV or TSV file.</p>
+        <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">Importar desde CSV</h1>
+        <p class="text-sm text-app-tertiary mt-1">Importa publicaciones en lote desde un archivo CSV o TSV.</p>
     </div>
     <a href="{% url 'calendar:calendar' workspace_id=workspace.id %}" class="text-sm text-app-tertiary hover:text-app-body flex items-center gap-1">
         {% icon "chevron-left" css_class="w-4 h-4" %}
-        Back to Calendar
+        Volver al calendario
     </a>
 </div>
 {% endblock %}
@@ -26,7 +26,7 @@
     <div class="relief p-6">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-app-on-primary" style="background: var(--primary);">1</div>
-            <h2 class="text-sm font-semibold text-app-strong">Upload CSV File</h2>
+            <h2 class="text-sm font-semibold text-app-strong">Subir archivo CSV</h2>
         </div>
 
         <form hx-post="{% url 'composer:csv_upload' workspace_id=workspace.id %}"
@@ -47,8 +47,8 @@
                  @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; filename = $event.dataTransfer.files[0]?.name"
                  :class="dragging && 'border-orange-300 bg-orange-50/30'">
                 {% icon "upload" css_class="w-10 h-10 text-app-faint mx-auto mb-3" %}
-                <p class="text-sm text-app-secondary mb-1">Drop your CSV file here, or <label for="csv-file" class="font-semibold cursor-pointer" style="color: var(--primary);">browse</label></p>
-                <p class="text-xs text-app-ghost">Supports .csv and .tsv files</p>
+                <p class="text-sm text-app-secondary mb-1">Suelta tu archivo CSV aquí o <label for="csv-file" class="font-semibold cursor-pointer" style="color: var(--primary);">búscalo</label></p>
+                <p class="text-xs text-app-ghost">Admite archivos .csv y .tsv</p>
                 <p class="text-xs text-app-secondary mt-2 font-medium" x-show="filename" x-text="filename" x-cloak></p>
                 <input type="file" name="csv_file" id="csv-file" accept=".csv,.tsv" required class="hidden"
                        x-ref="fileInput"
@@ -57,10 +57,10 @@
 
             <div class="mt-4 flex items-center justify-between">
                 <div class="text-xs text-app-ghost">
-                    Expected columns: date, time, platforms, caption, media_url, category, tags, first_comment
+                    Columnas esperadas: date, time, platforms, caption, media_url, category, tags, first_comment
                 </div>
                 <button type="submit" class="btn-brand text-sm py-2 px-5">
-                    Upload &amp; Map Columns
+                    Subir y asignar columnas
                 </button>
             </div>
         </form>

@@ -41,7 +41,7 @@ class CSVUploadSizeCapTests(TestCase):
         response = self.client.post(self.url, data={"csv_file": upload})
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8")
-        self.assertIn("too large", body)
+        self.assertIn("demasiado grande", body)
 
     def test_under_cap_csv_proceeds_to_mapping(self):
         small_csv = b"date,platform,caption\n2026-05-01,instagram,Hello\n"
@@ -49,4 +49,4 @@ class CSVUploadSizeCapTests(TestCase):
         response = self.client.post(self.url, data={"csv_file": upload})
         self.assertEqual(response.status_code, 200)
         body = response.content.decode("utf-8")
-        self.assertNotIn("too large", body)
+        self.assertNotIn("demasiado grande", body)

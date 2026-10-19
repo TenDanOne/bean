@@ -6,7 +6,7 @@
 <!-- Workspace settings sidebar -->
 <a href="{% url 'calendar:calendar' workspace_id=request.workspace.id %}" class="sidebar-nav-item mb-2">
     {% icon "arrow-left" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-    <span class="sidebar-nav-label">Workspace Settings</span>
+    <span class="sidebar-nav-label">Ajustes del espacio de trabajo</span>
 </a>
 
 <div class="sidebar-section-label">{{ request.workspace.name }}</div>
@@ -16,19 +16,19 @@
 </a>
 <a href="{% url 'social_accounts:list' workspace_id=request.workspace.id %}" class="sidebar-nav-item mb-1 {% if settings_active == 'social_accounts' %}active{% endif %}">
     {% icon "share-nodes" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-    <span class="sidebar-nav-label">Social Accounts</span>
+    <span class="sidebar-nav-label">Cuentas sociales</span>
 </a>
 <a href="{% url 'media_library:index' workspace_id=request.workspace.id %}" class="sidebar-nav-item mb-1 {% if settings_active == 'media' %}active{% endif %}">
     {% icon "image" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-    <span class="sidebar-nav-label">Media Library</span>
+    <span class="sidebar-nav-label">Biblioteca de medios</span>
 </a>
 <a href="{% url 'workspaces:approvals_settings' workspace_id=request.workspace.id %}" class="sidebar-nav-item mb-1 {% if settings_active == 'approvals' %}active{% endif %}">
     {% icon "shield-halved" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-    <span class="sidebar-nav-label">Approvals</span>
+    <span class="sidebar-nav-label">Aprobaciones</span>
 </a>
 <a href="{% url 'client_portal_admin:client_list' workspace_id=request.workspace.id %}" class="sidebar-nav-item mb-1 {% if settings_active == 'clients' %}active{% endif %}">
     {% icon "user-group" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-    <span class="sidebar-nav-label">Client Portal</span>
+    <span class="sidebar-nav-label">Portal de clientes</span>
 </a>
 {% endblock %}
 

@@ -1,4 +1,4 @@
-<!-- Invite Client Modal -->
+<!-- Invitar cliente Modal -->
 <template x-teleport="body">
     <div x-show="showInviteModal" x-transition.opacity
          class="fixed inset-0 z-50 flex items-center justify-center"
@@ -11,7 +11,7 @@
 
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 flex-shrink-0" style="border-bottom: 1px solid var(--border);">
-                <h3 class="text-base font-semibold" style="color: var(--text-primary);">Invite Client</h3>
+                <h3 class="text-base font-semibold" style="color: var(--text-primary);">Invitar cliente</h3>
                 <button @click="showInviteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                     {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                 </button>
@@ -27,15 +27,15 @@
 
                 <!-- Email -->
                 <div class="mb-5">
-                    <label for="client-email" class="block text-sm font-medium mb-1.5" style="color: var(--text-primary);">Email Address</label>
-                    <input type="email" id="client-email" name="email" required placeholder="client@example.com"
+                    <label for="client-email" class="block text-sm font-medium mb-1.5" style="color: var(--text-primary);">Correo electrónico</label>
+                    <input type="email" id="client-email" name="email" required placeholder="cliente@ejemplo.com"
                            class="input-focus-surface w-full px-4 py-2.5 text-sm outline-none"
                            style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-1);">
                 </div>
 
                 <!-- Info -->
                 <div class="mb-5 px-3 py-2.5 rounded-lg text-xs" style="background: var(--neutral-50); color: var(--text-secondary);">
-                    <p>The client will receive an invitation email to create an account. Once accepted, they will have <strong>Client</strong> access to this workspace, allowing them to review and approve posts via the Client Portal.</p>
+                    <p>El cliente recibirá un correo de invitación para crear su cuenta. Al aceptarlo tendrá acceso de <strong>Cliente</strong> a este espacio de trabajo y podrá revisar y aprobar publicaciones desde el portal de clientes.</p>
                 </div>
 
                 <!-- Error container -->
@@ -46,12 +46,12 @@
                     <button type="button" @click="showInviteModal = false"
                             class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                             style="background: var(--neutral-100); color: var(--text-primary);">
-                        Cancel
+                        Cancelar
                     </button>
                     <button type="submit"
                             class="btn-opacity px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                             style="background: var(--primary); color: var(--on-primary);">
-                        Send Invitation
+                        Enviar invitación
                     </button>
                 </div>
             </form>

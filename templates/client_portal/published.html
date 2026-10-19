@@ -1,12 +1,12 @@
 {% extends "client_portal/portal_base.html" %}
 {% load humanize %}
-{% block title %}Published Content - {{ workspace.name }}{% endblock %}
+{% block title %}Contenido publicado - {{ workspace.name }}{% endblock %}
 
 {% block content %}
 <div>
     <div class="mb-6">
-        <h1 class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Published Content</h1>
-        <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Posts that have been published to your social channels</p>
+        <h1 class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Contenido publicado</h1>
+        <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Publicaciones que ya se publicaron en tus canales sociales</p>
     </div>
 
     <div class="space-y-3">
@@ -41,8 +41,8 @@
         {% empty %}
         <div class="text-center py-16">
             {% icon "file-lines" css_class="mx-auto w-14 h-14 mb-3" %}
-            <p class="font-medium" style="color: var(--text-secondary);">No published posts yet</p>
-            <p class="text-sm mt-1" style="color: var(--text-tertiary);">Published content will appear here</p>
+            <p class="font-medium" style="color: var(--text-secondary);">Aún no hay publicaciones publicadas</p>
+            <p class="text-sm mt-1" style="color: var(--text-tertiary);">El contenido publicado aparecerá aquí</p>
         </div>
         {% endfor %}
     </div>

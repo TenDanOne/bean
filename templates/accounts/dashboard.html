@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}Dashboard{% endblock %}
+{% block page_title %}Panel{% endblock %}
 
 {% block content %}
 <div style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 200px);">
@@ -24,14 +24,14 @@
             color: var(--text-primary);
             letter-spacing: -0.015em;
             margin-bottom: 8px;
-        ">No workspaces yet</h2>
+        ">Aún no tienes espacios de trabajo</h2>
 
         <p style="
             font-size: 0.9375rem;
             color: var(--text-secondary);
             line-height: 1.7;
             margin-bottom: 32px;
-        ">Create a workspace to start scheduling posts, managing content, and collaborating with your team.</p>
+        ">Crea un espacio de trabajo para programar publicaciones, gestionar contenido y colaborar con tu equipo.</p>
 
         <!-- Create workspace form -->
         <form method="post" action="{% url 'workspaces:create' %}" style="
@@ -49,17 +49,17 @@
                 font-weight: 600;
                 color: var(--text-primary);
                 margin-bottom: 6px;
-            ">Workspace name</label>
+            ">Nombre del espacio de trabajo</label>
             <input
                 type="text"
                 name="name"
-                placeholder="e.g. My Brand, Client Name"
+                placeholder="p. ej. Mi marca, Nombre del cliente"
                 required
                 class="form-input-styled"
                 style="margin-bottom: 16px;"
             >
             <button type="submit" class="btn-brand">
-                Create Workspace
+                Crear espacio de trabajo
             </button>
         </form>
     </div>

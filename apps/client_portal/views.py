@@ -30,7 +30,7 @@ def _portal_response(post_id, action, *, tone, title, body=""):
 def _portal_error(request, message):
     """Feedback for a failed portal action: an error toast for htmx, 400 otherwise."""
     if request.htmx:
-        return toast_response(tone="error", title="Couldn't complete that", body=message)
+        return toast_response(tone="error", title="No se pudo completar", body=message)
     return HttpResponse(message, status=400)
 
 
@@ -200,7 +200,7 @@ def portal_approve(request, post_id):
 
     if request.htmx:
         return _portal_response(
-            post.id, "approved", tone="success", title="Approved", body="Thanks — scheduled to publish."
+            post.id, "approved", tone="success", title="Aprobada", body="Gracias, se programó para publicarse."
         )
     return redirect("client_portal:approval_queue")
 
@@ -222,7 +222,11 @@ def portal_request_changes(request, post_id):
 
     if request.htmx:
         return _portal_response(
-            post.id, "changes_requested", tone="info", title="Feedback sent", body="The team will take a look."
+            post.id,
+            "changes_requested",
+            tone="info",
+            title="Comentarios enviados",
+            body="El equipo les echará un vistazo.",
         )
     return redirect("client_portal:approval_queue")
 
@@ -243,7 +247,9 @@ def portal_reject(request, post_id):
         return _portal_error(request, str(e))
 
     if request.htmx:
-        return _portal_response(post.id, "rejected", tone="error", title="Post rejected", body="The team was notified.")
+        return _portal_response(
+            post.id, "rejected", tone="error", title="Publicación rechazada", body="Se avisó al equipo."
+        )
     return redirect("client_portal:approval_queue")
 
 
@@ -267,8 +273,8 @@ def portal_request_hold(request, post_id):
             post.id,
             "on_hold",
             tone="warn",
-            title="Hold requested",
-            body="The team was notified. Nothing publishes while held.",
+            title="Pausa solicitada",
+            body="Se avisó al equipo. Nada se publica mientras esté en pausa.",
         )
     return redirect("client_portal:approval_queue")
 

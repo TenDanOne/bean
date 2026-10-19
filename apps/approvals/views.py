@@ -26,9 +26,9 @@ def _get_workspace(request, workspace_id):
 
     workspace = get_object_or_404(Workspace, id=workspace_id)
     if not request.user.is_authenticated:
-        raise PermissionDenied("Authentication required.")
+        raise PermissionDenied("Se requiere iniciar sesión.")
     if not WorkspaceMembership.objects.filter(user=request.user, workspace=workspace).exists():
-        raise PermissionDenied("You do not have access to this workspace.")
+        raise PermissionDenied("No tienes acceso a este espacio de trabajo.")
     return workspace
 
 
@@ -59,16 +59,19 @@ def approve(request, workspace_id, post_id):
     try:
         moved = services.approve_post(post, request.user, workspace, comment_text)
     except ValueError as e:
-        return _toast_response(tone="error", title="Couldn't approve", body=str(e))
+        return _toast_response(tone="error", title="No se pudo aprobar", body=str(e))
 
     if not moved:
-        return _toast_response(tone="warn", title="Nothing to update", body="This post was already actioned.")
+        return _toast_response(tone="warn", title="Nada que actualizar", body="Esta publicación ya fue atendida.")
 
     if post.platform_posts.filter(status="pending_client").exists():
         return _toast_response(
-            tone="success", title="Approved internally", body="Sent for client sign-off", refresh="approvalAction"
+            tone="success",
+            title="Aprobada internamente",
+            body="Enviada para visto bueno del cliente",
+            refresh="approvalAction",
         )
-    return _toast_response(tone="success", title="Approved", body="Ready to publish", refresh="approvalAction")
+    return _toast_response(tone="success", title="Aprobada", body="Lista para publicar", refresh="approvalAction")
 
 
 @login_required
@@ -83,13 +86,13 @@ def request_changes_view(request, workspace_id, post_id):
     try:
         moved = services.request_changes(post, request.user, workspace, comment_text)
     except ValueError as e:
-        return _toast_response(tone="error", title="Couldn't send back", body=str(e))
+        return _toast_response(tone="error", title="No se pudo devolver", body=str(e))
 
     if not moved:
-        return _toast_response(tone="warn", title="Nothing to update", body="This post was already actioned.")
+        return _toast_response(tone="warn", title="Nada que actualizar", body="Esta publicación ya fue atendida.")
 
     return _toast_response(
-        tone="info", title="Sent back for changes", body="The author was notified", refresh="approvalAction"
+        tone="info", title="Devuelta con cambios", body="Se avisó al autor", refresh="approvalAction"
     )
 
 
@@ -105,13 +108,13 @@ def reject(request, workspace_id, post_id):
     try:
         moved = services.reject_post(post, request.user, workspace, comment_text)
     except ValueError as e:
-        return _toast_response(tone="error", title="Couldn't reject", body=str(e))
+        return _toast_response(tone="error", title="No se pudo rechazar", body=str(e))
 
     if not moved:
-        return _toast_response(tone="warn", title="Nothing to update", body="This post was already actioned.")
+        return _toast_response(tone="warn", title="Nada que actualizar", body="Esta publicación ya fue atendida.")
 
     return _toast_response(
-        tone="error", title="Post rejected", body="The author was notified", refresh="approvalAction"
+        tone="error", title="Publicación rechazada", body="Se avisó al autor", refresh="approvalAction"
     )
 
 
@@ -125,9 +128,9 @@ def resume(request, workspace_id, post_id):
 
     moved = services.resume_hold(post, request.user, workspace)
     if not moved:
-        return _toast_response(tone="warn", title="Nothing to update", body="This post is not on hold.")
+        return _toast_response(tone="warn", title="Nada que actualizar", body="Esta publicación no está en pausa.")
 
-    return _toast_response(tone="success", title="Hold lifted", body="Back to approved", refresh="approvalAction")
+    return _toast_response(tone="success", title="Pausa levantada", body="Vuelve a aprobada", refresh="approvalAction")
 
 
 @login_required
@@ -140,7 +143,7 @@ def bulk_action(request, workspace_id):
     post_ids = request.POST.getlist("post_ids")
 
     if not post_ids:
-        return _toast_response(tone="warn", title="No posts selected")
+        return _toast_response(tone="warn", title="No hay publicaciones seleccionadas")
 
     if action == "approve":
         results = services.bulk_approve(post_ids, request.user, workspace)
@@ -149,26 +152,29 @@ def bulk_action(request, workspace_id):
         try:
             results = services.bulk_reject(post_ids, request.user, workspace, comment_text)
         except ValueError as e:
-            return _toast_response(tone="error", title="Couldn't reject", body=str(e))
+            return _toast_response(tone="error", title="No se pudo rechazar", body=str(e))
     else:
-        return _toast_response(tone="error", title="Invalid action")
+        return _toast_response(tone="error", title="Acción no válida")
 
     n = sum(1 for _, success, _ in results if success)
-    plural = "s" if n != 1 else ""
+    plural = "es" if n != 1 else ""
 
     if n == 0:
         return _toast_response(
-            tone="warn", title="Nothing to update", body="None were still pending.", refresh="bulkActionComplete"
+            tone="warn", title="Nada que actualizar", body="Ninguna seguía pendiente.", refresh="bulkActionComplete"
         )
     if action == "approve":
         return _toast_response(
             tone="success",
-            title=f"{n} post{plural} approved",
-            body="Moved to the next stage",
+            title=f"{n} publicación{plural} aprobada{'s' if n != 1 else ''}",
+            body="Pasó a la siguiente etapa",
             refresh="bulkActionComplete",
         )
     return _toast_response(
-        tone="error", title=f"{n} post{plural} rejected", body="Creators notified", refresh="bulkActionComplete"
+        tone="error",
+        title=f"{n} publicación{plural} rechazada{'s' if n != 1 else ''}",
+        body="Se avisó a los autores",
+        refresh="bulkActionComplete",
     )
 
 
@@ -187,7 +193,7 @@ def add_comment(request, workspace_id, post_id):
 
     body = request.POST.get("body", "").strip()
     if not body:
-        return HttpResponse("Comment body is required.", status=400)
+        return HttpResponse("El comentario no puede estar vacío.", status=400)
 
     # Taken from the request and never checked, so an unknown string reached the
     # model and — worse — an outside client could post into the internal channel,
@@ -195,7 +201,7 @@ def add_comment(request, workspace_id, post_id):
     # somewhere they cannot read, and the team would read it as a private note.
     visibility = request.POST.get("visibility", PostComment.Visibility.EXTERNAL)
     if visibility not in PostComment.Visibility.values:
-        return HttpResponse("Unknown comment visibility.", status=400)
+        return HttpResponse("Visibilidad de comentario desconocida.", status=400)
     membership = getattr(request, "workspace_membership", None)
     if membership and membership.workspace_role == WorkspaceMembership.WorkspaceRole.CLIENT:
         visibility = PostComment.Visibility.EXTERNAL
@@ -237,7 +243,7 @@ def edit_comment(request, workspace_id, post_id, comment_id):
     body = request.POST.get("body", "").strip()
 
     if not body:
-        return HttpResponse("Comment body is required.", status=400)
+        return HttpResponse("El comentario no puede estar vacío.", status=400)
 
     # Scope the post + comment lookup to the request workspace so a viewer
     # cannot edit / surface comments belonging to a different workspace.

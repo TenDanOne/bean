@@ -1,12 +1,12 @@
 {% extends "client_portal/portal_base.html" %}
 {% load humanize %}
-{% block title %}Activity - {{ workspace.name }}{% endblock %}
+{% block title %}Actividad - {{ workspace.name }}{% endblock %}
 
 {% block content %}
 <div>
     <div class="mb-6">
-        <h1 class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Your Activity</h1>
-        <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Your review history and actions</p>
+        <h1 class="text-xl font-bold tracking-tight" style="color: var(--text-primary);">Tu actividad</h1>
+        <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Tu historial de revisiones y acciones</p>
     </div>
 
     <div class="rounded-xl border overflow-hidden" style="background: var(--surface-0); border-color: var(--border);">
@@ -43,13 +43,13 @@
             </div>
 
             <!-- Time -->
-            <span class="text-[0.6875rem] flex-shrink-0" style="color: var(--text-ghost);">{{ action.created_at|timesince }} ago</span>
+            <span class="text-[0.6875rem] flex-shrink-0" style="color: var(--text-ghost);">hace {{ action.created_at|timesince }}</span>
         </div>
         {% empty %}
         <div class="text-center py-16">
             {% icon "list" css_class="mx-auto w-14 h-14 mb-3" %}
-            <p class="font-medium" style="color: var(--text-secondary);">No activity yet</p>
-            <p class="text-sm mt-1" style="color: var(--text-tertiary);">Your review actions will be logged here</p>
+            <p class="font-medium" style="color: var(--text-secondary);">Aún no hay actividad</p>
+            <p class="text-sm mt-1" style="color: var(--text-tertiary);">Aquí se registrarán tus acciones de revisión</p>
         </div>
         {% endfor %}
     </div>

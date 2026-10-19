@@ -165,10 +165,10 @@ def issue_api_key(
 
     sa_list = list(social_accounts)
     if not sa_list:
-        raise ValueError("An API key must allowlist at least one connected account.")
+        raise ValueError("Una clave de API debe permitir al menos una cuenta conectada.")
     for sa in sa_list:
         if sa.workspace_id != workspace.id:
-            raise ValueError(f"SocialAccount {sa.id} does not belong to workspace {workspace.id}.")
+            raise ValueError(f"La cuenta social {sa.id} no pertenece al espacio de trabajo {workspace.id}.")
 
     # Org-level manage_api_keys gate — must be checked before any
     # workspace-permission logic so a non-admin who happens to have rich
@@ -176,8 +176,8 @@ def issue_api_key(
     org_membership = OrgMembership.objects.filter(user=issued_by, organization_id=workspace.organization_id).first()
     if not has_org_permission(org_membership, "manage_api_keys"):
         raise ValueError(
-            f"User {issued_by} lacks the org-level 'manage_api_keys' permission "
-            f"for organization {workspace.organization_id}; cannot issue API keys."
+            f"El usuario {issued_by} no tiene el permiso de organización 'manage_api_keys' "
+            f"en la organización {workspace.organization_id}; no puede emitir claves de API."
         )
 
     # Permission intersection check — the issuer can only grant what they hold.
@@ -186,13 +186,13 @@ def issue_api_key(
         granter_perms = {k for k, v in membership.effective_permissions.items() if v}
     except WorkspaceMembership.DoesNotExist as exc:
         raise ValueError(
-            f"User {issued_by} has no membership in workspace {workspace}; cannot issue an API key on their behalf."
+            f"El usuario {issued_by} no es miembro del espacio de trabajo {workspace}; no se puede emitir una clave de API en su nombre."
         ) from exc
 
     requested = set(permissions or [])
     ungrantable = requested - granter_perms
     if ungrantable:
-        raise ValueError(f"Issuer cannot grant permissions they don't hold: {sorted(ungrantable)}")
+        raise ValueError(f"No puedes otorgar permisos que no tienes: {sorted(ungrantable)}")
 
     random_part = secrets.token_urlsafe(32)
     lookup = _make_lookup(random_part)
@@ -254,24 +254,24 @@ def update_api_key(api_key: ApiKey, *, editor, permissions: list[str], social_ac
     org_membership = OrgMembership.objects.filter(user=editor, organization_id=workspace.organization_id).first()
     if not has_org_permission(org_membership, "manage_api_keys"):
         raise ValueError(
-            f"User {editor} lacks the org-level 'manage_api_keys' permission "
-            f"for organization {workspace.organization_id}; cannot edit API keys."
+            f"El usuario {editor} no tiene el permiso de organización 'manage_api_keys' "
+            f"en la organización {workspace.organization_id}; no puede editar claves de API."
         )
 
     try:
         membership = WorkspaceMembership.objects.get(user=editor, workspace=workspace)
     except WorkspaceMembership.DoesNotExist as exc:
         raise ValueError(
-            f"User {editor} has no membership in workspace {workspace}; cannot edit an API key there."
+            f"El usuario {editor} no es miembro del espacio de trabajo {workspace}; no puede editar una clave de API ahí."
         ) from exc
 
     # Accounts: non-empty, all in the key's workspace (mirrors issue_api_key).
     sa_list = list(social_accounts)
     if not sa_list:
-        raise ValueError("An API key must allowlist at least one connected account.")
+        raise ValueError("Una clave de API debe permitir al menos una cuenta conectada.")
     for sa in sa_list:
         if sa.workspace_id != workspace.id:
-            raise ValueError(f"SocialAccount {sa.id} does not belong to workspace {workspace.id}.")
+            raise ValueError(f"La cuenta social {sa.id} no pertenece al espacio de trabajo {workspace.id}.")
 
     # Permissions: flip only within the editor's grantable set; preserve the rest.
     editor_grantable = {k for k, v in membership.effective_permissions.items() if v and k in PERMISSION_KEYS}

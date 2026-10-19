@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}Notification Preferences{% endblock %}
+{% block page_title %}Preferencias de notificaciones{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl">
@@ -12,9 +12,9 @@
                 <a href="{% url 'notifications:list' %}" class="text-app-ghost hover:text-app-secondary transition-colors duration-150">
                     {% icon "chevron-left" css_class="w-5 h-5" %}
                 </a>
-                <h2 class="text-xl font-semibold text-app tracking-tight">Notification Preferences</h2>
+                <h2 class="text-xl font-semibold text-app tracking-tight">Preferencias de notificaciones</h2>
             </div>
-            <p class="text-sm text-app-tertiary mt-1 ml-8">Choose which notifications you receive and how.</p>
+            <p class="text-sm text-app-tertiary mt-1 ml-8">Elige qué notificaciones recibes y por qué medio.</p>
         </div>
     </div>
 
@@ -24,13 +24,13 @@
         {# Channel toggles matrix #}
         <div class="relief overflow-hidden mb-5">
             <div class="px-5 py-4 border-b border-app-subtle bg-stone-50/50">
-                <h3 class="text-[13px] font-semibold text-app">Event Channels</h3>
-                <p class="text-xs text-app-tertiary mt-0.5">Toggle delivery channels for each event type.</p>
+                <h3 class="text-[13px] font-semibold text-app">Canales por evento</h3>
+                <p class="text-xs text-app-tertiary mt-0.5">Activa o desactiva los canales de entrega de cada tipo de evento.</p>
             </div>
 
             {# Table header #}
             <div class="grid grid-cols-[1fr_80px_80px_80px] gap-0 px-5 py-2.5 border-b border-app-subtle bg-stone-50/30">
-                <div class="text-[10px] font-bold text-app-ghost uppercase tracking-widest">Event</div>
+                <div class="text-[10px] font-bold text-app-ghost uppercase tracking-widest">Evento</div>
                 {% for ch_value, ch_label in channel_choices %}
                 <div class="text-[10px] font-bold text-app-ghost uppercase tracking-widest text-center">{{ ch_label }}</div>
                 {% endfor %}
@@ -60,16 +60,16 @@
         {# Quiet hours & digest #}
         <div class="relief overflow-hidden mb-5" x-data="{ quietEnabled: {{ quiet_hours.is_enabled|yesno:'true,false' }} }">
             <div class="px-5 py-4 border-b border-app-subtle bg-stone-50/50">
-                <h3 class="text-[13px] font-semibold text-app">Quiet Hours & Digest</h3>
-                <p class="text-xs text-app-tertiary mt-0.5">Suppress non-critical notifications during specific hours.</p>
+                <h3 class="text-[13px] font-semibold text-app">Horas de silencio y resumen</h3>
+                <p class="text-xs text-app-tertiary mt-0.5">Silencia las notificaciones no críticas durante ciertas horas.</p>
             </div>
 
             <div class="p-5 space-y-5">
                 {# Quiet hours toggle #}
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[13px] font-semibold text-app">Enable quiet hours</p>
-                        <p class="text-xs text-app-tertiary mt-0.5">Non-critical notifications are held until quiet hours end.</p>
+                        <p class="text-[13px] font-semibold text-app">Activar horas de silencio</p>
+                        <p class="text-xs text-app-tertiary mt-0.5">Las notificaciones no críticas se retienen hasta que terminen las horas de silencio.</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input
@@ -87,7 +87,7 @@
                 <div x-show="quietEnabled" x-collapse class="space-y-4 pl-0">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="quiet-start" class="block text-xs font-semibold text-app-secondary mb-1.5">Start time</label>
+                            <label for="quiet-start" class="block text-xs font-semibold text-app-secondary mb-1.5">Hora de inicio</label>
                             <input
                                 type="time"
                                 name="quiet_hours_start"
@@ -97,7 +97,7 @@
                             >
                         </div>
                         <div>
-                            <label for="quiet-end" class="block text-xs font-semibold text-app-secondary mb-1.5">End time</label>
+                            <label for="quiet-end" class="block text-xs font-semibold text-app-secondary mb-1.5">Hora de fin</label>
                             <input
                                 type="time"
                                 name="quiet_hours_end"
@@ -108,16 +108,16 @@
                         </div>
                     </div>
                     <div>
-                        <label for="quiet-tz" class="block text-xs font-semibold text-app-secondary mb-1.5">Timezone</label>
+                        <label for="quiet-tz" class="block text-xs font-semibold text-app-secondary mb-1.5">Zona horaria</label>
                         <input
                             type="text"
                             name="quiet_hours_timezone"
                             id="quiet-tz"
                             value="{{ quiet_hours.timezone }}"
-                            placeholder="e.g. America/New_York"
+                            placeholder="p. ej. America/Mexico_City"
                             class="w-full text-[13px] text-app-body px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-all duration-150 font-mono"
                         >
-                        <p class="text-[11px] text-app-ghost mt-1">IANA timezone identifier. Leave as UTC if unsure.</p>
+                        <p class="text-[11px] text-app-ghost mt-1">Identificador de zona horaria IANA. Déjalo en UTC si no estás seguro.</p>
                     </div>
                 </div>
 
@@ -127,8 +127,8 @@
                 {# Digest mode #}
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-[13px] font-semibold text-app">Daily digest</p>
-                        <p class="text-xs text-app-tertiary mt-0.5">Batch email notifications into a single daily summary instead of individual emails.</p>
+                        <p class="text-[13px] font-semibold text-app">Resumen diario</p>
+                        <p class="text-xs text-app-tertiary mt-0.5">Agrupa las notificaciones por correo en un solo resumen diario en lugar de correos individuales.</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input
@@ -149,7 +149,7 @@
                 type="submit"
                 class="inline-flex items-center gap-2 px-6 py-2.5 text-[13px] font-semibold text-app-inverse bg-orange-500 rounded-full hover:bg-orange-600 transition-all duration-150 shadow-[0_4px_14px_rgba(249,115,22,0.28)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.35)] hover:-translate-y-px"
             >
-                Save Preferences
+                Guardar preferencias
             </button>
         </div>
     </form>

@@ -96,9 +96,9 @@ class TestDescriptions:
         "role,key,expected_absent",
         [
             # The claims that would be lies if the matrix drifted back.
-            ("editor", "approve_posts", "approve"),
-            ("editor", "publish_directly", "publish"),
-            ("viewer", "reply_from_inbox", "reply"),
+            ("editor", "approve_posts", "aprobar"),
+            ("editor", "publish_directly", "publicar"),
+            ("viewer", "reply_from_inbox", "responde"),
         ],
     )
     def test_the_description_matches_the_matrix(self, role, key, expected_absent):

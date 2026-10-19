@@ -13,7 +13,7 @@ the browser's back button, and an HTMX swap does not always leave one.
             control in the inbox not speaking the same language.
             {% endcomment %}
             class="relief relief-interactive flex-shrink-0 w-8 h-8 flex items-center justify-center"
-            aria-label="Back to all publications">
+            aria-label="Volver a todas las publicaciones">
         {% icon "chevron-left" css_class="w-4 h-4" %}
     </button>
     {% if active_folder.platform %}
@@ -24,16 +24,16 @@ the browser's back button, and an HTMX swap does not always leave one.
     <span class="flex-1 min-w-0">
         <span class="block text-sm font-medium truncate text-app">{{ active_folder.label|default:active_post_id }}</span>
         <span class="block text-xs text-app-tertiary">
-            {{ inbox_messages|length }} comment{{ inbox_messages|length|pluralize }}
+            {{ inbox_messages|length }} comentario{{ inbox_messages|length|pluralize }}
             {% if active_folder.published_at %}
-            · {{ active_folder.published_at|date:"M j, Y" }}
+            · {{ active_folder.published_at|date:"j/m/Y" }}
             {% endif %}
         </span>
     </span>
     {% if active_folder.url %}
     <a href="{{ active_folder.url }}" target="_blank" rel="noopener"
        class="flex-shrink-0 p-1 rounded text-app-ghost hover:text-app-secondary transition-colors"
-       title="Open on the platform">
+       title="Abrir en la plataforma">
         {% icon "arrow-up-right-from-square" css_class="w-3.5 h-3.5" %}
     </a>
     {% endif %}

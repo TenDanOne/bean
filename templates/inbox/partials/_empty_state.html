@@ -7,35 +7,35 @@ nothing was given to *them*. Telling the second group to "connect your accounts"
 sent them to a page their role refuses.
 {% endcomment %}
 {% if not social_accounts and not request|can:"manage_social_accounts" %}
-{% include "common/_no_access.html" with icon="comment" title="No channels assigned to you here" body="The inbox shows comments and messages from the channels you have been given. You do not have any in this brand yet." ask=workspace_owner.display_name %}
+{% include "common/_no_access.html" with icon="comment" title="No tienes canales asignados aquí" body="La bandeja muestra comentarios y mensajes de los canales que te han asignado. Todavía no tienes ninguno en esta marca." ask=workspace_owner.display_name %}
 {% else %}
 <div class="flex flex-col items-center justify-center py-16 px-6 text-center">
     <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style="background: var(--surface-2);">
         {% icon "comment" css_class="w-8 h-8" %}
     </div>
-    <h3 class="text-sm font-semibold text-app-strong mb-1">Your inbox is empty</h3>
+    <h3 class="text-sm font-semibold text-app-strong mb-1">Tu bandeja está vacía</h3>
 
     {% if social_accounts %}
     <p class="text-[13px] text-app-tertiary max-w-xs leading-relaxed">
-        Comments, mentions, and DMs from your connected accounts will appear here. Messages are synced every 5 minutes.
+        Los comentarios, menciones y mensajes directos de tus cuentas conectadas aparecerán aquí. Los mensajes se sincronizan cada 5 minutos.
     </p>
     {% else %}
     <p class="text-[13px] text-app-tertiary max-w-xs leading-relaxed mb-4">
-        Connect your social accounts to start receiving messages in your inbox.
+        Conecta tus cuentas sociales para empezar a recibir mensajes en tu bandeja.
     </p>
     <a href="{% url 'social_accounts:connect' workspace_id=workspace.id %}"
        class="inline-flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
         {% icon "plus" css_class="w-4 h-4" %}
-        Connect Accounts
+        Conectar cuentas
     </a>
     {% endif %}
 
     {% if active_filters.q or active_filters.platform or active_filters.type or active_filters.status or active_filters.sentiment %}
     <div class="mt-4 pt-4 border-t border-app-subtle">
-        <p class="text-[12px] text-app-ghost mb-2">No messages match your current filters.</p>
+        <p class="text-[12px] text-app-ghost mb-2">Ningún mensaje coincide con los filtros actuales.</p>
         <a href="{% url 'inbox:feed' workspace_id=workspace.id %}"
            class="text-[12px] font-semibold hover:underline" style="color: var(--primary);">
-            Clear all filters
+            Quitar todos los filtros
         </a>
     </div>
     {% endif %}

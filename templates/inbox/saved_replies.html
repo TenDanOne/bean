@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Saved Replies - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Respuestas guardadas - {{ workspace.name }} - BEAN{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl">
@@ -12,15 +12,15 @@
                    class="text-app-ghost hover:text-app-secondary transition-colors">
                     {% icon "chevron-left" css_class="w-5 h-5" %}
                 </a>
-                <h2 class="text-xl font-semibold text-app tracking-tight">Saved Replies</h2>
+                <h2 class="text-xl font-semibold text-app tracking-tight">Respuestas guardadas</h2>
             </div>
-            <p class="text-sm text-app-tertiary ml-8">Pre-written responses for common questions. Use variables: <code class="text-[11px] px-1 py-0.5 bg-app-2 rounded">{sender_name}</code> <code class="text-[11px] px-1 py-0.5 bg-app-2 rounded">{account_name}</code> <code class="text-[11px] px-1 py-0.5 bg-app-2 rounded">{post_url}</code></p>
+            <p class="text-sm text-app-tertiary ml-8">Respuestas prediseñadas para preguntas frecuentes. Usa variables: <code class="text-[11px] px-1 py-0.5 bg-app-2 rounded">{sender_name}</code> <code class="text-[11px] px-1 py-0.5 bg-app-2 rounded">{account_name}</code> <code class="text-[11px] px-1 py-0.5 bg-app-2 rounded">{post_url}</code></p>
         </div>
         <a href="{% url 'inbox:saved_reply_create' workspace_id=workspace.id %}"
            class="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold text-app-inverse rounded-full transition-all duration-150"
            style="background: var(--primary); box-shadow: var(--shadow-primary);">
             {% icon "plus" css_class="w-4 h-4" %}
-            New Reply
+            Nueva respuesta
         </a>
     </div>
 
@@ -42,7 +42,7 @@
                     {% icon "pencil" css_class="w-3.5 h-3.5" %}
                 </a>
                 <form x-data method="post" action="{% url 'inbox:saved_reply_delete' workspace_id=workspace.id reply_id=reply.id %}"
-                      @submit="if(!confirm('Delete this saved reply?')) $event.preventDefault()">
+                      @submit="if(!confirm('¿Eliminar esta respuesta guardada?')) $event.preventDefault()">
                     {% csrf_token %}
                     <button type="submit"
                             class="w-7 h-7 flex items-center justify-center rounded-md text-app-ghost hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer">
@@ -58,8 +58,8 @@
         <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background: var(--surface-2);">
             {% icon "bookmark" css_class="w-6 h-6" %}
         </div>
-        <h3 class="text-sm font-semibold text-app-strong mb-1">No saved replies yet</h3>
-        <p class="text-[13px] text-app-tertiary">Create reusable response templates for common questions.</p>
+        <h3 class="text-sm font-semibold text-app-strong mb-1">Aún no hay respuestas guardadas</h3>
+        <p class="text-[13px] text-app-tertiary">Crea plantillas de respuesta reutilizables para preguntas frecuentes.</p>
     </div>
     {% endif %}
 </div>

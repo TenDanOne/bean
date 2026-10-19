@@ -1,20 +1,20 @@
 {% extends "layouts/settings.html" %}
-{% block title %}API Keys - Settings - BEAN{% endblock %}
+{% block title %}Claves de API - Ajustes - BEAN{% endblock %}
 {% block content %}
 <div x-data="{ showIssueModal: false, showRevealModal: {% if reveal_token %}true{% else %}false{% endif %} }">
     <div class="flex items-start justify-between mb-8 gap-6">
         <div>
-            <h2 class="text-xl font-semibold" style="color: var(--text-primary);">API Keys</h2>
+            <h2 class="text-xl font-semibold" style="color: var(--text-primary);">Claves de API</h2>
             <p class="text-sm mt-1 max-w-xl" style="color: var(--text-tertiary);">
-                Used by AI agents and external scripts to act in your workspaces.
-                Each key can be scoped to one workspace and an explicit list of social accounts.
+                Las usan agentes de IA y scripts externos para actuar en tus espacios de trabajo.
+                Cada clave se limita a un espacio de trabajo y a una lista explícita de cuentas sociales.
             </p>
         </div>
         <button type="button"
                 @click="showIssueModal = true"
                 class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150 cursor-pointer whitespace-nowrap">
             {% icon "plus" css_class="w-4 h-4" %}
-            Issue new key
+            Emitir nueva clave
         </button>
     </div>
 
@@ -35,9 +35,9 @@
     {% if revoked_count %}
     <div class="flex justify-end mb-3 text-xs">
         {% if show_all %}
-        <a href="{% url 'api_keys:list' %}" style="color: var(--text-tertiary);">Hide revoked keys</a>
+        <a href="{% url 'api_keys:list' %}" style="color: var(--text-tertiary);">Ocultar claves revocadas</a>
         {% else %}
-        <a href="?show=all" style="color: var(--text-tertiary);">Show {{ revoked_count }} revoked</a>
+        <a href="?show=all" style="color: var(--text-tertiary);">Mostrar {{ revoked_count }} revocadas</a>
         {% endif %}
     </div>
     {% endif %}
@@ -53,15 +53,15 @@
     {% else %}
     <div class="px-6 py-12 text-center rounded-xl" style="background: var(--surface-0); border: 1px solid var(--border);">
         {% if revoked_count and not show_all %}
-        <p class="text-sm" style="color: var(--text-tertiary);">No active API keys.</p>
+        <p class="text-sm" style="color: var(--text-tertiary);">No hay claves de API activas.</p>
         <p class="text-xs mt-2" style="color: var(--text-tertiary);">
-            <a href="?show=all" style="color: var(--text-secondary); text-decoration: underline;">Show {{ revoked_count }} revoked</a>
-            or click <strong>Issue new key</strong> to mint a new one.
+            <a href="?show=all" style="color: var(--text-secondary); text-decoration: underline;">Mostrar {{ revoked_count }} revocadas</a>
+            o haz clic en <strong>Emitir nueva clave</strong> para crear otra.
         </p>
         {% else %}
-        <p class="text-sm" style="color: var(--text-tertiary);">No API keys issued yet.</p>
+        <p class="text-sm" style="color: var(--text-tertiary);">Aún no se emite ninguna clave de API.</p>
         <p class="text-xs mt-2" style="color: var(--text-tertiary);">
-            Click <strong>Issue new key</strong> to mint one for an agent.
+            Haz clic en <strong>Emitir nueva clave</strong> para crear una para un agente.
         </p>
         {% endif %}
     </div>

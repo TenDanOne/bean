@@ -133,10 +133,10 @@ class TestTheEmptyStateExplainsItself:
         response = client.get(reverse("inbox:feed", kwargs={"workspace_id": workspace.id}) + "?q=anything")
         body = response.content.decode()
 
-        assert "No channels assigned to you here" in body
+        assert "No tienes canales asignados aquí" in body
         # "Ask an administrator" is useless in a five-person agency. display_name
         # falls back to the local part of the address.
-        assert "Ask <strong>owner</strong>" in body
+        assert "Pídele acceso a <strong>owner</strong>" in body
 
     def test_analytics_does_not_claim_the_workspace_has_none(self, client, django_user_model, workspace, channel):
         """It used to say "no analytics-enabled accounts are connected to this
@@ -151,5 +151,5 @@ class TestTheEmptyStateExplainsItself:
         response = client.get(reverse("analytics:index", kwargs={"workspace_id": workspace.id}))
         body = response.content.decode()
 
-        assert "are connected to this workspace" not in body
-        assert "No channels to show numbers for" in body
+        assert "están conectadas a este espacio" not in body
+        assert "No hay canales con cifras para mostrar" in body

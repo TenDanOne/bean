@@ -1,1 +1,1 @@
-{% autoescape off %}Confirm your email for BEAN{% endautoescape %}
+{% autoescape off %}Confirma tu correo para BEAN{% endautoescape %}

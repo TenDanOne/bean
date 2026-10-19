@@ -111,8 +111,8 @@ def _remind_reviewers(post):
             notify(
                 user=membership.user,
                 event_type=EventType.APPROVAL_REMINDER,
-                title="Post awaiting your review",
-                body=f'A post in {workspace.name} has been waiting for review: "{post.caption_snippet}"',
+                title="Publicación en espera de tu revisión",
+                body=f'Una publicación en {workspace.name} lleva tiempo esperando revisión: "{post.caption_snippet}"',
                 data={
                     "post_id": str(post.id),
                     "workspace_id": str(workspace.id),
@@ -132,8 +132,8 @@ def _remind_clients(post):
         notify(
             user=membership.user,
             event_type=EventType.APPROVAL_REMINDER,
-            title="Posts waiting for your approval",
-            body=f"Content in {workspace.name} is waiting for your review.",
+            title="Publicaciones en espera de tu aprobación",
+            body=f"Hay contenido en {workspace.name} esperando tu revisión.",
             data={
                 "post_id": str(post.id),
                 "workspace_id": str(workspace.id),
@@ -152,14 +152,14 @@ def _escalate(post, stage):
         ],
     ).select_related("user")
 
-    stage_label = "internal review" if stage == "pending_review" else "client approval"
+    stage_label = "revisión interna" if stage == "pending_review" else "aprobación del cliente"
 
     for membership in manager_memberships:
         notify(
             user=membership.user,
             event_type=EventType.APPROVAL_STALLED,
-            title="Stalled post needs attention",
-            body=f'A post in {workspace.name} has been stuck in {stage_label} after multiple reminders: "{post.caption_snippet}"',
+            title="Publicación estancada requiere atención",
+            body=f'Una publicación en {workspace.name} sigue en {stage_label} tras varios recordatorios: "{post.caption_snippet}"',
             data={
                 "post_id": str(post.id),
                 "workspace_id": str(workspace.id),

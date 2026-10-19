@@ -88,13 +88,13 @@ class UnsplashButtonVisibilityTests(ComposerTestCase):
     @override_settings(UNSPLASH_ACCESS_KEY="test-key")
     def test_button_rendered_with_api_key(self):
         html = self._compose_html()
-        self.assertIn('title="Search Unsplash"', html)
+        self.assertIn('title="Buscar en Unsplash"', html)
         self.assertIn('x-show="showUnsplashModal"', html)  # modal markup present
 
     @override_settings(UNSPLASH_ACCESS_KEY="")
     def test_button_hidden_without_api_key(self):
         html = self._compose_html()
-        self.assertNotIn('title="Search Unsplash"', html)
+        self.assertNotIn('title="Buscar en Unsplash"', html)
         # Modal markup gone too; only the JS state/methods remain in the script.
         self.assertNotIn('x-show="showUnsplashModal"', html)
 

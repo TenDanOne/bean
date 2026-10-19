@@ -17,17 +17,17 @@ forever; we explicitly do NOT persist plaintext anywhere.
                 {% icon "circle-exclamation" css_class="w-[20px] h-[20px] flex-shrink-0 mt-0.5" %}
                 <div>
                     <h3 class="text-base font-semibold" style="color: var(--text-primary);">
-                        Save this token now.
+                        Guarda este token ahora.
                     </h3>
                     <p class="text-xs mt-1" style="color: var(--text-secondary);">
-                        BEAN does not store the plaintext token. Once you close this modal it cannot be retrieved.
-                        Paste it into your agent or secret manager before continuing.
+                        BEAN no guarda el token en texto plano. Al cerrar esta ventana no se podrá recuperar.
+                        Pégalo en tu agente o gestor de secretos antes de continuar.
                     </p>
                 </div>
             </div>
 
             <div class="text-xs mb-2" style="color: var(--text-tertiary);">
-                Key name: <strong style="color: var(--text-secondary);">{{ key_name }}</strong>
+                Nombre de la clave: <strong style="color: var(--text-secondary);">{{ key_name }}</strong>
             </div>
 
             <div class="flex items-center gap-2 rounded-lg px-3 py-2 mb-4"
@@ -35,12 +35,12 @@ forever; we explicitly do NOT persist plaintext anywhere.
                 <code id="reveal-token" class="text-xs break-all flex-1 font-mono"
                       style="color: var(--text-primary);">{{ token }}</code>
                 <button type="button"
-                        x-data="{ label: 'Copy' }"
-                        @click="navigator.clipboard.writeText(document.getElementById('reveal-token').innerText); label = 'Copied'; setTimeout(() => label = 'Copy', 1500)"
+                        x-data="{ label: 'Copiar' }"
+                        @click="navigator.clipboard.writeText(document.getElementById('reveal-token').innerText); label = 'Copiado'; setTimeout(() => label = 'Copiar', 1500)"
                         x-text="label"
                         class="px-2.5 py-1 text-xs font-medium rounded cursor-pointer whitespace-nowrap"
                         style="background: var(--neutral-900, #111827); color: white;">
-                    Copy
+                    Copiar
                 </button>
             </div>
 
@@ -48,7 +48,7 @@ forever; we explicitly do NOT persist plaintext anywhere.
                 <button type="button" @click="showRevealModal = false"
                         class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
                         style="background: var(--neutral-100); color: var(--text-primary);">
-                    I've saved it
+                    Ya lo guardé
                 </button>
             </div>
         </div>
