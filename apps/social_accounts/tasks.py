@@ -33,6 +33,7 @@ def check_social_account_health(account_id: str):
     # and inbox sync so every get_provider call resolves credentials identically.
     from apps.publisher.engine import _resolve_publish_credentials
 
+    previous_status = account.connection_status
     credentials = _resolve_publish_credentials(account)
 
     try:
@@ -84,6 +85,7 @@ def check_social_account_health(account_id: str):
         account.last_error = friendly_health_check_error(e)
 
     account.last_health_check_at = timezone.now()
+    _notify_if_disconnected(account, previous_status)
     account.save(
         update_fields=[
             "oauth_access_token",
@@ -99,6 +101,26 @@ def check_social_account_health(account_id: str):
             "updated_at",
         ]
     )
+
+
+def _notify_if_disconnected(account, previous_status):
+    """Avisa a los propietarios del espacio cuando una cuenta pasa a ERROR (una vez por caída)."""
+    from apps.members.models import WorkspaceMembership
+    from apps.notifications.engine import notify
+
+    if account.connection_status != account.ConnectionStatus.ERROR or previous_status == account.connection_status:
+        return
+    name = account.account_name or account.account_handle
+    for m in WorkspaceMembership.objects.filter(
+        workspace_id=account.workspace_id, workspace_role="owner"
+    ).select_related("user"):
+        notify(
+            user=m.user,
+            event_type="social_account_disconnected",
+            title="Cuenta social desconectada",
+            body=f"{name} ({account.platform}) dejó de responder y hay que reconectarla.",
+            data={"social_account_id": str(account.id), "workspace_id": str(account.workspace_id)},
+        )
 
 
 @background(schedule=0)

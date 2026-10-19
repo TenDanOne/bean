@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from urllib.parse import urlencode
 
@@ -31,6 +32,7 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 REVOKE_URL = "https://oauth2.googleapis.com/revoke"
 API_BASE = "https://www.googleapis.com/youtube/v3"
 UPLOAD_BASE = "https://www.googleapis.com/upload/youtube/v3"
+UPLOAD_CHUNK_SIZE = 8 * 1024 * 1024  # resumable chunks must be multiples of 256 KiB
 ANALYTICS_BASE = "https://youtubeanalytics.googleapis.com/v2"
 
 # YouTube Analytics caps a ``filters=video==<id>,<id>,...`` list at 500 IDs
@@ -261,21 +263,7 @@ class YouTubeProvider(SocialProvider):
 
         # Step 2: Upload video binary
         if content.media_files:
-            video_path = content.media_files[0]
-            with open(video_path, "rb") as f:
-                video_data = f.read()
-
-            upload_resp = self._request(
-                "PUT",
-                upload_uri,
-                headers={
-                    "Content-Type": "video/*",
-                    "Content-Length": str(len(video_data)),
-                },
-                data=video_data,
-                timeout=300.0,
-            )
-            upload_body = upload_resp.json()
+            upload_body = self._upload_resumable(upload_uri, content.media_files[0])
             video_id = upload_body.get("id", "")
 
             # Step 3 (optional): upload custom thumbnail
@@ -312,6 +300,32 @@ class YouTubeProvider(SocialProvider):
             "No video file provided (media_files required)",
             platform=self.platform_name,
         )
+
+    def _upload_resumable(self, upload_uri: str, video_path: str) -> dict:
+        """PUT the file to a resumable session in chunks (308 = keep going, 200/201 = done)."""
+        total = os.path.getsize(video_path)
+        if total == 0:
+            raise PublishError("El archivo de video está vacío.", platform=self.platform_name, retryable=False)
+        with open(video_path, "rb") as f:
+            start = 0
+            while start < total:
+                chunk = f.read(UPLOAD_CHUNK_SIZE)
+                end = start + len(chunk)
+                resp = self._request(
+                    "PUT",
+                    upload_uri,
+                    headers={
+                        "Content-Type": "video/*",
+                        "Content-Length": str(len(chunk)),
+                        "Content-Range": f"bytes {start}-{end - 1}/{total}",
+                    },
+                    data=chunk,
+                    timeout=300.0,
+                )
+                if resp.status_code != 308:
+                    return resp.json()
+                start = end
+        raise PublishError("YouTube no confirmó la subida del video.", platform=self.platform_name)
 
     # ------------------------------------------------------------------
     # Comments

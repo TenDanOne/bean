@@ -81,12 +81,14 @@
         {% csrf_token %}
         <input type="hidden" name="action" value="update_password">
         <div class="space-y-4">
+            {% if user.has_usable_password %}
             <div>
                 <label for="current_password" class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">Contraseña actual</label>
                 <input type="password" id="current_password" name="current_password" placeholder="Contraseña actual" required
                        class="input-focus w-full px-3 py-2 text-sm outline-none transition-colors"
                        style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
             </div>
+            {% endif %}
             <div>
                 <label for="password" class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">Nueva contraseña</label>
                 <input type="password" id="password" name="password" placeholder="Nueva contraseña" minlength="8" required
@@ -186,11 +188,15 @@
                                 style="background: var(--neutral-100); color: var(--text-primary);">
                             Cancelar
                         </button>
-                        <form method="POST">
+                        <form method="POST" x-data="{ typed: '' }">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="delete_account">
-                            <button type="submit"
-                                    class="btn-opacity px-5 py-2 text-sm font-semibold rounded-full cursor-pointer transition-colors whitespace-nowrap"
+                            <label for="confirm_email" class="block text-xs mb-1" style="color: var(--text-secondary);">Escribe <strong>{{ user.email }}</strong> para confirmar</label>
+                            <input type="text" id="confirm_email" name="confirm_email" x-model="typed" autocomplete="off" required
+                                   class="w-full px-3 py-1.5 mb-3 text-sm rounded-lg"
+                                   style="border: 1px solid var(--border); background: var(--surface-0); color: var(--text-primary);">
+                            <button type="submit" :disabled="typed.trim().toLowerCase() !== '{{ user.email|lower|escapejs }}'"
+                                    class="btn-opacity px-5 py-2 text-sm font-semibold rounded-full cursor-pointer transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                                     style="background: var(--error-500, #EF4444); color: white;">
                                 Sí, eliminar mi cuenta
                             </button>

@@ -310,7 +310,7 @@
          CENTER PANEL - Caption Editor + Actions
          ════════════════════════════════════════════════════════════ -->
     <div class="panel-center flex flex-col bg-app-1 min-h-0">
-        <form id="composer-form"
+        <form id="composer-form" data-no-error-toast
               hx-post="{% if post %}{% url 'composer:save_post_edit' workspace_id=workspace.id post_id=post.id %}{% else %}{% url 'composer:save_post' workspace_id=workspace.id %}{% endif %}"
               hx-swap="none"
               @htmx:after-request="onFormSaved($event)"
@@ -1111,7 +1111,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                   :class="'pi-' + (charLimits[accId]?.platform || '')"
                                   x-html="platformIconSvg(charLimits[accId]?.platform || '')"></span>
                             <span class="text-xs font-semibold text-app-secondary" x-text="charLimits[accId]?.name + ' - Personalización'"></span>
-                            <button type="button" class="ml-auto text-xs text-red-400 hover:text-red-500 cursor-pointer" @click="overrides[accId] = false">Quitar personalización</button>
+                            <button type="button" class="ml-auto text-xs text-red-400 hover:text-red-500 cursor-pointer" @click="clearOverride(accId)">Quitar personalización</button>
                         </div>
                         <!-- Title override (only for platforms that need it) -->
                         <template x-if="charLimits[accId]?.needs_title">
@@ -1119,6 +1119,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                 <label class="block text-[11px] font-semibold text-app-ghost uppercase tracking-wider mb-1"
                                        x-text="(charLimits[accId]?.title_label || 'Título') + ' personalizado'"></label>
                                 <input type="text" :name="'override_title_' + accId"
+                                       x-init="$el.value = platformOverrides[accId]?.title || ''"
                                        class="w-full text-sm px-3 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
                                        :placeholder="'Personalizar ' + (charLimits[accId]?.title_label || 'título') + '…'"
                                        :maxlength="charLimits[accId]?.title_max_length || 255">
@@ -1128,6 +1129,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                   class="w-full text-sm px-3 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all resize-none"
                                   style="font-family: system-ui, -apple-system, sans-serif;"
                                   :placeholder="'Personalizar ' + (charLimits[accId]?.caption_label || 'texto') + ' para esta plataforma...'"
+                                  x-init="$el.value = platformOverrides[accId]?.caption || ''"
                                   rows="3"></textarea>
 
                     </div>
@@ -1136,6 +1138,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                 <!-- First Comment (conditional - only when a platform supporting comments is selected) -->
                 <div x-show="anyPlatformSupportsFirstComment" x-transition x-cloak>
                     <label class="block text-sm font-semibold text-app-tertiary uppercase tracking-wider mb-2">Primer comentario</label>
+                    <p class="text-[11px] text-app-ghost mb-2">Sale en el siguiente procesamiento de pendientes, unos minutos después de publicar.</p>
                     <textarea name="first_comment"
                               class="comment-editor"
                               placeholder="Primer comentario publicado después de la publicación principal…"
@@ -1425,6 +1428,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                     </div>
                                 </button>
 
+                                {% if can_publish %}
                                 <!-- Now -->
                                 <button type="button" data-mode="publish_now" data-label="Ahora" data-action-label="Publicar ahora"
                                         data-icon="play"
@@ -1437,6 +1441,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                         <div class="text-xs text-app-ghost mt-0.5">Publicar de inmediato</div>
                                     </div>
                                 </button>
+                                {% endif %}
 
                                 <!-- Set Date and Time -->
                                 <button type="button" data-mode="schedule" data-label="Programar" data-action-label="Programar publicación"
@@ -1981,6 +1986,7 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
 {{ selected_account_ids|json_script:"composer-selected-accounts" }}
 {{ char_limits|json_script:"composer-char-limits" }}
 {{ platform_extras|json_script:"composer-platform-extras" }}
+{{ platform_overrides|json_script:"composer-platform-overrides" }}
 {{ media_items|json_script:"composer-media-items" }}
 <script nonce="{{ request.csp_nonce }}">
 function composerApp() {
@@ -1991,6 +1997,7 @@ function composerApp() {
         selectedAccounts: JSON.parse(document.getElementById('composer-selected-accounts').textContent),
         charLimits: JSON.parse(document.getElementById('composer-char-limits').textContent),
         overrides: {},
+        platformOverrides: JSON.parse(document.getElementById('composer-platform-overrides').textContent) || {},
         advancedOpen: {},
         platformExtras: JSON.parse(document.getElementById('composer-platform-extras').textContent) || {},
         showMediaPicker: false,
@@ -2105,7 +2112,8 @@ function composerApp() {
         init() {
             // Initialize overrides map
             this.selectedAccounts.forEach(id => {
-                this.overrides[id] = false;
+                const po = this.platformOverrides[id] || {};
+                this.overrides[id] = !!(po.title || po.caption);
                 this.advancedOpen[id] = false;
                 if (!this.platformExtras[id]) this.platformExtras[id] = {};
             });
@@ -2120,6 +2128,11 @@ function composerApp() {
                 this.showThumbnailPicker = false;
                 this.thumbnailPickerAccId = null;
             });
+
+            {% if can_publish and request.GET.action == "publish_now" %}
+            // Desde la Cola: dejar elegido "Publicar ahora" (un clic para confirmar).
+            setTimeout(() => document.querySelector('.publish-mode-option[data-mode="publish_now"]')?.click(), 300);
+            {% endif %}
 
             // Trigger preview on page load for existing posts
             if (this.selectedAccounts.length > 0) {
@@ -2162,6 +2175,15 @@ function composerApp() {
             document.body.addEventListener('previewUpdate', syncVideoAttached);
             document.body.addEventListener('htmx:afterSwap', (e) => {
                 if (e.target && e.target.id === 'media-list') syncVideoAttached();
+            });
+        },
+
+        clearOverride(id) {
+            this.overrides[id] = false;
+            // Los inputs siguen en el DOM (x-show): vaciarlos para que el guardado quite lo personalizado.
+            ['title', 'caption'].forEach(f => {
+                const el = this.$root.querySelector(`[name="override_${f}_${id}"]`);
+                if (el) el.value = '';
             });
         },
 
@@ -2620,7 +2642,9 @@ function composerApp() {
             if (event.detail.elt !== event.currentTarget) return;
             const xhr = event.detail.xhr;
             if (event.detail.successful) {
-                const action = document.getElementById('publish-action-btn')?.value;
+                // The action actually submitted (Guardar borrador vs. the publish button), not the publish button's mode.
+                let action = event.detail.requestConfig?.parameters?.action;
+                if (Array.isArray(action)) action = action[action.length - 1];
                 if (action === 'schedule' || action === 'publish_now' || action === 'add_to_queue' || action === 'add_to_queue_priority') {
                     // Redirect to calendar after scheduling/publishing/queuing
                     window.location.href = '{% url "calendar:calendar" workspace_id=workspace.id %}';

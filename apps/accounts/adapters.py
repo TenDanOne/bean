@@ -39,6 +39,8 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def pre_social_login(self, request, sociallogin):
         """Sync OAuthConnection for returning users and auto-connected accounts."""
+        # Unverified local accounts matched by email are protected by allauth itself:
+        # SOCIALACCOUNT_EMAIL_AUTHENTICATION wipes their password on the Google login (wipe_password).
         super().pre_social_login(request, sociallogin)
         if sociallogin.is_existing:
             self._sync_oauth_connection(sociallogin.user, sociallogin)

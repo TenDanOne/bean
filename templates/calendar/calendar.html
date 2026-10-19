@@ -49,7 +49,7 @@
         background: var(--surface-0);
     }
     @media (min-width: 768px) {
-        .cal-day { min-height: 130px; padding: 8px; }
+        .cal-day { min-height: 122px; padding: 8px; }
     }
     .cal-day:hover { background: var(--warm-50); }
     .cal-day.other-month { background: var(--warm-50); }
@@ -187,6 +187,20 @@
     .cal-add-cell.has-posts:focus-within .cal-add-btn,
     .cal-add-cell .cal-add-btn:focus-visible { opacity: 1; }
 
+    /* Mes: «+» discreto arriba a la derecha (como el mockup); visible al pasar el cursor o enfocar */
+    .cal-day.cal-add-cell.cal-add-cell .cal-add-btn {
+        top: 4px; right: 4px; left: auto; transform: none;
+        width: 24px; height: 24px; border-radius: 6px;
+        background: transparent; color: var(--text-tertiary); box-shadow: none;
+    }
+    .cal-day.cal-add-cell.cal-add-cell .cal-add-btn svg { width: 12px; height: 12px; }
+    .cal-day.cal-add-cell.cal-add-cell:hover .cal-add-btn,
+    .cal-day.cal-add-cell.cal-add-cell:focus-within .cal-add-btn { opacity: 1; background: var(--warm-200); transform: none; box-shadow: none; }
+    .cal-day.cal-add-cell.cal-add-cell .cal-add-btn:hover { background: var(--warm-200); color: var(--text-primary); transform: none; }
+    @media (max-width: 640px) {
+        .cal-day.cal-add-cell.cal-add-cell .cal-add-btn { opacity: 0.7; }
+    }
+
     /* Empty cells: larger centered button */
     .cal-add-cell:not(.has-posts) .cal-add-btn {
         top: 50%; left: 50%; right: auto;
@@ -315,7 +329,7 @@ function calendarApp() {
         activeView: '{{ view_type }}',
         draggedPlatformPostId: null,
         calendarFilters: {
-            status: '{{ active_filters.statuses.0|default:"" }}',
+            statuses: [{% for st in active_filters.statuses %}'{{ st }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
             channel: '',
             tag: '{{ active_filters.tags.0|default:"" }}',
             tz: '{{ display_timezone|default:"UTC" }}',
@@ -326,13 +340,23 @@ function calendarApp() {
             params.set('mode', 'calendar');
             params.set('view', this.activeView);
             params.set('date', '{{ target_date|date:"Y-m-d" }}');
-            if (this.calendarFilters.status) params.set('status', this.calendarFilters.status);
+            this.calendarFilters.statuses.forEach((st) => params.append('status', st));
             if (this.calendarFilters.channel) params.set('channel', this.calendarFilters.channel);
             if (this.calendarFilters.tag) params.set('tag', this.calendarFilters.tag);
             if (this.calendarFilters.tz) params.set('tz', this.calendarFilters.tz);
             {% if show_holidays %}params.set('holidays', '1');{% endif %}
             const url = '{% url "calendar:calendar" workspace_id=workspace.id %}?' + params.toString();
             htmx.ajax('GET', url, {target: '#calendar-content', swap: 'innerHTML'});
+        },
+
+        // Chips de estado: lista vacía = todos activos; nunca se apaga el último.
+        toggleStatus(btn) {
+            const chips = [...document.querySelectorAll('[data-status-chip]')];
+            const next = chips.filter((c) => (c === btn) !== (c.getAttribute('aria-pressed') === 'true'));
+            if (!next.length) return;
+            this.calendarFilters.statuses = next.length === chips.length
+                ? [] : next.flatMap((c) => c.dataset.statuses.split(','));
+            this.reloadCalendar();
         },
 
         startDrag(event, platformPostId) {
@@ -351,7 +375,7 @@ function calendarApp() {
             event.dataTransfer.dropEffect = 'move';
         },
 
-        dropOnSlot(event, dateStr, timeStr) {
+        dropOnSlot(event, dateStr, timeStr, keepTime) {
             event.preventDefault();
             const platformPostId = this.draggedPlatformPostId;
             if (!platformPostId) return;
@@ -397,11 +421,14 @@ function calendarApp() {
                 body: new URLSearchParams({
                     platform_post_id: platformPostId,
                     new_datetime: newDatetime,
+                    ...(keepTime ? { keep_time: '1' } : {}),
                 }),
-            }).then((res) => {
+            }).then(async (res) => {
                 if (!res.ok) {
                     rollback();
-                    console.error('Reschedule failed', res.status);
+                    let msg = 'No se pudo reprogramar la publicación.';
+                    try { msg = (await res.json()).error || msg; } catch (e) {}
+                    document.body.dispatchEvent(new CustomEvent('showToast', { detail: { tone: 'error', title: 'No se movió', body: msg } }));
                 }
             }).catch((err) => {
                 rollback();

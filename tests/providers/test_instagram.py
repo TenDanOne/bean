@@ -12,6 +12,7 @@ def _resp(data):
 
 def test_get_user_pages_returns_linked_instagram_business_accounts():
     provider = InstagramProvider({"client_id": "id", "client_secret": "secret"})
+    provider.refresh_token = MagicMock(return_value=MagicMock(access_token="user-token"))  # intercambio long-lived
     provider._request = MagicMock(
         return_value=MagicMock(
             json=MagicMock(

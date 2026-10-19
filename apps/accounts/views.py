@@ -52,22 +52,59 @@ LEGAL_DOMICILIO = (
 )
 
 
-def public_legal(request):
-    """Página legal única (ES/EN) con anclas #privacidad #terminos #borrado-de-datos #contacto."""
-    return _public(request, "public/legal.html", responsable=LEGAL_RESPONSABLE, domicilio=LEGAL_DOMICILIO)
+# Documentos legales: (idioma, doc) -> título, etiqueta corta del menú. Un documento por página.
+LEGAL_DOCS = ("privacy", "terms", "data_deletion", "contact")
+LEGAL_TEXT = {
+    "es": {
+        "privacy": ("Política de privacidad", "Privacidad"),
+        "terms": ("Términos de uso", "Términos"),
+        "data_deletion": ("Borrado de datos", "Borrado de datos"),
+        "contact": ("Contacto", "Contacto"),
+        "updated": "Actualizado en octubre de 2026",
+    },
+    "en": {
+        "privacy": ("Privacy Policy", "Privacy"),
+        "terms": ("Terms of Service", "Terms"),
+        "data_deletion": ("Data deletion", "Data deletion"),
+        "contact": ("Contact", "Contact"),
+        "updated": "Last updated October 2026",
+    },
+}
 
 
-def _legal_redirect(anchor):
+def public_legal_doc(request, lang, doc):
+    """Un documento legal (privacidad, términos, borrado de datos o contacto) en un idioma."""
+    text = LEGAL_TEXT[lang]
+    nav = [
+        {"label": text[d][1], "url": reverse(f"legal_{lang}_{d}"), "active": d == doc, "title": text[d][0]}
+        for d in LEGAL_DOCS
+    ]
+    return _public(
+        request,
+        f"public/legal/{lang}_{doc}.html",
+        lang=lang,
+        doc_title=text[doc][0],
+        updated=text["updated"],
+        nav=nav,
+        switch={code: reverse(f"legal_{code}_{doc}") for code in LEGAL_TEXT},
+        responsable=LEGAL_RESPONSABLE,
+        domicilio=LEGAL_DOMICILIO,
+    )
+
+
+def _legal_redirect(name):
     def view(request):
-        return redirect(f"{reverse('public_legal')}#{anchor}", permanent=True)
+        return redirect(reverse(name), permanent=True)
 
     return view
 
 
-public_privacy = _legal_redirect("privacidad")
-public_terms = _legal_redirect("terminos")
-public_support = _legal_redirect("contacto")
-public_data_deletion = _legal_redirect("borrado-de-datos")
+# Nombres y URLs antiguas conservados: pueden estar registrados en las consolas de Meta/Google/TikTok.
+public_legal = _legal_redirect("legal_es_privacy")
+public_privacy = _legal_redirect("legal_en_privacy")
+public_terms = _legal_redirect("legal_en_terms")
+public_support = _legal_redirect("legal_en_contact")
+public_data_deletion = _legal_redirect("legal_en_data_deletion")
 
 
 def _parse_signed_request(signed_request):
@@ -284,13 +321,15 @@ def _handle_password_update(request, user):
     password = request.POST.get("password", "")
     password_confirm = request.POST.get("password_confirm", "")
 
-    if not current_password:
-        messages.error(request, "La contraseña actual es obligatoria.")
-        return
+    # Quien entra con Google no tiene contraseña usable: puede fijar una sin la actual.
+    if user.has_usable_password():
+        if not current_password:
+            messages.error(request, "La contraseña actual es obligatoria.")
+            return
 
-    if not user.check_password(current_password):
-        messages.error(request, "La contraseña actual es incorrecta.")
-        return
+        if not user.check_password(current_password):
+            messages.error(request, "La contraseña actual es incorrecta.")
+            return
 
     if not password:
         messages.error(request, "La nueva contraseña no puede estar vacía.")
@@ -313,6 +352,10 @@ def _handle_password_update(request, user):
 def _handle_account_deletion(request, user):
     """Handle account deletion with sole-owner safety check."""
     from apps.members.models import OrgMembership
+
+    if request.POST.get("confirm_email", "").strip().lower() != user.email.lower():
+        messages.error(request, "Escribe tu correo exactamente como aparece para confirmar; no se eliminó nada.")
+        return redirect("accounts:settings")
 
     # Check if user is the sole owner of any organization
     owned_memberships = OrgMembership.objects.filter(user=user, org_role=OrgMembership.OrgRole.OWNER).select_related(

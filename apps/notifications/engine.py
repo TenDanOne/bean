@@ -111,6 +111,14 @@ def notify(
         # During quiet hours, only deliver in-app (silent). Skip email/webhook.
         channels_to_dispatch = [c for c in channels_to_dispatch if c == Channel.IN_APP]
 
+    # Con resumen diario activo el correo inmediato se sustituye por el digest.
+    qh = getattr(user, "quiet_hours", None)
+    if qh is not None and qh.digest_mode:
+        channels_to_dispatch = [c for c in channels_to_dispatch if c != Channel.EMAIL]
+    # Sin URL no hay a dónde entregar: no se crea la entrega (antes quedaba «entregada»).
+    if not (data or {}).get("webhook_url"):
+        channels_to_dispatch = [c for c in channels_to_dispatch if c != Channel.WEBHOOK]
+
     for channel in channels_to_dispatch:
         delivery = NotificationDelivery.objects.create(
             notification=notification,
@@ -281,8 +289,7 @@ def _dispatch_webhook(delivery: NotificationDelivery) -> None:
 
     webhook_url = notification.data.get("webhook_url")
     if not webhook_url:
-        logger.info("No webhook_url in notification data, skipping webhook delivery")
-        return
+        raise RuntimeError("Sin webhook_url: no hay a dónde entregar")
 
     # Re-validate immediately before the request. The single-pass DNS resolve
     # used by is_safe_url is reused by httpx via the OS resolver cache; this

@@ -10,7 +10,7 @@ numbers are usually larger than people expect.
             <h4 class="text-sm font-semibold" style="color: #991B1B;">Eliminar {{ account_name }} de forma permanente</h4>
             <p class="text-[13px] mt-1" style="color: #B91C1C;">
                 Esto también destruye
-                <strong>{{ impact.posts }} publicaci{{ impact.posts|pluralize:"ón,ones" }}</strong> and
+                <strong>{{ impact.posts }} publicaci{{ impact.posts|pluralize:"ón,ones" }}</strong> y
                 <strong>{{ impact.messages }} mensaje{{ impact.messages|pluralize }} de la bandeja</strong>.
                 No se puede deshacer.
             </p>
@@ -35,6 +35,15 @@ numbers are usually larger than people expect.
             <input type="text" id="confirm-{{ account.id }}" name="confirm_name" autocomplete="off" required
                    class="flex-1 px-3 py-1.5 text-sm outline-none"
                    style="border: 1px solid #FCA5A5; background: var(--surface-0); color: var(--text-primary);">
+            <button type="button"
+                    hx-get="{% url 'social_accounts:list' workspace_id=workspace_id %}"
+                    hx-target="#account-{{ account.id }}"
+                    hx-select="#account-{{ account.id }}"
+                    hx-swap="outerHTML"
+                    class="px-4 py-1.5 text-sm font-semibold rounded-full cursor-pointer"
+                    style="color: #991B1B;">
+                Cancelar
+            </button>
             <button type="submit"
                     class="px-4 py-1.5 text-sm font-semibold text-app-inverse rounded-full cursor-pointer transition-colors"
                     style="background: #DC2626;">

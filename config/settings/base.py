@@ -271,6 +271,7 @@ SESSION_SAVE_EVERY_REQUEST = True  # Sliding window
 
 # Email
 EMAIL_BACKEND_TYPE = env("EMAIL_BACKEND_TYPE")
+EMAIL_TIMEOUT = 10  # un SMTP colgado no debe bloquear el drenado de la cola
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@localhost")
 
 if EMAIL_BACKEND_TYPE == "smtp":

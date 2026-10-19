@@ -205,12 +205,15 @@ def account_list(request, workspace_id):
         .order_by("platform", "account_name")
     )
     configured_platforms = _get_configured_platforms(request.org.id)
+    archived_count = sum(1 for a in accounts if a.is_archived)
 
     return render(
         request,
         "social_accounts/list.html",
         {
             "accounts": accounts,
+            "connected_count": len(accounts) - archived_count,
+            "archived_count": archived_count,
             "workspace_id": workspace_id,
             "configured_platforms": configured_platforms,
             "platform_choices": PlatformCredential.Platform.choices,
@@ -855,7 +858,9 @@ def disconnect(request, workspace_id, account_id):
 
     # HTMX partial response
     if request.headers.get("HX-Request"):
-        return render(request, "social_accounts/partials/_empty.html")
+        return render(
+            request, "social_accounts/partials/_account_card.html", {"account": account, "workspace_id": workspace_id}
+        )
 
     return redirect("social_accounts:list", workspace_id=workspace_id)
 

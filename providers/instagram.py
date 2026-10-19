@@ -227,6 +227,12 @@ class InstagramProvider(SocialProvider):
         Brightbean should be the Instagram Business account selected from the
         Facebook Pages the user manages.
         """
+        # Con el token de usuario de corta duración, los tokens de Página que devuelve /me/accounts
+        # también caducan; con uno de larga duración no caducan. Si el intercambio falla seguimos con el original.
+        try:
+            access_token = self.refresh_token(access_token).access_token
+        except Exception:
+            logger.warning("%s long-lived token exchange failed; using the short-lived user token", self.platform_name)
         resp = self._request(
             "GET",
             f"{BASE_URL}/me/accounts",

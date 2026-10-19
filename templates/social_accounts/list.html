@@ -37,7 +37,7 @@
     <!-- Summary footer -->
     <div class="mt-6 pt-4 border-t border-app">
         <p class="text-xs text-app-ghost">
-            {{ accounts|length }} cuenta{{ accounts|length|pluralize }} conectada{{ accounts|length|pluralize }}.
+            {{ connected_count }} cuenta{{ connected_count|pluralize }} conectada{{ connected_count|pluralize }}{% if archived_count %} y {{ archived_count }} archivada{{ archived_count|pluralize }}{% endif %}.
             Revisamos su estado automáticamente cada 6 horas.
         </p>
     </div>

@@ -23,7 +23,9 @@ def enqueue_analytics_backfill(sender, instance: SocialAccount, created: bool, u
     if not created:
         if update_fields is None:
             return
-        if "oauth_access_token" not in update_fields:
+        # Un refresco de token también escribe oauth_access_token; solo una reconexión
+        # (update_or_create de la vista OAuth) escribe además analytics_needs_reconnect.
+        if "oauth_access_token" not in update_fields or "analytics_needs_reconnect" not in update_fields:
             return
     if instance.connection_status != SocialAccount.ConnectionStatus.CONNECTED:
         return

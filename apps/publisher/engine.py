@@ -24,13 +24,16 @@ from datetime import timedelta
 from background_task import background
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from apps.composer.models import PlatformPost
+from apps.composer.services import media_error_for_platform
 from apps.credentials.models import resolve_platform_credentials
 from apps.social_accounts.models import SocialAccount
 from providers import get_provider
+from providers.exceptions import PublishError
 from providers.types import PostType, PublishContent
 
 from .models import PublishLog, RateLimitState
@@ -39,6 +42,9 @@ logger = logging.getLogger(__name__)
 
 # Retry backoff schedule (in seconds)
 RETRY_BACKOFF = [60, 300, 1800]  # 1min, 5min, 30min
+
+# A PUBLISHING row with no platform id this long is a crashed/timed-out attempt, not a live one.
+STUCK_PUBLISHING_TIMEOUT = timedelta(minutes=15)
 
 # A pending publish (TikTok processing) that the platform never confirms fails after this long.
 PENDING_PUBLISH_TIMEOUT = timedelta(hours=24)
@@ -134,6 +140,7 @@ class PublishEngine:
                     logger.exception("Unexpected error publishing post group %s", post_id)
 
         # Always process retries, even when no new posts are due
+        self._recover_stuck_publishing()
         self._process_retries()
         self._check_pending_publishes()
 
@@ -148,6 +155,8 @@ class PublishEngine:
             )
             .annotate(effective_at=Coalesce("scheduled_at", "post__scheduled_at"))
             .filter(effective_at__lte=now)
+            # A failed attempt waits out its backoff before the next one.
+            .filter(Q(next_retry_at__isnull=True) | Q(next_retry_at__lte=now))
             # Never publish a post that has any platform on hold — a client hold
             # parks the whole post out of the publish path even if a sibling
             # platform is already scheduled.
@@ -189,8 +198,9 @@ class PublishEngine:
             if not platform_posts:
                 return
 
+            # updated_at marks when the attempt began (stuck-publishing recovery relies on it).
             PlatformPost.objects.filter(id__in=[pp.id for pp in platform_posts]).update(
-                status=PlatformPost.Status.PUBLISHING
+                status=PlatformPost.Status.PUBLISHING, updated_at=timezone.now()
             )
 
         # Publish in parallel
@@ -329,6 +339,18 @@ class PublishEngine:
                 exc_info=True,
             )
 
+    def _recover_stuck_publishing(self):
+        """Turn attempts that died mid-publish (no platform id, >15 min) into a retryable FAILED."""
+        return PlatformPost.objects.filter(
+            status=PlatformPost.Status.PUBLISHING,
+            platform_post_id="",
+            updated_at__lt=timezone.now() - STUCK_PUBLISHING_TIMEOUT,
+        ).update(
+            status=PlatformPost.Status.FAILED,
+            publish_error="La publicación se interrumpió; puedes reintentarla.",
+            updated_at=timezone.now(),
+        )
+
     def _check_pending_publishes(self):
         """Resolve PUBLISHING posts whose platform is still processing (e.g. TikTok Direct Post)."""
         pending = PlatformPost.objects.filter(
@@ -381,6 +403,13 @@ class PublishEngine:
         media_urls = []
         temp_files = []
         attachments = list(platform_post.post.media_attachments.select_related("media_asset").order_by("position"))
+
+        # Fail clearly (no retries) when the media can't work on this platform.
+        media_error = media_error_for_platform(
+            platform, [pm.media_asset.media_type for pm in attachments if pm.media_asset.file]
+        )
+        if media_error:
+            raise PublishError(media_error, platform=platform, retryable=False)
 
         # For video-only platforms (YouTube, TikTok), skip non-video attachments
         video_only = set(provider.supported_post_types) <= {PostType.VIDEO, PostType.SHORT}
@@ -684,7 +713,7 @@ def _post_first_comment_task(platform_post_id):
         credentials = _resolve_publish_credentials(account)
         provider = get_provider(account.platform, credentials)
         provider.publish_comment(
-            access_token=account.oauth_access_token,
+            access_token=account.get_fresh_access_token(provider),
             post_id=platform_post.platform_post_id,
             text=comment_text,
         )

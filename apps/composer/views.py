@@ -24,6 +24,7 @@ from apps.common.validators import (
     parse_and_truncate_tag_string,
     parse_and_truncate_youtube_tag_string,
 )
+from apps.composer.services import media_error_for_platform
 from apps.members.channels import visible_accounts
 from apps.members.decorators import require_permission
 from apps.members.models import WorkspaceMembership
@@ -185,6 +186,67 @@ def _scoped_platform_post_ids(request, post):
     return list(post.platform_posts.filter(social_account_id=scope).values_list("id", flat=True))
 
 
+def _publishable_account_ids(request, workspace):
+    """Ids (str) of the workspace accounts this member may post to (visible + ``can_publish``)."""
+    return {
+        str(pk)
+        for pk in visible_accounts(
+            request.workspace_membership,
+            SocialAccount.objects.for_workspace(workspace.id),
+            capability="can_publish",
+        ).values_list("id", flat=True)
+    }
+
+
+def _is_read_only_published(post):
+    """A post whose every platform copy is already published is history: no edits."""
+    statuses = set(post.platform_posts.values_list("status", flat=True))
+    return statuses == {PlatformPost.Status.PUBLISHED}
+
+
+def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_approval=True):
+    """400 JSON when this save may not go out: approval gate or media unfit for a platform.
+
+    With mandatory approval, scheduling/queueing needs ``publish_directly``; everyone
+    else must route the post through "Enviar a aprobación".
+    """
+    from apps.composer.services import _APPROVAL_MODES_BLOCKING_DIRECT_SCHEDULE
+
+    if check_approval and workspace.approval_workflow_mode in _APPROVAL_MODES_BLOCKING_DIRECT_SCHEDULE:
+        membership = request.workspace_membership
+        perms = membership.effective_permissions if membership else {}
+        if not perms.get("publish_directly", False):
+            return JsonResponse(
+                {"errors": {"approval": "Este espacio requiere aprobación: envía la publicación a aprobación."}},
+                status=400,
+            )
+
+    from apps.media_library.models import MediaAsset
+
+    media_types = []
+    if post_id:
+        media_types += list(PostMedia.objects.filter(post_id=post_id).values_list("media_asset__media_type", flat=True))
+    pending = request.session.get(f"pending_media_{workspace.id}", [])
+    if pending:
+        media_types += list(
+            MediaAsset.objects.filter(id__in=pending, workspace=workspace).values_list("media_type", flat=True)
+        )
+    account_ids = set(_parse_selected_account_ids(request.POST.get("selected_accounts", "")))
+    platforms = set(
+        SocialAccount.objects.filter(id__in=account_ids, workspace=workspace).values_list("platform", flat=True)
+    )
+    if queue_id and _is_valid_uuid(queue_id):
+        from apps.calendar.models import Queue
+
+        q = Queue.objects.filter(id=queue_id, workspace=workspace).select_related("social_account").first()
+        if q and q.social_account_id:
+            platforms.add(q.social_account.platform)
+    errors = [e for e in (media_error_for_platform(p, media_types) for p in sorted(platforms)) if e]
+    if errors:
+        return JsonResponse({"errors": {"media": " ".join(errors)}}, status=400)
+    return None
+
+
 def _sync_platform_posts(request, post, workspace, initial_status=None):
     """Sync platform post selections from form data.
 
@@ -199,14 +261,7 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
     # is why the per-channel check goes here rather than in each caller. The
     # composer only offers channels they can see, but "can see" and "may post to"
     # are separate grants — and a hand-crafted POST never went through the form.
-    allowed_ids = {
-        str(pk)
-        for pk in visible_accounts(
-            request.workspace_membership,
-            SocialAccount.objects.for_workspace(workspace.id),
-            capability="can_publish",
-        ).values_list("id", flat=True)
-    }
+    allowed_ids = _publishable_account_ids(request, workspace)
     permitted_ids = [acc_id for acc_id in selected_ids if acc_id in allowed_ids]
 
     # Deletion is decided on the *unfiltered* selection on purpose. If a member
@@ -230,12 +285,16 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
             social_account=account,
             defaults=defaults,
         )
-        override_title = request.POST.get(f"override_title_{acc_id}", "").strip()
-        override_caption = request.POST.get(f"override_caption_{acc_id}", "").strip()
-        override_comment = request.POST.get(f"override_comment_{acc_id}", "").strip()
-        pp.platform_specific_title = override_title if override_title else None
-        pp.platform_specific_caption = override_caption if override_caption else None
-        pp.platform_specific_first_comment = override_comment if override_comment else None
+        # Solo se toca el override si el campo vino en el formulario: un guardado
+        # parcial (sin esos inputs) no debe borrar lo personalizado antes.
+        for field, attr in (
+            ("title", "platform_specific_title"),
+            ("caption", "platform_specific_caption"),
+            ("comment", "platform_specific_first_comment"),
+        ):
+            key = f"override_{field}_{acc_id}"
+            if key in request.POST:
+                setattr(pp, attr, request.POST[key].strip() or None)
 
         # Per-platform extras
         if account.platform == "youtube":
@@ -479,6 +538,14 @@ def compose(request, workspace_id, post_id=None):
             selected_account_ids = [pp.social_account_id for pp in platform_post_list]
         media_attachments = post.media_attachments.select_related("media_asset").all()
         platform_extras = {str(pp.social_account_id): (pp.platform_extra or {}) for pp in platform_post_list}
+        platform_overrides = {
+            str(pp.social_account_id): {
+                "title": pp.platform_specific_title or "",
+                "caption": pp.platform_specific_caption or "",
+                "comment": pp.platform_specific_first_comment or "",
+            }
+            for pp in platform_post_list
+        }
         template_data = None
     else:
         post = None
@@ -504,11 +571,14 @@ def compose(request, workspace_id, post_id=None):
         template_data = _resolve_template_data(request.GET.get("template"), workspace)
         if template_data and template_data.get("caption"):
             initial["caption"] = template_data["caption"]
+        if template_data and template_data.get("first_comment"):
+            initial["first_comment"] = template_data["first_comment"]
         form = PostForm(initial=initial)
         platform_post_list = []
         selected_account_ids = []
         media_attachments = []
         platform_extras = {}
+        platform_overrides = {}
 
     # Clear any stale pending media from previous compose sessions.
     # Each compose page load starts fresh; the upload flow re-populates
@@ -530,6 +600,17 @@ def compose(request, workspace_id, post_id=None):
         )
         .order_by("platform", "account_name")
     )
+
+    # A saved template also brings its accounts (only ones this member can see) and media.
+    if template_data and not post_id and not account_filter:
+        visible_ids = {str(pk) for pk in social_accounts.values_list("id", flat=True)}
+        selected_account_ids = [a for a in template_data.get("platform_account_ids") or [] if a in visible_ids]
+        template_media_ids = [m for m in template_data.get("media_asset_ids") or [] if _is_valid_uuid(m)]
+        if template_media_ids:
+            by_id = {str(a.id): a for a in MediaAsset.objects.filter(id__in=template_media_ids, workspace=workspace)}
+            ordered = [by_id[m] for m in template_media_ids if m in by_id]
+            request.session[session_key] = [str(a.id) for a in ordered]
+            pending_assets = ordered
 
     # When opening from calendar with a specific account, show only that account.
     if account_filter:
@@ -670,6 +751,7 @@ def compose(request, workspace_id, post_id=None):
         "social_accounts": social_accounts,
         "selected_account_ids": [str(aid) for aid in selected_account_ids],
         "platform_extras": platform_extras,
+        "platform_overrides": platform_overrides,
         "media_attachments": media_attachments,
         "media_items": media_items,
         "char_limits": char_limits,
@@ -827,6 +909,10 @@ def save_post(request, workspace_id, post_id=None):
     if post_id:
         post = get_object_or_404(Post, id=post_id, workspace=workspace)
         _require_may_edit(request, post)
+        if _is_read_only_published(post):
+            return JsonResponse(
+                {"errors": {"post": "Esta publicación ya se publicó y no se puede editar."}}, status=400
+            )
         _orig_content = _base_content_snapshot(post)
         form = PostForm(request.POST, instance=post)
     else:
@@ -850,6 +936,17 @@ def save_post(request, workspace_id, post_id=None):
     # which is why we sync those before/after running it.
     pending_target = None  # what to transition existing children to after sync
     initial_status = "draft"  # default status for newly created PlatformPosts
+
+    if action in ("schedule", "publish_now", "add_to_queue", "add_to_queue_priority"):
+        blocked = _scheduling_guard(
+            request,
+            workspace,
+            post_id,
+            request.POST.get("queue_id") if action.startswith("add_to_queue") else None,
+            check_approval=action != "publish_now",
+        )
+        if blocked is not None:
+            return blocked
 
     if action == "schedule":
         aware_dt = _combine_schedule_dt(
@@ -1193,6 +1290,8 @@ def autosave(request, workspace_id, post_id=None):
     if post_id:
         post = get_object_or_404(Post, id=post_id, workspace=workspace)
         _require_may_edit(request, post)
+        if _is_read_only_published(post):
+            return HttpResponse(status=204)
         orig_content = _base_content_snapshot(post)
     else:
         # Check if a previous autosave already created a draft for this session
@@ -1201,7 +1300,10 @@ def autosave(request, workspace_id, post_id=None):
         if client_post_id:
             try:
                 post = Post.objects.get(id=client_post_id, workspace=workspace)
-            except Post.DoesNotExist:
+                _require_may_edit(request, post)
+                if _is_read_only_published(post):
+                    return HttpResponse(status=204)
+            except (Post.DoesNotExist, ValidationError):
                 post = Post(workspace=workspace, author=request.user)
                 is_new = True
         else:
@@ -1237,13 +1339,18 @@ def autosave(request, workspace_id, post_id=None):
             del request.session[session_key]
 
     # Sync platform selections
+    # Same rules as _sync_platform_posts: only this workspace's accounts the member
+    # may publish to are added, and targets they can't touch are never dropped.
     selected_ids = _parse_selected_account_ids(request.POST.get("selected_accounts", ""))
-    _remove_deselected_platform_posts(request, post, selected_ids)
+    allowed_ids = _publishable_account_ids(request, workspace)
+    keep_ids = list(dict.fromkeys(selected_ids + [i for i in _existing_target_ids(post) if i not in allowed_ids]))
+    _remove_deselected_platform_posts(request, post, keep_ids)
     for acc_id in selected_ids:
-        PlatformPost.objects.get_or_create(
-            post=post,
-            social_account_id=acc_id,
-        )
+        if acc_id in allowed_ids:
+            PlatformPost.objects.get_or_create(
+                post=post,
+                social_account_id=acc_id,
+            )
 
     # Option A: an autosave that changed an approved post's content reverts it to
     # pending_review so edited content can't publish without a fresh review.
@@ -2082,30 +2189,23 @@ def upload_media(request, workspace_id, post_id=None):
     if not uploaded_file:
         return JsonResponse({"error": "No se envió ningún archivo"}, status=400)
 
-    from apps.media_library.models import MediaAsset
+    from apps.media_library.quotas import StorageQuotaExceededError
+    from apps.media_library.services import create_asset
+    from apps.media_library.tasks import process_media_asset
 
-    # Determine media type
-    content_type = uploaded_file.content_type or ""
-    if content_type.startswith("image/"):
-        media_type = MediaAsset.MediaType.IMAGE
-    elif content_type.startswith("video/"):
-        media_type = MediaAsset.MediaType.VIDEO
-    elif content_type == "image/gif":
-        media_type = MediaAsset.MediaType.GIF
-    else:
-        media_type = MediaAsset.MediaType.DOCUMENT
-
-    asset = MediaAsset.objects.create(
-        organization=workspace.organization,
-        workspace=workspace,
-        uploaded_by=request.user,
-        file=uploaded_file,
-        filename=uploaded_file.name,
-        media_type=media_type,
-        mime_type=content_type,
-        file_size=uploaded_file.size,
-        source="upload",
-    )
+    # Same validation as the library: sniffed type, size cap, org quota.
+    try:
+        asset = create_asset(
+            organization=workspace.organization,
+            workspace=workspace,
+            uploaded_file=uploaded_file,
+            uploaded_by=request.user,
+        )
+    except ValidationError as exc:
+        return JsonResponse({"error": " ".join(exc.messages)}, status=400)
+    except StorageQuotaExceededError:
+        return JsonResponse({"error": "Se alcanzó el límite de almacenamiento de la organización."}, status=413)
+    process_media_asset(str(asset.id))  # metadata, duration and thumbnail
 
     if post_id:
         post = get_object_or_404(Post, id=post_id, workspace=workspace)
@@ -3193,6 +3293,56 @@ def use_template(request, workspace_id, template_id):
 # ---------------------------------------------------------------------------
 
 
+def _read_csv_rows(raw: bytes) -> list[list[str]]:
+    """Parse CSV bytes from Excel or Sheets: UTF-8 (BOM) or cp1252, delimiter ``,`` ``;`` or tab."""
+    import csv
+    import io
+
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = raw.decode("cp1252", errors="replace")  # Excel en español guarda así
+    try:
+        dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;	")
+    except csv.Error:
+        dialect = csv.excel
+    return list(csv.reader(io.StringIO(text), dialect))
+
+
+def _csv_cell(row, mapping, field):
+    idx = mapping.get(field)
+    return row[idx].strip() if idx is not None and idx < len(row) else ""
+
+
+def _import_media_from_url(workspace, user, url):
+    """Download a public http(s) image/video and add it to the media library (validated like an upload)."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    from apps.common.validators import is_safe_url
+    from apps.media_library.services import create_asset
+
+    if not is_safe_url(url):
+        raise ValueError("URL de medio no válida")
+    max_bytes = 50 * 1024 * 1024
+    data = bytearray()
+    try:
+        with httpx.stream("GET", url, timeout=20, follow_redirects=False) as resp:
+            resp.raise_for_status()
+            for chunk in resp.iter_bytes():
+                data.extend(chunk)
+                if len(data) > max_bytes:
+                    raise ValueError("El medio es demasiado grande")
+    except httpx.HTTPError as exc:
+        raise ValueError("No se pudo descargar el medio") from exc
+    name = url.split("?")[0].rstrip("/").rsplit("/", 1)[-1] or "medio"
+    return create_asset(
+        organization=workspace.organization,
+        workspace=workspace,
+        uploaded_file=SimpleUploadedFile(name, bytes(data)),
+        uploaded_by=user,
+    )
+
+
 @login_required
 @require_permission("create_posts")
 def csv_upload(request, workspace_id):
@@ -3200,9 +3350,6 @@ def csv_upload(request, workspace_id):
     workspace = _get_workspace(request, workspace_id)
 
     if request.method == "POST" and request.FILES.get("csv_file"):
-        import csv
-        import io
-
         csv_file = request.FILES["csv_file"]
         if csv_file.size and csv_file.size > MAX_CSV_UPLOAD_BYTES:
             return render(
@@ -3210,9 +3357,7 @@ def csv_upload(request, workspace_id):
                 "composer/csv_import.html",
                 {"workspace": workspace, "error": "El archivo CSV es demasiado grande (máx. 5 MB)."},
             )
-        decoded = csv_file.read().decode("utf-8-sig")
-        reader = csv.reader(io.StringIO(decoded))
-        rows = list(reader)
+        rows = _read_csv_rows(csv_file.read())
 
         if not rows:
             return render(
@@ -3286,8 +3431,6 @@ def csv_preview(request, workspace_id):
     for field in ["date", "time", "platforms", "caption", "media_url", "category", "tags", "first_comment"]:
         col_idx = request.POST.get(f"map_{field}", "")
         if col_idx != "":
-            import contextlib
-
             with contextlib.suppress(ValueError, TypeError):
                 mapping[field] = int(col_idx)
 
@@ -3295,9 +3438,10 @@ def csv_preview(request, workspace_id):
     errors = []
     valid_count = 0
 
+    from apps.credentials.models import PlatformCredential
     from apps.social_accounts.models import SocialAccount
 
-    valid_platforms = {p[0].lower() for p in SocialAccount.Platform.choices}
+    valid_platforms = {p[0].lower() for p in PlatformCredential.Platform.choices}
     connected_accounts = set(
         SocialAccount.objects.for_workspace(workspace.id)
         .filter(connection_status=SocialAccount.ConnectionStatus.CONNECTED)
@@ -3309,33 +3453,35 @@ def csv_preview(request, workspace_id):
 
         # Validate date
         if "date" in mapping:
-            date_val = row[mapping["date"]].strip() if mapping["date"] < len(row) else ""
+            date_val = _csv_cell(row, mapping, "date")
             if date_val:
                 try:
-                    from datetime import date as date_cls
-
-                    date_cls.fromisoformat(date_val)
+                    datetime.strptime(date_val, "%Y-%m-%d")
                 except ValueError:
-                    row_errors.append(f"Invalid date format '{date_val}' (expected YYYY-MM-DD)")
+                    row_errors.append(f"Fecha no válida '{date_val}' (formato esperado AAAA-MM-DD)")
             else:
-                row_errors.append("Date is empty")
+                row_errors.append("La fecha está vacía")
+            time_val = _csv_cell(row, mapping, "time")
+            if time_val:
+                try:
+                    datetime.strptime(time_val, "%H:%M")
+                except ValueError:
+                    row_errors.append(f"Hora no válida '{time_val}' (formato esperado HH:MM)")
 
-        # Validate platforms
-        if "platforms" in mapping:
-            platforms_val = row[mapping["platforms"]].strip() if mapping["platforms"] < len(row) else ""
-            if platforms_val:
-                for p in platforms_val.split(","):
-                    p = p.strip().lower()
-                    if p and p not in valid_platforms:
-                        row_errors.append(f"Unknown platform '{p}'")
-                    elif p and p not in connected_accounts:
-                        row_errors.append(f"Platform '{p}' is not connected")
+        # Validate platforms: every row needs at least one connected account.
+        platforms_val = _csv_cell(row, mapping, "platforms")
+        platforms = [p.strip().lower() for p in platforms_val.split(",") if p.strip()]
+        if not platforms:
+            row_errors.append("La fila no tiene plataformas")
+        for p in platforms:
+            if p not in valid_platforms:
+                row_errors.append(f"Plataforma desconocida '{p}'")
+            elif p not in connected_accounts:
+                row_errors.append(f"La plataforma '{p}' no está conectada")
 
         # Validate caption
-        if "caption" in mapping:
-            caption_val = row[mapping["caption"]].strip() if mapping["caption"] < len(row) else ""
-            if not caption_val:
-                row_errors.append("Caption is empty")
+        if not _csv_cell(row, mapping, "caption"):
+            row_errors.append("El texto está vacío")
 
         if row_errors:
             errors.append({"row": row_idx, "errors": row_errors})
@@ -3362,7 +3508,7 @@ def csv_preview(request, workspace_id):
 @require_permission("create_posts")
 @require_POST
 def csv_confirm_import(request, workspace_id):
-    """Kick off the CSV import as a background job."""
+    """Import the validated CSV rows; a bad row is skipped (and reported) without touching the rest."""
     workspace = _get_workspace(request, workspace_id)
     csv_data = request.session.get(f"csv_import_{workspace.id}")
     mapping = request.session.get(f"csv_mapping_{workspace.id}")
@@ -3370,93 +3516,107 @@ def csv_confirm_import(request, workspace_id):
     if not csv_data or not mapping:
         return HttpResponse("No se encontraron datos del CSV. Vuelve a subir el archivo.", status=400)
 
+    import zoneinfo
+    from datetime import time as time_cls
+
+    from apps.composer.services import _APPROVAL_MODES_BLOCKING_DIRECT_SCHEDULE
     from apps.social_accounts.models import SocialAccount
+
+    # With mandatory approval, only members with publish_directly may schedule; for
+    # everyone else a dated row becomes a draft that keeps the date as its proposal.
+    membership = request.workspace_membership
+    perms = membership.effective_permissions if membership else {}
+    may_schedule = workspace.approval_workflow_mode not in _APPROVAL_MODES_BLOCKING_DIRECT_SCHEDULE or perms.get(
+        "publish_directly", False
+    )
+    tz = zoneinfo.ZoneInfo(workspace.effective_timezone or "UTC")
+    allowed_ids = _publishable_account_ids(request, workspace)
 
     rows = csv_data["rows"]
     created_count = 0
-    error_count = 0
+    drafted_for_approval = 0
+    row_errors = []
 
-    for row in rows:
+    for row_idx, row in enumerate(rows, start=2):
         try:
-            caption = row[mapping["caption"]].strip() if "caption" in mapping and mapping["caption"] < len(row) else ""
+            caption = _csv_cell(row, mapping, "caption")
             if not caption:
-                error_count += 1
-                continue
+                raise ValueError("El texto está vacío")
 
-            post = Post(
-                workspace=workspace,
-                author=request.user,
-                caption=caption,
-            )
-            initial_pp_status = "draft"
+            platforms = [p.strip().lower() for p in _csv_cell(row, mapping, "platforms").split(",") if p.strip()]
+            accounts = [
+                acc
+                for acc in SocialAccount.objects.filter(
+                    workspace=workspace,
+                    platform__in=platforms,
+                    connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+                )
+                if str(acc.id) in allowed_ids
+            ]
+            if not accounts:
+                raise ValueError("La fila no tiene cuentas conectadas a las que puedas publicar")
 
-            # Date + time
-            if "date" in mapping and mapping["date"] < len(row):
-                date_str = row[mapping["date"]].strip()
-                time_str = ""
-                if "time" in mapping and mapping["time"] < len(row):
-                    time_str = row[mapping["time"]].strip()
+            scheduled_at = None
+            date_str = _csv_cell(row, mapping, "date")
+            if date_str:
+                time_str = _csv_cell(row, mapping, "time")
+                d = datetime.strptime(date_str, "%Y-%m-%d").date()
+                t = datetime.strptime(time_str, "%H:%M").time() if time_str else time_cls(9, 0)
+                scheduled_at = datetime.combine(d, t).replace(tzinfo=tz)
 
-                if date_str:
-                    import zoneinfo
+            media_url = _csv_cell(row, mapping, "media_url")
+            tags_raw = _csv_cell(row, mapping, "tags")
+            cat_name = _csv_cell(row, mapping, "category")
 
-                    ws_tz = workspace.effective_timezone or "UTC"
-                    tz = zoneinfo.ZoneInfo(ws_tz)
-                    from datetime import time as time_cls
-
-                    d = datetime.strptime(date_str, "%Y-%m-%d").date()
-                    t = datetime.strptime(time_str, "%H:%M").time() if time_str else time_cls(9, 0)
-                    naive_dt = datetime.combine(d, t)
-                    post.scheduled_at = naive_dt.replace(tzinfo=tz)
-                    initial_pp_status = "scheduled"
-
-            # First comment
-            if "first_comment" in mapping and mapping["first_comment"] < len(row):
-                post.first_comment = row[mapping["first_comment"]].strip()
-
-            # Tags
-            if "tags" in mapping and mapping["tags"] < len(row):
-                tags_raw = row[mapping["tags"]].strip()
+            with transaction.atomic():
+                post = Post(
+                    workspace=workspace,
+                    author=request.user,
+                    caption=caption,
+                    first_comment=_csv_cell(row, mapping, "first_comment"),
+                )
                 if tags_raw:
                     post.tags = [t.strip() for t in tags_raw.split(",") if t.strip()]
-
-            # Category
-            if "category" in mapping and mapping["category"] < len(row):
-                cat_name = row[mapping["category"]].strip()
                 if cat_name:
-                    cat, _ = ContentCategory.objects.get_or_create(
-                        workspace=workspace,
-                        name=cat_name,
-                        defaults={"color": "#3B82F6"},
+                    post.category, _ = ContentCategory.objects.get_or_create(
+                        workspace=workspace, name=cat_name, defaults={"color": "#3B82F6"}
                     )
-                    post.category = cat
+                initial_pp_status = "draft"
+                if scheduled_at and may_schedule:
+                    post.scheduled_at = scheduled_at
+                    initial_pp_status = "scheduled"
+                elif scheduled_at:
+                    post.proposed_publish_at = scheduled_at
+                post.save()
 
-            post.save()
+                media_types = []
+                if media_url:
+                    asset = _import_media_from_url(workspace, request.user, media_url)
+                    PostMedia.objects.create(post=post, media_asset=asset, position=0)
+                    media_types.append(asset.media_type)
+                if initial_pp_status == "scheduled":
+                    for acc in accounts:
+                        media_err = media_error_for_platform(acc.platform, media_types)
+                        if media_err:
+                            raise ValueError(media_err)
 
-            # Platforms
-            if "platforms" in mapping and mapping["platforms"] < len(row):
-                platforms_str = row[mapping["platforms"]].strip()
-                if platforms_str:
-                    for p in platforms_str.split(","):
-                        p = p.strip().lower()
-                        accounts = SocialAccount.objects.filter(
-                            workspace=workspace,
-                            platform=p,
-                            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
-                        )
-                        for acc in accounts:
-                            PlatformPost.objects.get_or_create(
-                                post=post,
-                                social_account=acc,
-                                defaults={
-                                    "status": initial_pp_status,
-                                    "scheduled_at": post.scheduled_at,
-                                },
-                            )
-
+                for acc in accounts:
+                    PlatformPost.objects.create(
+                        post=post,
+                        social_account=acc,
+                        status=initial_pp_status,
+                        scheduled_at=post.scheduled_at,
+                    )
+            if scheduled_at and not may_schedule:
+                drafted_for_approval += 1
             created_count += 1
+        except ValidationError as exc:
+            row_errors.append({"row": row_idx, "errors": [" ".join(exc.messages)]})
+        except ValueError as exc:
+            row_errors.append({"row": row_idx, "errors": [str(exc)]})
         except Exception:
-            error_count += 1
+            logger.exception("CSV import: row %s failed", row_idx)
+            row_errors.append({"row": row_idx, "errors": ["Error inesperado al importar la fila"]})
 
     # Clean up session data
     request.session.pop(f"csv_import_{workspace.id}", None)
@@ -3468,7 +3628,9 @@ def csv_confirm_import(request, workspace_id):
         {
             "workspace": workspace,
             "created_count": created_count,
-            "error_count": error_count,
+            "error_count": len(row_errors),
+            "row_errors": row_errors[:50],
+            "drafted_for_approval": drafted_for_approval,
             "total_rows": len(rows),
         },
     )

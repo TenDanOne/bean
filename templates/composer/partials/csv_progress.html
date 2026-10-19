@@ -23,6 +23,20 @@
         {% endif %}
     </div>
 
+    {% if drafted_for_approval %}
+    <p class="text-sm text-app-tertiary mb-3">{{ drafted_for_approval }} fila{{ drafted_for_approval|pluralize }} con fecha se importó como borrador (con la fecha como propuesta) porque este espacio requiere aprobación.</p>
+    {% endif %}
+    {% if row_errors %}
+    <div class="mb-6 max-h-48 overflow-y-auto rounded-lg border border-red-100 text-left">
+        {% for err in row_errors %}
+        <div class="px-3 py-2 text-xs bg-red-50/50 {% if not forloop.last %}border-b border-red-50{% endif %}">
+            <span class="font-mono font-semibold text-red-600">Fila {{ err.row }}</span>
+            <span class="text-red-700">{{ err.errors|join:"; " }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <p class="text-sm text-app-tertiary mb-6">
         {% if created_count > 0 %}
         Tus publicaciones importadas ya están en el calendario.

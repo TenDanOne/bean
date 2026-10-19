@@ -235,10 +235,19 @@ def cross_workspace_calendar(request):
     else:
         target_date = date.today()
 
+    # Channels this user may see: owners see all, everyone else only what they were assigned.
+    from apps.members.channels import visible_accounts
+
+    visible_ids = set()
+    for m in WorkspaceMembership.objects.filter(user=request.user, workspace__in=filtered_workspaces):
+        visible_ids.update(
+            visible_accounts(m, SocialAccount.objects.for_workspace(m.workspace_id)).values_list("id", flat=True)
+        )
+
     # Social accounts across filtered workspaces (for channel filter)
     social_accounts = (
         SocialAccount.objects.filter(
-            workspace__in=filtered_workspaces,
+            id__in=visible_ids,
             connection_status=SocialAccount.ConnectionStatus.CONNECTED,
         )
         .select_related("workspace")
@@ -252,7 +261,7 @@ def cross_workspace_calendar(request):
     from django.db.models.functions import Coalesce
 
     base_pps = (
-        PlatformPost.objects.filter(post__workspace__in=filtered_workspaces)
+        PlatformPost.objects.filter(post__workspace__in=filtered_workspaces, social_account_id__in=visible_ids)
         .select_related("post__workspace", "post__author", "social_account")
         .prefetch_related("post__media_attachments__media_asset")
         .annotate(effective_at=Coalesce("scheduled_at", "post__scheduled_at"))

@@ -76,6 +76,8 @@ OPTIONAL_POST_INFO_FIELDS = (
 # TikTok FILE_UPLOAD's per-chunk limit is 64 MB decimal (not 64 MiB).
 # Anything larger requires multi-chunk upload, which we don't implement yet.
 MAX_SINGLE_CHUNK_SIZE = 64_000_000
+# Larger videos go in chunks of this size (TikTok: 5-64 MB each; the last one absorbs the remainder).
+UPLOAD_CHUNK_SIZE = 32_000_000
 
 CONTENT_TYPE_BY_EXT = {
     ".mp4": "video/mp4",
@@ -431,13 +433,10 @@ class TikTokProvider(SocialProvider):
         """Publish using FILE_UPLOAD source (two-step)."""
         video_path = content.media_files[0]
         video_size = os.path.getsize(video_path)
-        if video_size > MAX_SINGLE_CHUNK_SIZE:
-            raise PublishError(
-                f"Video file is {video_size} bytes; TikTok single-chunk upload "
-                f"supports up to {MAX_SINGLE_CHUNK_SIZE} bytes. Multi-chunk upload "
-                "is not yet implemented.",
-                platform=self.platform_name,
-            )
+        if video_size <= MAX_SINGLE_CHUNK_SIZE:
+            chunk_size, chunk_count = video_size, 1
+        else:
+            chunk_size, chunk_count = UPLOAD_CHUNK_SIZE, video_size // UPLOAD_CHUNK_SIZE
 
         ext = os.path.splitext(video_path)[1].lower()
         content_type = CONTENT_TYPE_BY_EXT.get(ext, "video/mp4")
@@ -448,8 +447,8 @@ class TikTokProvider(SocialProvider):
             "source_info": {
                 "source": "FILE_UPLOAD",
                 "video_size": video_size,
-                "chunk_size": video_size,
-                "total_chunk_count": 1,
+                "chunk_size": chunk_size,
+                "total_chunk_count": chunk_count,
             },
         }
         init_body = self._init_video_publish(access_token, payload)
@@ -463,20 +462,22 @@ class TikTokProvider(SocialProvider):
                 raw_response=init_body,
             )
 
-        # Step 2: stream the video binary to TikTok's presigned URL
+        # Step 2: send the binary to TikTok's presigned URL, one chunk at a time (never the whole file in memory)
         with open(video_path, "rb") as f:
-            video_bytes = f.read()
-        self._request(
-            "PUT",
-            upload_url,
-            headers={
-                "Content-Type": content_type,
-                "Content-Length": str(video_size),
-                "Content-Range": f"bytes 0-{video_size - 1}/{video_size}",
-            },
-            data=video_bytes,
-            timeout=120.0,
-        )
+            for i in range(chunk_count):
+                start = i * chunk_size
+                end = video_size if i == chunk_count - 1 else start + chunk_size
+                self._request(
+                    "PUT",
+                    upload_url,
+                    headers={
+                        "Content-Type": content_type,
+                        "Content-Length": str(end - start),
+                        "Content-Range": f"bytes {start}-{end - 1}/{video_size}",
+                    },
+                    data=f.read(end - start),
+                    timeout=120.0,
+                )
 
         return PublishResult(
             platform_post_id=publish_id,

@@ -10,14 +10,20 @@ class NotificationsConfig(AppConfig):
         from django.db.models.signals import post_migrate
 
         post_migrate.connect(self._register_tasks, sender=self)
+        from . import signals  # noqa: F401
 
     @staticmethod
     def _register_tasks(sender, **kwargs):
         from apps.common.background import register_recurring_task
-        from apps.notifications.tasks import NOTIFICATION_RETRY_INTERVAL_SECONDS, retry_failed_deliveries
+        from apps.notifications.tasks import (
+            NOTIFICATION_RETRY_INTERVAL_SECONDS,
+            retry_failed_deliveries,
+            run_daily_digests,
+        )
 
         register_recurring_task(
             retry_failed_deliveries,
             repeat=NOTIFICATION_RETRY_INTERVAL_SECONDS,
             verbose_name="retry_failed_deliveries",
         )
+        register_recurring_task(run_daily_digests, repeat=86400, verbose_name="run_daily_digests")

@@ -232,6 +232,7 @@ def test_publish_multi_photo_cleans_up_after_partial_staging_failure():
 
 def test_get_user_pages_includes_follower_count():
     provider = FacebookProvider({"client_id": "id", "client_secret": "secret"})
+    provider.refresh_token = MagicMock(return_value=MagicMock(access_token="user-token"))  # intercambio long-lived
     provider._request = MagicMock(
         return_value=MagicMock(
             json=MagicMock(

@@ -639,3 +639,22 @@ class TestCheckPublishStatus:
         assert st.platform_post_id == post_id
         if state == "failed":
             assert "file_format_check_failed" in st.error
+
+
+class TestChunkedUpload:
+    @patch.object(TikTokProvider, "_request")
+    def test_large_file_is_sent_in_chunks(self, mock_request, tmp_path, monkeypatch):
+        monkeypatch.setattr("providers.tiktok.MAX_SINGLE_CHUNK_SIZE", 10)
+        monkeypatch.setattr("providers.tiktok.UPLOAD_CHUNK_SIZE", 8)
+        video = tmp_path / "v.mp4"
+        video.write_bytes(b"x" * 20)  # 20 // 8 = 2 chunks: 8 + 12
+        mock_request.return_value = _make_response({"data": {"upload_url": "https://up", "publish_id": "p1"}})
+        provider = TikTokProvider({"client_key": "k", "client_secret": "s"})
+        content = PublishContent(text="t", media_files=[str(video)], post_type=PostType.VIDEO)
+
+        provider._publish_file_upload("tok", content, "SELF_ONLY")
+
+        init = mock_request.call_args_list[0].kwargs["json"]["source_info"]
+        assert (init["chunk_size"], init["total_chunk_count"]) == (8, 2)
+        puts = [c.kwargs["headers"]["Content-Range"] for c in mock_request.call_args_list[1:]]
+        assert puts == ["bytes 0-7/20", "bytes 8-19/20"]

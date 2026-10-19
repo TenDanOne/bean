@@ -11,6 +11,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import QuerySet
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.dateformat import format as date_format
 from django.views.decorators.http import require_POST
 
@@ -113,6 +114,48 @@ def _get_valid_channel_filter(request):
         return ""
 
 
+# Chips-filtro de estado del calendario: clave -> (etiqueta, estados reales de PlatformPost que agrupa).
+STATUS_CHIPS = (
+    ("draft", "Borrador", ("draft",)),
+    ("review", "En revisión", ("pending_review", "pending_client", "changes_requested")),
+    ("approved", "Aprobado", ("approved",)),
+    ("scheduled", "Programado", ("scheduled",)),
+    ("publishing", "Publicando", ("publishing",)),
+    ("published", "Publicado", ("published",)),
+    ("failed", "Falló", ("failed", "rejected")),
+)
+
+
+def _get_valid_statuses(request):
+    """Return the ``status`` query values that are real PlatformPost statuses (unknown ones are ignored)."""
+    valid = set(PlatformPost.Status.values)
+    return [s for s in dict.fromkeys(request.GET.getlist("status")) if s in valid]
+
+
+def _status_chips(workspace, request, display_tz, start, end):
+    """Chips-filtro de estado con su conteo para el rango visible [start, end] (ignora el filtro de estado)."""
+    counts: dict[str, int] = defaultdict(int)
+    rows = (
+        _get_filtered_platform_posts(workspace, request, apply_status=False)
+        .filter(effective_at__date__gte=start - timedelta(days=1), effective_at__date__lte=end + timedelta(days=1))
+        .values_list("status", "effective_at")
+    )
+    for status, effective_at in rows:
+        if effective_at and start <= effective_at.astimezone(display_tz).date() <= end:
+            counts[status] += 1
+    selected = set(_get_valid_statuses(request))
+    return [
+        {
+            "key": key,
+            "label": label,
+            "statuses": ",".join(statuses),
+            "count": sum(counts[st] for st in statuses),
+            "active": not selected or bool(selected & set(statuses)),
+        }
+        for key, label, statuses in STATUS_CHIPS
+    ]
+
+
 def _get_filtered_posts(workspace, request):
     """Apply calendar filters from query params."""
     qs = (
@@ -123,7 +166,7 @@ def _get_filtered_posts(workspace, request):
 
     # Status filter — editorial status now lives on PlatformPost, so match
     # posts that have at least one child carrying the target state.
-    statuses = request.GET.getlist("status")
+    statuses = _get_valid_statuses(request)
     if statuses:
         qs = qs.filter(platform_posts__status__in=statuses).distinct()
 
@@ -163,7 +206,7 @@ def _get_filtered_posts(workspace, request):
     return qs
 
 
-def _get_filtered_platform_posts(workspace, request):
+def _get_filtered_platform_posts(workspace, request, apply_status=True):
     """Return a PlatformPost queryset filtered by calendar query params.
 
     Each row carries an ``effective_at`` annotation that falls back to
@@ -179,7 +222,7 @@ def _get_filtered_platform_posts(workspace, request):
 
     # Status filter — editorial status now lives on the PlatformPost itself,
     # so each chip can stand on its own per-account state.
-    statuses = request.GET.getlist("status")
+    statuses = _get_valid_statuses(request) if apply_status else []
     if statuses:
         qs = qs.filter(status__in=statuses)
 
@@ -373,7 +416,7 @@ def _get_publish_context(workspace, request):
         .count(),
         "sent_count": PlatformPost.objects.filter(
             post__workspace_id=workspace.id,
-            status__in=["published", "failed"],
+            status__in=["publishing", "published", "failed"],
         ).count(),
     }
 
@@ -470,7 +513,7 @@ def _get_tab_context(request, workspace, tab: str) -> dict:
         platform_posts = (
             PlatformPost.objects.filter(
                 post__workspace_id=workspace.id,
-                status__in=["published", "failed"],
+                status__in=["publishing", "published", "failed"],
             )
             .select_related("post__author", "social_account")
             .prefetch_related("post__media_attachments__media_asset")
@@ -624,7 +667,7 @@ def calendar_view(request, workspace_id):
 
     # Active filters
     active_filters = {
-        "statuses": request.GET.getlist("status"),
+        "statuses": _get_valid_statuses(request),
         "platforms": request.GET.getlist("platform"),
         "authors": request.GET.getlist("author"),
         "categories": request.GET.getlist("category"),
@@ -800,6 +843,7 @@ def _month_view_data(request, workspace, target_date, context):
             "next_date": next_month.isoformat(),
             "unscheduled_drafts": drafts,
             "day_names": DAY_NAMES_ES,
+            "status_chips": _status_chips(workspace, request, display_tz, weeks[0][0], weeks[-1][6]),
         }
     )
 
@@ -879,6 +923,7 @@ def _week_view_data(request, workspace, target_date, context):
             "prev_date": (monday - timedelta(weeks=1)).isoformat(),
             "next_date": (monday + timedelta(weeks=1)).isoformat(),
             "period_label": f"{date_format(week_days[0], 'j M')} – {date_format(week_days[6], 'j M Y')}",
+            "status_chips": _status_chips(workspace, request, display_tz, week_days[0], week_days[6]),
         }
     )
 
@@ -948,6 +993,7 @@ def _day_view_data(request, workspace, target_date, context):
             "prev_date": (target_date - timedelta(days=1)).isoformat(),
             "next_date": (target_date + timedelta(days=1)).isoformat(),
             "period_label": date_format(target_date, r"l, j \d\e F \d\e Y").capitalize(),
+            "status_chips": _status_chips(workspace, request, display_tz, target_date, target_date),
         }
     )
 
@@ -1061,6 +1107,22 @@ def reschedule_post(request, workspace_id):
         new_dt = datetime.fromisoformat(new_datetime_str)
         if new_dt.tzinfo is None:
             new_dt = new_dt.replace(tzinfo=tz)
+        # La vista mes suelta en una hora fija (09:00); se conserva la hora original de la publicación.
+        if request.POST.get("keep_time") and pp.scheduled_at:
+            orig = pp.scheduled_at.astimezone(tz)
+            new_dt = datetime.combine(new_dt.date(), orig.timetz().replace(tzinfo=None), tzinfo=tz)
+        if new_dt <= timezone.now():
+            return JsonResponse({"error": "No se puede programar una publicación en el pasado."}, status=400)
+        if pp.status == "draft":
+            from apps.composer.services import _require_approval_gate_passes
+
+            try:
+                _require_approval_gate_passes(workspace)
+            except ValueError:
+                return JsonResponse(
+                    {"error": "Este espacio exige aprobación: la publicación no se puede programar arrastrándola."},
+                    status=400,
+                )
         pp.scheduled_at = new_dt
         # Drop into "scheduled" so the publisher picks it up. Drag-drop on a
         # draft chip is treated as an implicit schedule action.

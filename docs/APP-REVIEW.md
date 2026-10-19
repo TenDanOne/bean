@@ -227,3 +227,7 @@ YouTube/Google tiene su propio proceso (verificación de OAuth para scopes sensi
 | T6 | El token de `/tiktok<token>.txt` debe coincidir con el del portal; verificar dominio `ithos.mx` o prefijo y registrar el redirect `social1` | `apps/accounts/urls_root.py` |
 | T7 | `publish_per_day=5` en el `RateLimitConfig` de TikTok limita a 5 publicaciones diarias; confirmar que basta tras la auditoría | `providers/tiktok.py` |
 | G1 | La UI está pasando a español; el screencast para los revisores debe llevar subtítulos en inglés | (decisión) |
+
+## Tokens de Meta (Facebook / Instagram)
+
+Al conectar, `get_user_pages` (`providers/facebook.py`, `providers/instagram.py`) intercambia primero el token de usuario por uno de larga duración (`GET /oauth/access_token?grant_type=fb_exchange_token`) y solo después llama a `/me/accounts`; así los tokens de Página resultantes no caducan. No se pudo confirmar con `debug_token` (no había token real): tras conectar una Página, comprobar en https://developers.facebook.com/tools/debug/accesstoken/ que el token de Página muestre «Expires: Never». Si el intercambio falla, se usa el token original y se registra una advertencia.

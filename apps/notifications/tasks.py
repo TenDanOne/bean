@@ -83,3 +83,9 @@ def retry_failed_deliveries():
     count = _retry()
     if count > 0:
         logger.info("Retried %d failed notification deliveries", count)
+
+
+@background(schedule=0)
+def run_daily_digests():
+    """Resumen diario por correo, una vez al día (``send_daily_digests`` es la función plana, testeable)."""
+    send_daily_digests()

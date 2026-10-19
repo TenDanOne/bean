@@ -216,3 +216,20 @@ class TestSetCommentVisibility:
         params = self._params(mock_request, visible=True)
 
         assert params["moderationStatus"] == "published"
+
+
+class TestResumableChunks:
+    def test_upload_goes_in_chunks_until_final_response(self, tmp_path, monkeypatch):
+        from providers.youtube import YouTubeProvider
+
+        monkeypatch.setattr("providers.youtube.UPLOAD_CHUNK_SIZE", 8)
+        video = tmp_path / "v.mp4"
+        video.write_bytes(b"x" * 20)
+        responses = [MagicMock(status_code=308), MagicMock(status_code=308), MagicMock(status_code=200)]
+        responses[2].json.return_value = {"id": "vid"}
+        provider = YouTubeProvider({"client_id": "c", "client_secret": "s"})
+        with patch.object(YouTubeProvider, "_request", side_effect=responses) as req:
+            body = provider._upload_resumable("https://up", str(video))
+        assert body == {"id": "vid"}
+        ranges = [c.kwargs["headers"]["Content-Range"] for c in req.call_args_list]
+        assert ranges == ["bytes 0-7/20", "bytes 8-15/20", "bytes 16-19/20"]

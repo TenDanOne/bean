@@ -335,7 +335,7 @@ register_tool(
         name="schedule_post",
         description=(
             "Create a post and schedule it to publish at a specific UTC timestamp. "
-            "The publisher polls every ~15s and will fire the post once the time elapses."
+            "The post goes out the next time the queue is processed (the Procesar pendientes button or the scheduled cron call) after its time."
         ),
         input_schema={
             "type": "object",

@@ -84,11 +84,13 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
                             hace {{ pp.post.created_at|timesince }}
                         </span>
                         <div class="flex items-center gap-1.5">
+                            {% if request.workspace_membership.effective_permissions.publish_directly %}
                             <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}&action=publish_now"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border border-app text-app-secondary hover:border-app-hover hover:text-app-strong transition-colors">
                                 {% icon "paper-plane" css_class="w-3.5 h-3.5 rotate-90" %}
                                 Publicar
                             </a>
+                            {% endif %}
                             {% include "calendar/partials/_post_actions_menu.html" with post_id=pp.post_id account_id=pp.social_account_id %}
                         </div>
                     </div>

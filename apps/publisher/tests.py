@@ -148,9 +148,10 @@ class DispatchExtraInjectionTest(SimpleTestCase):
         _access_token, content = mock_provider.publish_post.call_args.args
         self.assertEqual(content.extra.get("author"), "urn:li:organization:98765")
 
+    @patch("apps.publisher.engine.media_error_for_platform", return_value=None)  # extras, not media, are under test
     @patch("apps.publisher.engine.get_provider")
     @patch("apps.publisher.engine._resolve_publish_credentials", return_value={})
-    def test_injects_ig_user_id_for_instagram(self, _mock_creds, mock_get_provider):
+    def test_injects_ig_user_id_for_instagram(self, _mock_creds, mock_get_provider, _mock_media):
         engine, platform_post, mock_provider = _build_dispatch_mocks(
             platform="instagram",
             account_platform_id="17841400000000000",
@@ -505,3 +506,67 @@ class PendingPublishTest(TestCase):
         )
         self._check(PublishStatus("published", "7300000000000000001"))
         self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHED)
+
+
+class StuckAndRetryTests(TestCase):
+    """Recuperación de PUBLISHING atascado y next_retry_at respetado."""
+
+    def setUp(self):
+        from apps.accounts.models import User
+        from apps.composer.models import PlatformPost, Post
+        from apps.organizations.models import Organization
+        from apps.social_accounts.models import SocialAccount
+        from apps.workspaces.models import Workspace
+
+        user = User.objects.create_user(email="p@example.com", password="x", tos_accepted_at=timezone.now())
+        org = Organization.objects.create(name="O")
+        ws = Workspace.objects.create(organization=org, name="W")
+        acc = SocialAccount.objects.create(
+            workspace=ws, platform="facebook", account_platform_id="1", account_name="A", connection_status="connected"
+        )
+        self.post = Post.objects.create(workspace=ws, author=user, caption="c")
+        self.PP = PlatformPost
+        self.acc = acc
+
+    def _pp(self, **kw):
+        return self.PP.objects.create(post=self.post, social_account=self.acc, **kw)
+
+    def test_stuck_publishing_without_id_fails_after_15_minutes(self):
+        pp = self._pp(status="publishing")
+        self.PP.objects.filter(id=pp.id).update(updated_at=timezone.now() - timedelta(minutes=20))
+        self.assertEqual(PublishEngine()._recover_stuck_publishing(), 1)
+        pp.refresh_from_db()
+        self.assertEqual(pp.status, "failed")
+        self.assertTrue(pp.publish_error)
+
+    def test_recent_or_identified_publishing_is_left_alone(self):
+        recent = self._pp(status="publishing")
+        self.assertEqual(PublishEngine()._recover_stuck_publishing(), 0)
+        recent.refresh_from_db()
+        self.assertEqual(recent.status, "publishing")
+
+    def test_due_query_respects_next_retry_at(self):
+        past = timezone.now() - timedelta(hours=1)
+        waiting = self._pp(status="scheduled", scheduled_at=past, next_retry_at=timezone.now() + timedelta(minutes=5))
+        ids = {pp.id for pp in PublishEngine()._get_due_platform_posts()}
+        self.assertNotIn(waiting.id, ids)
+        self.PP.objects.filter(id=waiting.id).update(next_retry_at=timezone.now() - timedelta(minutes=1))
+        ids = {pp.id for pp in PublishEngine()._get_due_platform_posts()}
+        self.assertIn(waiting.id, ids)
+
+    def test_media_unfit_for_platform_fails_without_retry(self):
+        from providers.exceptions import PublishError
+
+        yt = type(self.acc).objects.create(
+            workspace=self.acc.workspace,
+            platform="youtube",
+            account_platform_id="y",
+            account_name="Y",
+            connection_status="connected",
+        )
+        pp = self.PP.objects.create(post=self.post, social_account=yt, status="publishing")
+        with patch("apps.publisher.engine.get_provider") as gp:
+            gp.return_value.supported_post_types = [PostType.VIDEO]
+            with self.assertRaises(PublishError) as ctx:
+                PublishEngine()._dispatch_to_provider(pp)
+        self.assertFalse(ctx.exception.retryable)

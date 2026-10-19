@@ -50,7 +50,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
 
         <!-- Actions -->
         <div class="flex items-center gap-2">
-            {% if account.needs_reconnect %}
+            {% if account.needs_reconnect or account.is_archived or account.connection_status == "token_expiring" %}
             <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=workspace_id account_id=account.id %}">
                 {% csrf_token %}
                 <button type="submit" class="bbs-btn bbs-btn-neutral text-xs px-3 py-1.5" style="color: var(--brand-700);">

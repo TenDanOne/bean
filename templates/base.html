@@ -286,7 +286,13 @@
                x-init="$el.classList.remove('sidebar-initial'); document.documentElement.classList.remove('sidebar-is-collapsed'); $nextTick(() => $el.classList.add('transition-all', 'duration-200'))"
                @click="if (window.innerWidth < 1024 && $event.target.closest('a')) { mobileMenuOpen = false }">
 
-            <!-- Workspace switcher (top of sidebar) -->
+            <!-- Logo BEAN by ITHOS (siempre arriba); colapsado = solo isotipo -->
+            <a href="/" class="block px-4 pt-4 pb-2" :class="sidebarCollapsed && 'px-0 flex justify-center'" aria-label="BEAN by ITHOS">
+                <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-[34px] w-auto" x-show="!sidebarCollapsed">
+                <svg viewBox="-6.5 0 124 114.3" class="h-[34px] w-auto" x-show="sidebarCollapsed" x-cloak role="img" aria-label="BEAN by ITHOS"><image href="{% static 'marca/bean-by-ithos.svg' %}" width="345.2" height="114.3"/></svg>
+            </a>
+
+            <!-- Workspace switcher (fila secundaria bajo el logo) -->
             <div class="relative border-b border-app-subtle" x-data="{ wsOpen: false }">
                 <button @click="wsOpen = !wsOpen"
                         class="sidebar-ws-btn w-full flex items-center gap-2.5 px-4 py-3.5 text-left hover:bg-black/[0.04] transition-colors cursor-pointer rounded-br-lg"
@@ -296,18 +302,18 @@
                     {% if current_ws.icon %}
                     <img src="{{ current_ws.icon.url }}" alt="" class="sidebar-logo-mark flex-shrink-0 object-cover">
                     {% else %}
-                    <div class="sidebar-logo-mark flex-shrink-0">{{ current_ws.name|make_list|first|upper }}</div>
+                    <div class="sidebar-logo-mark flex-shrink-0" aria-hidden="true">{{ current_ws.name|make_list|first|upper }}</div>
                     {% endif %}
-                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" x-show="!sidebarCollapsed" x-cloak>{{ current_ws.name }}</span>
+                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" :class="sidebarCollapsed && 'sr-only'" x-cloak>{{ current_ws.name }}</span>
                     {% elif sidebar_workspaces %}
                     {% if sidebar_workspaces.0.icon %}
                     <img src="{{ sidebar_workspaces.0.icon.url }}" alt="" class="sidebar-logo-mark flex-shrink-0 object-cover">
                     {% else %}
-                    <div class="sidebar-logo-mark flex-shrink-0">{{ sidebar_workspaces.0.name|make_list|first|upper }}</div>
+                    <div class="sidebar-logo-mark flex-shrink-0" aria-hidden="true">{{ sidebar_workspaces.0.name|make_list|first|upper }}</div>
                     {% endif %}
-                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" x-show="!sidebarCollapsed" x-cloak>{{ sidebar_workspaces.0.name }}</span>
+                    <span class="flex-1 font-bold text-[0.9375rem] tracking-tight text-app truncate" :class="sidebarCollapsed && 'sr-only'" x-cloak>{{ sidebar_workspaces.0.name }}</span>
                     {% else %}
-                    <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-8 w-auto flex-shrink-0">
+                    <span class="flex-1 text-sm text-app-secondary truncate" x-show="!sidebarCollapsed" x-cloak>Sin espacio de trabajo</span>
                     {% endif %}
                     {% endwith %}
                     <svg class="w-4 h-4 text-app-ghost flex-shrink-0 transition-transform" :class="wsOpen && 'rotate-180'" x-show="!sidebarCollapsed" x-cloak fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -713,12 +719,14 @@
                         </div>
                     </div>
                     <span class="sidebar-nav-label truncate flex-1 text-app-ghost">{{ channel.account_name|default:channel.account_handle }}</span>
+                    {% if request|can:"manage_social_accounts" %}
                     <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=request.workspace.id account_id=channel.id %}" class="sidebar-nav-label">
                         {% csrf_token %}
                         <button type="submit" class="sidebar-tag-warn" title="Reconectar {{ channel.account_name|default:channel.account_handle }}">
                             Reconectar
                         </button>
                     </form>
+                    {% endif %}
                 </div>
                 {% endfor %}
                 </div>
@@ -841,6 +849,7 @@
                     {% icon "bars" css_class="w-[20px] h-[20px]" %}
                 </button>
                 <div class="flex items-center gap-2">
+                    <a href="/" class="flex-shrink-0"><img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-7 w-auto"></a>
                     {% with current_ws=request.workspace %}
                     {% if current_ws %}
                     {% if current_ws.icon %}
@@ -849,8 +858,6 @@
                     <div class="w-7 h-7 rounded-md flex items-center justify-center text-app-on-primary text-[11px] font-bold" style="background: var(--primary);">{{ current_ws.name|make_list|first|upper }}</div>
                     {% endif %}
                     <span class="text-sm font-semibold text-app-strong truncate max-w-[160px]">{{ current_ws.name }}</span>
-                    {% else %}
-                    <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS" class="h-7 w-auto">
                     {% endif %}
                     {% endwith %}
                 </div>
@@ -941,50 +948,6 @@
                 });
             });
         })();
-
-        /* Notification bell - Alpine.js component */
-        function notificationBell() {
-            return {
-                open: false,
-                unreadCount: 0,
-                _interval: null,
-                toggle() {
-                    this.open = !this.open;
-                    if (this.open) {
-                        /* Refresh drawer content when opening */
-                        htmx.trigger('#notification-drawer-content', 'load');
-                    }
-                },
-                startPolling() {
-                    this.fetchCount();
-                    this._interval = setInterval(() => this.fetchCount(), 30000);
-                },
-                async fetchCount() {
-                    try {
-                        const resp = await fetch('{% url "notifications:unread_count" %}');
-                        if (resp.ok) {
-                            const data = await resp.json();
-                            this.unreadCount = data.count;
-                        }
-                    } catch (e) { /* silent */ }
-                },
-                destroy() {
-                    if (this._interval) clearInterval(this._interval);
-                }
-            };
-        }
-
-        /* Refresh unread count after any HTMX notification action */
-        document.body.addEventListener('htmx:afterSettle', function(evt) {
-            var target = evt.detail.target;
-            if (target && (target.id === 'notification-drawer-content' || target.id === 'notification-history-list' || target.closest && target.closest('#notification-drawer-content'))) {
-                /* Trigger a count refresh on the bell component */
-                var bellEl = document.querySelector('[x-data="notificationBell()"]');
-                if (bellEl && bellEl.__x) {
-                    bellEl.__x.$data.fetchCount();
-                }
-            }
-        });
     </script>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
     {% if user.is_authenticated and request.workspace %}<script src="{% static 'js/tour.js' %}" defer></script>{% endif %}

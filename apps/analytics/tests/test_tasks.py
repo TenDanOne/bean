@@ -198,3 +198,63 @@ def test_sync_account_metrics_refreshes_empty_follower_count_when_today_rows_exi
 
     account.refresh_from_db()
     assert account.follower_count == 1234
+
+
+@pytest.mark.django_db
+def test_sync_account_metrics_uses_fresh_token(workspace):
+    from datetime import date
+    from unittest.mock import MagicMock, patch
+
+    from apps.analytics.tasks import _sync_account_metrics
+    from providers.types import AccountMetrics
+
+    account = SocialAccount.objects.create(
+        workspace=workspace,
+        platform="instagram",
+        account_platform_id="ig-fresh",
+        account_name="IG Fresh",
+        oauth_access_token="viejo",
+        connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+    )
+    fake_provider = MagicMock()
+    fake_provider.account_metrics_supports_date_range = True
+    fake_provider.get_account_metrics.return_value = AccountMetrics(followers=1, reach=1, extra={})
+
+    with (
+        patch("apps.analytics.tasks._resolve_provider", return_value=fake_provider),
+        patch.object(SocialAccount, "get_fresh_access_token", return_value="nuevo"),
+    ):
+        _sync_account_metrics(account, date(2026, 6, 24))
+
+    assert fake_provider.get_account_metrics.call_args[0][0] == "nuevo"
+
+
+@pytest.mark.django_db
+def test_token_refresh_does_not_enqueue_backfill_but_reconnect_does(workspace):
+    from unittest.mock import MagicMock, patch
+
+    account = SocialAccount.objects.create(
+        workspace=workspace,
+        platform="youtube",
+        account_platform_id="yt-1",
+        account_name="YT",
+        oauth_access_token="a",
+        oauth_refresh_token="r",
+        connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+    )
+    provider = MagicMock()
+    provider.refresh_token.return_value = MagicMock(access_token="b", refresh_token=None, expires_in=3600)
+    with patch("apps.analytics.tasks.backfill_account_analytics") as backfill:
+        account.refresh_oauth_token(provider)
+        backfill.assert_not_called()
+        SocialAccount.objects.update_or_create(
+            workspace=workspace,
+            platform="youtube",
+            account_platform_id="yt-1",
+            defaults={
+                "oauth_access_token": "c",
+                "connection_status": SocialAccount.ConnectionStatus.CONNECTED,
+                "analytics_needs_reconnect": False,
+            },
+        )
+        backfill.assert_called_once()

@@ -12,6 +12,9 @@ from .models import (
     QuietHours,
 )
 
+# Eventos definidos pero que nada emite todavía: no se ofrecen en preferencias.
+NOT_EMITTED = {EventType.REPORT_GENERATED, EventType.ENGAGEMENT_ALERT, EventType.CLIENT_CONNECTED_ACCOUNTS}
+
 
 @login_required
 @require_GET
@@ -44,7 +47,10 @@ def notification_list(request):
         qs = qs.filter(is_read=False)
 
     # Pagination
-    page = int(request.GET.get("page", 1))
+    try:
+        page = max(1, int(request.GET.get("page", 1)))
+    except ValueError:
+        page = 1
     per_page = 30
     offset = (page - 1) * per_page
     notifications = qs[offset : offset + per_page]
@@ -88,7 +94,8 @@ def mark_all_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True, read_at=timezone.now())
 
     if request.htmx:
-        return notification_drawer(request)
+        # Desde el historial el destino es #notification-history-list: se recarga esa lista.
+        return redirect("notifications:list")
     return JsonResponse({"ok": True})
 
 
@@ -116,6 +123,8 @@ def preferences(request):
 
     matrix = []
     for event_value, event_label in EventType.choices:
+        if event_value in NOT_EMITTED:
+            continue
         channel_toggles = []
         for ch_value, ch_label in Channel.choices:
             if (event_value, ch_value) in pref_map:

@@ -365,3 +365,25 @@ def _require_approval_gate_passes(workspace) -> None:
             "Workspace requires approval before scheduling; create the post as a "
             "draft and route it through the approval workflow."
         )
+
+
+#: Plataformas que no publican sin video / sin ningún medio.
+_VIDEO_REQUIRED_PLATFORMS = {"youtube": "YouTube", "tiktok": "TikTok"}
+_MEDIA_REQUIRED_PLATFORMS = {"instagram": "Instagram", "instagram_login": "Instagram"}
+
+
+def media_error_for_platform(platform: str, media_types) -> str | None:
+    """Mensaje en español si los medios no sirven para *platform*, o ``None``.
+
+    ``media_types`` es la lista de ``MediaAsset.media_type`` del post. Se usa al
+    programar (composer) y de nuevo en el motor, así un post imposible de publicar
+    falla claro y sin reintentos en lugar de reventar en la API de la plataforma.
+    """
+    types = list(media_types)
+    if platform in _VIDEO_REQUIRED_PLATFORMS and "video" not in types:
+        name = _VIDEO_REQUIRED_PLATFORMS[platform]
+        extra = " (las imágenes no se pueden publicar)" if types else ""
+        return f"{name} requiere un video{extra}."
+    if platform in _MEDIA_REQUIRED_PLATFORMS and not types:
+        return f"{_MEDIA_REQUIRED_PLATFORMS[platform]} requiere al menos una imagen o un video."
+    return None

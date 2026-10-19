@@ -183,3 +183,32 @@ class TestPermanentDelete:
         client.post(_delete_url(workspace, account), {"confirm_name": "Premed UNX"})
 
         assert Post.objects.filter(id=post.id).exists()
+
+
+@pytest.mark.django_db
+class TestArchivedListing:
+    def test_archived_shows_state_reconnect_and_is_not_counted(self, client, owner, workspace, account):
+        account.archive()
+        client.force_login(owner)
+
+        resp = client.get(reverse("social_accounts:list", kwargs={"workspace_id": workspace.id}))
+
+        html = resp.content.decode()
+        assert "Archivada" in html
+        assert "Reconectar" in html
+        assert "0 cuentas conectadas y 1 archivada" in html
+
+    def test_htmx_archive_returns_the_card_with_archived_state(self, client, owner, workspace, account):
+        client.force_login(owner)
+
+        resp = client.post(_archive_url(workspace, account), HTTP_HX_REQUEST="true")
+
+        assert "Archivada" in resp.content.decode()
+
+    def test_delete_confirm_has_cancel_and_spanish_conjunction(self, client, owner, workspace, account):
+        client.force_login(owner)
+
+        html = client.get(_delete_url(workspace, account)).content.decode()
+
+        assert "Cancelar" in html
+        assert "</strong> and" not in html

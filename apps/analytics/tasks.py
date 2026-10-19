@@ -428,7 +428,7 @@ def _sync_account_metrics(account, on_date: dt_date) -> None:
         start = datetime.combine(target, time.min, tzinfo=tz)
         end = datetime.combine(target, time.max, tzinfo=tz)
         try:
-            metrics = provider.get_account_metrics(account.oauth_access_token, (start, end))
+            metrics = provider.get_account_metrics(account.get_fresh_access_token(provider), (start, end))
         except NotImplementedError:
             return
         except Exception as exc:
@@ -499,7 +499,7 @@ def _sync_youtube_post_analytics(account, provider, on_date: dt_date) -> None:
     end = datetime.combine(on_date, time.max, tzinfo=tz)
 
     try:
-        per_video = provider.get_post_analytics(account.oauth_access_token, post_ids, (start, end))
+        per_video = provider.get_post_analytics(account.get_fresh_access_token(provider), post_ids, (start, end))
     except NotImplementedError:
         return
     except Exception as exc:
@@ -541,7 +541,7 @@ def _sync_post_metrics(post, on_date: dt_date) -> None:
         return
     provider = _resolve_provider(account)
     try:
-        metrics = provider.get_post_metrics(account.oauth_access_token, post.platform_post_id)
+        metrics = provider.get_post_metrics(account.get_fresh_access_token(provider), post.platform_post_id)
     except NotImplementedError:
         return
     except Exception as exc:
