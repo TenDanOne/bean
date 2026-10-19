@@ -1,0 +1,55 @@
+{% load inbox_extras %}
+{% comment %}
+Conversación en burbujas (entrantes a la izquierda, salientes a la derecha) con el aviso de la ventana de respuesta.
+Pasadas 24 h solo se puede responder como agente humano (hasta 7 días); después de 7 días el envío queda deshabilitado.
+{% endcomment %}
+<button type="button" class="ib-btn ib-btn-ghost ib-back" data-ib-back>{% icon "chevron-left" css_class="w-3.5 h-3.5" %} Volver</button>
+<div class="ib-card" style="margin-top: 0;">
+    <div class="ib-dh">
+        <span class="ib-av ib-av-c{{ name|tone }}" aria-hidden="true">{{ name|initials }}</span>
+        <div class="t">
+            <h2 tabindex="-1" data-ib-title>{{ name }}</h2>
+            <span>Chat con {{ account.account_name|default:account.account_handle }} · {{ account.get_platform_display }}</span>
+        </div>
+        {% if notice %}<span style="margin-left: auto;">{% include "inbox/partials/_pill.html" with p=notice.pill %}</span>{% endif %}
+    </div>
+    <div class="ib-chat" role="log" aria-label="Conversación con {{ name }}" tabindex="0">
+        {% for b in bubbles %}
+        <div class="ib-bub {% if b.out %}ib-bub-out{% else %}ib-bub-in{% endif %}">
+            <span>{{ b.text }}</span>
+            <small>{% if b.out %}{% if b.sent_by %}{{ b.sent_by.display_name }}{% else %}Tú{% endif %} · {% endif %}hace {{ b.at|timesince }}{% if b.pending %} · Enviando…{% endif %}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% include "inbox/partials/_tools.html" with m=rep notes_list=notes %}
+    {% if notice %}
+    <div class="ib-alert ib-al-{{ notice.level }}" id="win-{{ rep.id }}" role="status" aria-live="polite">
+        {% if notice.level == "info" %}{% icon "circle-info" css_class="w-4 h-4" %}{% elif notice.level == "warn" %}{% icon "triangle-exclamation" css_class="w-4 h-4" %}{% else %}{% icon "circle-xmark" css_class="w-4 h-4" %}{% endif %}
+        <div>{{ notice.text }}</div>
+    </div>
+    {% endif %}
+    {% if caps.reply %}
+    <form class="ib-composer" x-data="{ sending: false }" hx-post="{% url 'inbox:send_reply' workspace_id=workspace.id message_id=rep.id %}"
+          hx-target="#inbox-detail-panel" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]"
+          @htmx:before-request="sending = true" @htmx:after-request="sending = false">
+        {% csrf_token %}
+        <input type="hidden" name="ui" value="1">
+        <input type="hidden" name="only" value="{{ only }}">
+        <label class="sr-only" for="cc-{{ rep.id }}">Mensaje para {{ name }}</label>
+        <textarea id="cc-{{ rep.id }}" name="body" required aria-describedby="win-{{ rep.id }}" :aria-busy="sending" :disabled="sending || {{ closed|yesno:'true,false' }}"
+                  {% if closed %}disabled{% endif %} placeholder="{% if closed %}No puedes responder a esta conversación{% else %}Escribe un mensaje…{% endif %}"></textarea>
+        {% if needs_agent %}
+        <label class="ib-chk"><input type="checkbox" name="human_agent" value="1"> Responder como agente humano (hasta 7 días)</label>
+        {% endif %}
+        <div id="reply-err-{{ rep.id }}"></div>
+        <div class="ib-line">
+            <button type="submit" class="ib-btn ib-btn-primary" {% if closed %}disabled{% endif %} :aria-busy="sending">{% icon "paper-plane" css_class="w-3.5 h-3.5" %} Enviar</button>
+            {% include "inbox/partials/_saved.html" %}
+            <span role="status"><span x-show="sending" x-cloak class="st-pill ib-k st-scheduled ib-k-enviando">Enviando</span></span>
+            <span class="ib-tag">{% icon "lock" css_class="w-3 h-3" %} Mensaje privado: solo lo ve {{ name }}</span>
+        </div>
+    </form>
+    {% else %}
+    <p class="ib-hint" style="margin-top: 10px;">{% icon "lock" css_class="w-3 h-3 inline" %} {% if not caps.role %}Tu rol puede leer la bandeja pero no responder.{% else %}Puedes ver este canal pero no responder desde él.{% endif %}{% if workspace_owner %} Pide acceso a {{ workspace_owner.display_name }}.{% endif %}</p>
+    {% endif %}
+</div>

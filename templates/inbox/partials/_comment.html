@@ -1,0 +1,104 @@
+{% load inbox_extras %}
+{% comment %}Un comentario del hilo. `r` trae m (mensaje), pills, replies (turnos) y hl. Todas las acciones devuelven el hilo entero (ui=1).{% endcomment %}
+{% with m=r.m %}
+<div class="ib-cm {% if r.hl %}hl{% endif %}" id="cm-{{ m.id }}" x-data="{ reply: false, del: false, sending: false }">
+    <span class="ib-av ib-av-c{{ m.sender_name|tone }}" aria-hidden="true">{{ m.sender_name|initials }}</span>
+    <div class="bd">
+        {% if m.deleted_on_platform %}
+        <div class="ib-tomb">
+            {% icon "trash" css_class="w-4 h-4" %}
+            <span>Comentario de {{ m.sender_name }} borrado: ya no aparece en {{ account.get_platform_display }}.</span>
+            <span class="st-pill ib-k st-paused ib-k-borrado" title="Ya no aparece en la plataforma">Borrado</span>
+        </div>
+        {% else %}
+        <div class="hd">
+            <b>{{ m.sender_name }}</b>
+            <time datetime="{{ m.received_at|date:'c' }}" title="{{ m.received_at|date:'j/m/Y H:i' }}">hace {{ m.received_at|timesince }}</time>
+            {% for p in r.pills %}{% include "inbox/partials/_pill.html" %}{% endfor %}
+        </div>
+        {% if m.is_hidden %}
+        <div class="ib-tomb">
+            {% icon "eye-slash" css_class="w-4 h-4" %}
+            <span>Comentario oculto: solo tú lo ves, tu audiencia no.</span>
+            {% if caps.moderate and m.is_moderatable %}
+            <button type="button" class="ib-btn ib-btn-secondary" hx-post="{% url 'inbox:toggle_hidden' workspace_id=workspace.id message_id=m.id %}"
+                    hx-vals='{"ui": "1", "only": "{{ only }}"}' hx-target="#inbox-detail-panel" hx-swap="innerHTML" hx-disabled-elt="this">
+                {% icon "eye" css_class="w-3.5 h-3.5" %} Mostrar
+            </button>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="tx">{{ m.body }}</div>
+        <div class="ib-cm-acts">
+            <button type="button" class="ib-btn ib-btn-ghost" @click="reply = !reply" :aria-expanded="reply" aria-controls="rf-{{ m.id }}"
+                    {% if not caps.reply %}disabled title="No puedes responder desde este canal."{% endif %}>
+                {% icon "reply" css_class="w-3.5 h-3.5" %} Responder
+            </button>
+            {% if m.is_moderatable %}
+            <button type="button" class="ib-btn ib-btn-ghost"
+                    {% if caps.moderate %}hx-post="{% url 'inbox:toggle_hidden' workspace_id=workspace.id message_id=m.id %}" hx-vals='{"ui": "1", "only": "{{ only }}"}' hx-target="#inbox-detail-panel" hx-swap="innerHTML" hx-disabled-elt="this" title="El público deja de verlo; se puede deshacer."
+                    {% else %}disabled title="No tienes el permiso Moderar en este canal."{% endif %}>
+                {% icon "eye-slash" css_class="w-3.5 h-3.5" %} Ocultar
+            </button>
+            {% endif %}
+            {% if m.is_moderatable %}
+            <button type="button" class="ib-btn ib-btn-ghost ib-btn-del" @click="del = true" :aria-expanded="del"
+                    {% if not caps.delete %}disabled title="Borrar es permanente: requiere el permiso Borrar en este canal y un rol de gestor o superior."{% endif %}>
+                {% icon "trash" css_class="w-3.5 h-3.5" %} Borrar
+            </button>
+            {% endif %}
+            {% if m.is_pending %}
+            <button type="button" class="ib-btn ib-btn-ghost"
+                    {% if caps.reply %}hx-post="{% url 'inbox:mark_answered' workspace_id=workspace.id message_id=m.id %}" hx-vals='{"ui": "1", "only": "{{ only }}"}' hx-target="#inbox-detail-panel" hx-swap="innerHTML" hx-disabled-elt="this"
+                    {% else %}disabled title="No puedes responder desde este canal."{% endif %}>
+                {% icon "check" css_class="w-3.5 h-3.5" %} Marcar contestado
+            </button>
+            {% endif %}
+        </div>
+        <div class="ib-confirm" role="alert" x-show="del" x-cloak>
+            <span>¿Borrar este comentario? Se elimina en {{ account.get_platform_display }} y no se puede deshacer. Para retirarlo de la vista pública sin perderlo, usa Ocultar.</span>
+            <button type="button" class="ib-btn ib-btn-danger" hx-post="{% url 'inbox:delete_comment' workspace_id=workspace.id message_id=m.id %}"
+                    hx-vals='{"ui": "1", "only": "{{ only }}"}' hx-target="#inbox-detail-panel" hx-swap="innerHTML" hx-disabled-elt="this">Sí, borrar</button>
+            <button type="button" class="ib-btn ib-btn-secondary" @click="del = false">Cancelar</button>
+        </div>
+        {% if caps.reply %}
+        <form id="rf-{{ m.id }}" class="ib-reply" x-show="reply" x-cloak
+              hx-post="{% url 'inbox:send_reply' workspace_id=workspace.id message_id=m.id %}" hx-target="#inbox-detail-panel" hx-swap="innerHTML"
+              hx-disabled-elt="find button[type=submit]" @htmx:before-request="sending = true" @htmx:after-request="sending = false">
+            {% csrf_token %}
+            <input type="hidden" name="ui" value="1">
+            <input type="hidden" name="only" value="{{ only }}">
+            <label class="sr-only" for="r-{{ m.id }}">Tu respuesta a {{ m.sender_name }}</label>
+            <textarea id="r-{{ m.id }}" name="body" required placeholder="Escribe tu respuesta…" :aria-busy="sending" :disabled="sending"></textarea>
+            <div class="ib-line">
+                <button type="submit" class="ib-btn ib-btn-primary" :aria-busy="sending">{% icon "paper-plane" css_class="w-3.5 h-3.5" %} Enviar respuesta</button>
+                <button type="button" class="ib-btn ib-btn-ghost" @click="reply = false" x-show="!sending">Cancelar</button>
+                {% include "inbox/partials/_saved.html" with saved=r.saved %}
+            </div>
+            <div class="ib-tr" role="status"><span x-show="sending" x-cloak class="st-pill ib-k st-scheduled ib-k-enviando">Enviando</span></div>
+            <div id="reply-err-{{ m.id }}"></div>
+        </form>
+        {% endif %}
+        {% endif %}
+{% include "inbox/partials/_tools.html" with notes_list=r.notes %}
+                {% if r.replies %}
+        <div class="ib-rep">
+            {% for t in r.replies %}
+            <div class="ib-cm">
+                <span class="ib-av ib-av-sm {% if t.side == 'right' %}ib-av-own{% else %}ib-av-c{{ t.name|tone }}{% endif %}" aria-hidden="true">{{ t.name|initials }}</span>
+                <div class="bd">
+                    <div class="hd">
+                        <b>{{ t.name }}</b>{% if t.side == "right" %}<span class="sr-only">(tu respuesta)</span>{% endif %}
+                        <time datetime="{{ t.at|date:'c' }}" title="{{ t.at|date:'j/m/Y H:i' }}">hace {{ t.at|timesince }}</time>
+                        {% if t.pending %}<span class="st-pill ib-k st-scheduled ib-k-enviando" title="Tu respuesta va en camino">Enviando</span>{% endif %}
+                    </div>
+                    <div class="tx">{{ t.body }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endwith %}

@@ -178,6 +178,17 @@ class InboxMessage(models.Model):
             deleted_on_platform__isnull=True,
         ) & ~Q(status__in=[cls.Status.RESOLVED, cls.Status.ARCHIVED])
 
+    @property
+    def is_pending(self):
+        """Python mirror of ``pending_q`` for a row already loaded."""
+        return (
+            self.awaiting_reply
+            and not self.is_outbound
+            and self.parent_message_id is None
+            and self.deleted_on_platform is None
+            and self.status not in (self.Status.RESOLVED, self.Status.ARCHIVED)
+        )
+
     def mark_thread_answered(self, before=None):
         """Clear ``awaiting_reply`` on this message's thread (its DM conversation, or its comment and replies).
 

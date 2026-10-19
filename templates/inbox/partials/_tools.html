@@ -1,0 +1,25 @@
+{% comment %}
+Asignar y notas internas de un mensaje (`m`). Las notas son solo del equipo: estilo punteado ámbar, distinto de las
+respuestas públicas. Reutiliza las vistas assign y add_note con ui=1 (devuelven el hilo o el chat completo).
+{% endcomment %}
+<div class="ib-tools" x-data="{ notes: false }">
+    {% if caps.reply %}{% include "inbox/partials/_assignment_dropdown.html" with message=m ui=1 %}{% elif m.assigned_to %}<span class="ib-tag">Asignado a {{ m.assigned_to.get_short_name|default:m.assigned_to.email }}</span>{% endif %}
+    <button type="button" class="ib-btn ib-btn-ghost" @click="notes = !notes" :aria-expanded="notes" aria-controls="notes-{{ m.id }}">
+        {% icon "file-lines" css_class="w-3.5 h-3.5" %} Notas internas{% if notes_list %} ({{ notes_list|length }}){% endif %}
+    </button>
+    <div class="ib-notes" id="notes-{{ m.id }}" x-show="notes" x-cloak>
+        <p class="ib-hint"><strong>Solo el equipo</strong> ve estas notas; no se publican.</p>
+        {% for n in notes_list %}
+        <div class="ib-note"><b>{{ n.author.display_name|default:"Usuario eliminado" }}</b> <time datetime="{{ n.created_at|date:'c' }}">hace {{ n.created_at|timesince }}</time><div>{{ n.body }}</div></div>
+        {% endfor %}
+        {% if caps.reply %}
+        <form hx-post="{% url 'inbox:add_note' workspace_id=workspace.id message_id=m.id %}" hx-target="#inbox-detail-panel" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
+            {% csrf_token %}
+            <input type="hidden" name="ui" value="1"><input type="hidden" name="only" value="{{ only }}">
+            <label class="sr-only" for="nt-{{ m.id }}">Nota interna</label>
+            <textarea id="nt-{{ m.id }}" name="body" required placeholder="Agrega una nota interna (solo visible para tu equipo)…"></textarea>
+            <button type="submit" class="ib-btn ib-btn-secondary">{% icon "plus" css_class="w-3.5 h-3.5" %} Agregar nota</button>
+        </form>
+        {% endif %}
+    </div>
+</div>

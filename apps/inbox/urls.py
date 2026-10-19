@@ -11,6 +11,10 @@ urlpatterns = [
     path("", views.inbox_feed, name="feed"),
     # Message detail + thread
     path("<uuid:message_id>/", views.message_detail, name="message_detail"),
+    # Bandeja: hilo de comentarios, conversación de chat y marcar contestado
+    path("<uuid:message_id>/thread/", views.thread_detail, name="thread_detail"),
+    path("<uuid:message_id>/chat/", views.chat_detail, name="chat_detail"),
+    path("<uuid:message_id>/answered/", views.mark_answered, name="mark_answered"),
     # Reply to message
     path("<uuid:message_id>/reply/", views.send_reply, name="send_reply"),
     # Internal notes

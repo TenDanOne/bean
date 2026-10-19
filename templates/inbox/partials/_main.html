@@ -1,0 +1,163 @@
+{% load common_extras inbox_extras %}
+{% comment %}
+Bandeja completa: encabezado, filtros, pestañas y el par lista/detalle. Todo el bloque lo vuelve a dibujar el
+servidor en cada cambio de filtro, pestaña o cuenta (htmx sustituye #inbox-message-list), así el estado vive en la
+URL y no en JavaScript. Solo el detalle se carga aparte, en #inbox-detail-panel.
+{% endcomment %}
+<div class="ib-h">
+    <h1>Bandeja social</h1>
+    <span class="sp"></span>
+    <a href="{% url 'inbox:saved_replies' workspace_id=workspace.id %}" class="ib-btn ib-btn-secondary" title="Respuestas guardadas">
+        {% icon "bookmark" css_class="w-3.5 h-3.5" %}<span>Respuestas guardadas</span>
+    </a>
+    {% if sla_config %}
+    <a href="{% url 'inbox:sla_config' workspace_id=workspace.id %}" class="ib-btn ib-btn-secondary" title="Configuración de SLA">
+        {% icon "clock" css_class="w-3.5 h-3.5" %}<span>SLA</span>
+    </a>
+    {% endif %}
+    <button type="button" id="ib-refresh" class="ib-btn ib-btn-secondary"
+            hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}?tab={{ st.tab }}&acc={{ selected.id|default:'' }}"
+            hx-include="#ib-filters" hx-target="#inbox-message-list" hx-swap="innerHTML">
+        {% icon "arrow-rotate-right" css_class="w-3.5 h-3.5" %} Actualizar
+    </button>
+</div>
+
+{% if not social_accounts %}
+{% include "inbox/partials/_empty_state.html" %}
+{% else %}
+
+<form id="ib-filters" class="ib-filters" hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}?tab={{ st.tab }}&acc={{ selected.id|default:'' }}"
+      hx-trigger="change, keyup changed delay:400ms from:#ib-q" hx-target="#inbox-message-list" hx-swap="innerHTML" hx-push-url="true">
+    <div class="ib-chipg" role="group" aria-label="Plataforma">
+        <label class="ib-chip"><input type="radio" id="ib-pl-all" name="platform" value="" {% if not st.platform %}checked{% endif %}>Todas</label>
+        {% for key, label in platform_chips %}
+        <label class="ib-chip"><input type="radio" id="ib-pl-{{ key }}" name="platform" value="{{ key }}" {% if st.platform == key %}checked{% endif %}>{% platform_icon key size="" css_class="w-3.5 h-3.5" %}{{ label }}</label>
+        {% endfor %}
+        <span class="ib-chip" aria-disabled="true">{% platform_icon "tiktok" size="" css_class="w-3.5 h-3.5" %}TikTok <span class="ib-soon">próximamente</span></span>
+    </div>
+    <label class="sr-only" for="ib-q">Buscar</label>
+    <input type="search" id="ib-q" name="q" value="{{ st.q }}" class="ib-sel" placeholder="Buscar mensajes…" autocomplete="off">
+    <label class="sr-only" for="ib-account">Cuenta</label>
+    <select class="ib-sel" id="ib-account" name="account">
+        <option value="">Todas las cuentas</option>
+        {% for a in social_accounts %}
+        <option value="{{ a.id }}" {% if st.account == a.id|stringformat:"s" %}selected{% endif %}>{{ a.account_name|default:a.account_handle }} · {{ a.get_platform_display }}</option>
+        {% endfor %}
+    </select>
+    <div class="ib-chipg" role="group" aria-label="Estado">
+        <label class="ib-chip"><input type="radio" id="ib-only-unans" name="only" value="unans" {% if not show_all %}checked{% endif %}>Sin contestar</label>
+        <label class="ib-chip"><input type="radio" id="ib-only-all" name="only" value="all" {% if show_all %}checked{% endif %}>Todos</label>
+    </div>
+    <label class="ib-chk" for="ib-mine"><input type="checkbox" id="ib-mine" name="mine" value="1" {% if st.mine %}checked{% endif %}> Asignado a mí</label>
+</form>
+
+<div class="ib-tabsrow">
+    <div class="ib-tabs" role="tablist" aria-label="Vistas de la bandeja" data-ib-tablist>
+        {% for key, label, count in tabs %}
+        <button type="button" role="tab" id="ib-tab-{{ key }}" aria-selected="{% if st.tab == key %}true{% else %}false{% endif %}"
+                aria-controls="ib-panel" tabindex="{% if st.tab == key %}0{% else %}-1{% endif %}"
+                hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}?tab={{ key }}" hx-include="#ib-filters"
+                hx-target="#inbox-message-list" hx-swap="innerHTML" hx-push-url="true"
+                class="ib-tab">{{ label }}<span class="ib-n {% if not count %}ib-n-z{% endif %}">{{ count }}</span></button>
+        {% endfor %}
+    </div>
+    <div class="ib-help" data-ib-help>
+        <button type="button" class="ib-helpb" aria-label="Qué significan los estados" aria-expanded="false" aria-controls="ib-legend">?</button>
+        <div class="ib-pop" id="ib-legend">
+            <div>
+                {% for group, pills in legend %}
+                <section>
+                    <h4>{{ group }}</h4>
+                    {% for p in pills %}
+                    <div class="r">{% include "inbox/partials/_pill.html" %}<span>{{ p.title }}{% if p.only_all %} (solo con «Todos»){% endif %}</span></div>
+                    {% endfor %}
+                </section>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ib-panel" role="tabpanel" aria-labelledby="ib-tab-{{ st.tab }}">
+    <div class="ib-split" id="ib-split">
+        <div class="ib-pane ib-pane-l">
+            {% if st.tab == "todo" %}
+                {% if items %}
+                <ul class="ib-list" data-ib-nav aria-label="Pendientes">
+                    {% for it in items %}{% include "inbox/partials/_item.html" %}{% endfor %}
+                </ul>
+                {% if more_n %}
+                <button type="button" id="ib-more" class="ib-btn ib-btn-secondary" style="margin-top: 8px;"
+                        hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}?tab=todo&n={{ more_n }}" hx-include="#ib-filters"
+                        hx-target="#inbox-message-list" hx-swap="innerHTML">Ver más</button>
+                {% endif %}
+                {% else %}
+                {% include "inbox/partials/_done.html" with text="No hay nada pendiente con estos filtros." %}
+                {% endif %}
+            {% else %}
+                {% if tiles %}
+                <div class="ib-accwrap" data-ib-more>
+                    <div class="ib-accbar" role="radiogroup" aria-label="Cuenta{% if tiles|length > 6 %} ({{ tiles|length }}; desplázate para ver más){% endif %}">
+                        {% for t in tiles %}
+                        <button type="button" role="radio" id="ib-acc-{{ t.account.id }}" aria-checked="{% if t.selected %}true{% else %}false{% endif %}"
+                                tabindex="{% if t.selected %}0{% else %}-1{% endif %}" class="ib-acc"
+                                hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}?tab={{ st.tab }}&acc={{ t.account.id }}" hx-include="#ib-filters"
+                                hx-target="#inbox-message-list" hx-swap="innerHTML" hx-push-url="true">
+                            {% include "inbox/partials/_acct_av.html" with account=t.account %}
+                            <span class="nm"><b>{{ t.account.account_name|default:t.account.account_handle }}</b><small>{{ t.account.get_platform_display }}</small></span>
+                            <span class="ib-n {% if not t.n %}ib-n-z{% endif %}">{{ t.n }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if st.tab == "com" %}
+                    {% if posts %}
+                    <ul class="ib-list" data-ib-nav aria-label="Publicaciones">
+                        {% for g in posts %}
+                        <li><button type="button" class="ib-it" data-ib-open="{{ g.rep.id }}"
+                                    hx-get="{% url 'inbox:thread_detail' workspace_id=workspace.id message_id=g.rep.id %}{% if show_all %}?only=all{% endif %}"
+                                    hx-target="#inbox-detail-panel" hx-swap="innerHTML">
+                            <span class="ib-row">
+                                <span class="ib-th {{ g.kind|thumb_shape }}" aria-hidden="true">{% icon g.kind|kind_icon css_class="w-[1em] h-[1em]" %}</span>
+                                <span class="ib-mid"><span class="ib-who"><b>{{ g.kind }}</b></span><span class="ib-tx">{{ g.count }} comentario{{ g.count|pluralize }}</span></span>
+                            </span>
+                        </button></li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    {% include "inbox/partials/_done.html" with text="Esta cuenta no tiene comentarios por contestar." %}
+                    {% endif %}
+                {% else %}
+                    {% if chats %}
+                    <ul class="ib-list" data-ib-nav aria-label="Conversaciones">
+                        {% for ch in chats %}{% with c=ch.c %}
+                        <li><button type="button" class="ib-it" data-ib-open="{{ c.rep.id }}"
+                                    hx-get="{% url 'inbox:chat_detail' workspace_id=workspace.id message_id=c.rep.id %}{% if show_all %}?only=all{% endif %}"
+                                    hx-target="#inbox-detail-panel" hx-swap="innerHTML">
+                            <span class="ib-row">
+                                <span class="ib-av ib-av-c{{ c.name|tone }}" aria-hidden="true">{{ c.name|initials }}</span>
+                                <span class="ib-mid"><span class="ib-who"><b>{{ c.name }}</b><time datetime="{{ c.last.received_at|date:'c' }}">hace {{ c.last.received_at|timesince }}</time></span><span class="ib-tx">{% if c.last.is_outbound %}Tú: {% endif %}{{ c.last.body }}</span></span>
+                                <span class="ib-rt">{% for p in ch.pills %}{% include "inbox/partials/_pill.html" %}{% endfor %}</span>
+                            </span>
+                        </button></li>
+                        {% endwith %}{% endfor %}
+                    </ul>
+                    {% else %}
+                    {% include "inbox/partials/_done.html" with text="Esta cuenta no tiene chats por contestar." %}
+                    {% endif %}
+                {% endif %}
+                {% else %}
+                <p class="ib-hint">Esa plataforma no tiene esta vista.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="ib-pane ib-pane-r" id="inbox-detail-panel" tabindex="-1">
+            <div class="ib-card ib-empty">
+                <div class="ic">{% icon "comment" css_class="w-[26px] h-[26px]" %}</div>
+                <h3>Elige un elemento</h3>
+                <p>Aquí verás el hilo de comentarios o la conversación.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

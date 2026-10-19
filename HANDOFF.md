@@ -174,3 +174,19 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - Pendientes del juez: DNS rebinding del CSV (usar resolve_public_ip), archivos R2 huérfanos y CSV sin process_media_asset, YouTube 308 sin leer Range, keep_time cuando pp.scheduled_at es nulo.
 - Cron: el usuario está configurando cron-job.org → POST /cron/run cada 5 min (pendiente confirmar el Test run 200).
 - Siguiente: Lote B (bandeja nueva + Shorts + tipos de post + borrar publicación), con mockup primero.
+
+## RETOMAR AQUÍ — 2026-10-19 (Fase 6 lote B completo)
+- En main:
+  - c705c6c: motor de la bandeja, tipos de post y borrar publicación.
+  - Este commit: interfaz nueva de la bandeja según mockups/mockup-bandeja.html (No contestados / Comentarios / Chats, estados de una palabra a la derecha, ayuda «?», cuentas en 2 columnas).
+- Decisiones del usuario:
+  - Se conservan búsqueda, respuestas guardadas, notas internas y asignar.
+  - Lote, sentimiento y SLA salen de la UI (los endpoints siguen vivos).
+  - «Ocultar» en YouTube se restauró (regresión detectada por el juez).
+- Juez PASA; pytest 1699 passed + 1 preexistente.
+- El usuario debe reconectar Facebook e Instagram (scopes nuevos + user id de Meta + token long-lived).
+- Pendientes:
+  - **App:** pestaña Preferencias, /settings/, menú de Ajustes por permisos, «Repetir recorrido», errores XHR de la biblioteca de medios.
+  - **CSV y subidas:** DNS rebinding del CSV, archivos huérfanos en R2, Range del 308 en YouTube.
+  - **Webhooks y bandeja:** suscripción de webhooks de IG sin confirmar; message_detail huérfano; el badge cuenta mensajes y la pestaña cuenta conversaciones.
+  - **Cron:** cron-job.org sin confirmar.

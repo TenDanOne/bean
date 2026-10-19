@@ -1,0 +1,23 @@
+{% load inbox_extras %}
+{% comment %}
+Un pendiente de «No contestados»: tu cuenta (avatar, nombre, plataforma), su origen (tipo de publicación o Chat),
+quien escribió, el extracto y las pastillas a la derecha. `it` trae type, m (mensaje con el que se abre), pills y kind.
+{% endcomment %}
+{% with account=it.m.social_account %}
+<li><button type="button" class="ib-it" data-ib-open="{{ it.m.id }}"
+            hx-get="{% if it.type == 'chat' %}{% url 'inbox:chat_detail' workspace_id=workspace.id message_id=it.m.id %}{% if show_all %}?only=all{% endif %}{% else %}{% url 'inbox:thread_detail' workspace_id=workspace.id message_id=it.m.id %}?hl=1{% if show_all %}&only=all{% endif %}{% endif %}"
+            hx-target="#inbox-detail-panel" hx-swap="innerHTML">
+    <span class="ib-org">
+        <span class="mt">{% include "inbox/partials/_acct_av.html" %}<b>{{ account.account_name|default:account.account_handle }}</b>{% platform_icon account.platform size="" css_class="w-3.5 h-3.5" %}<span class="sr-only">{{ account.get_platform_display }}</span></span>
+        <span class="src"><span class="ib-sq" aria-hidden="true">{% if it.type == "chat" %}{% icon "comment" css_class="w-[1em] h-[1em]" %}{% else %}{% icon it.kind|kind_icon css_class="w-[1em] h-[1em]" %}{% endif %}</span><b>{{ it.kind }}</b></span>
+    </span>
+    <span class="ib-row">
+        <span class="ib-av ib-av-c{{ it.m.sender_name|tone }}" aria-hidden="true">{{ it.m.sender_name|initials }}</span>
+        <span class="ib-mid">
+            <span class="ib-who"><b>{{ it.m.sender_name }}</b><time datetime="{{ it.at|date:'c' }}">hace {{ it.at|timesince }}</time></span>
+            <span class="ib-tx">{% if it.type == "chat" %}{% if it.c.last.is_outbound %}Tú: {% endif %}{{ it.c.last.body }}{% else %}{{ it.m.body }}{% endif %}</span>
+        </span>
+        <span class="ib-rt">{% for p in it.pills %}{% include "inbox/partials/_pill.html" %}{% endfor %}</span>
+    </span>
+</button></li>
+{% endwith %}

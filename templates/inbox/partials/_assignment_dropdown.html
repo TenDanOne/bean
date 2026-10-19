@@ -1,23 +1,21 @@
 <!-- Assignment dropdown -->
 <div x-data="{ assignOpen: false }" class="relative">
-    <button @click="assignOpen = !assignOpen"
+    <button type="button" @click="assignOpen = !assignOpen" :aria-expanded="assignOpen" aria-haspopup="true"
             class="inline-flex items-center gap-1 text-[12px] font-medium text-app-tertiary hover:text-app-body px-2 py-1 rounded-md hover:bg-app-1 transition-all cursor-pointer">
         {% if message.assigned_to %}
-        <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-app-inverse flex-shrink-0" style="background: var(--accent-indigo);">
-            {{ message.assigned_to.email|make_list|first|upper }}
-        </div>
+        <span class="ib-av ib-av-sm ib-av-own" aria-hidden="true">{{ message.assigned_to.email|slice:":2"|upper }}</span>
         <span class="text-app-body">{{ message.assigned_to.get_short_name|default:message.assigned_to.email|truncatechars:12 }}</span>
         {% else %}
         {% icon "user-plus" css_class="w-4 h-4" %}
         Asignar
         {% endif %}
     </button>
-    <div x-show="assignOpen" @click.away="assignOpen = false" x-cloak x-transition
+    <div x-show="assignOpen" @click.away="assignOpen = false" x-cloak x-transition.opacity.duration.100ms
          class="absolute right-0 top-full mt-1 bg-app rounded-lg shadow-lg ring-1 ring-app py-1 z-50 min-w-[180px] max-h-[220px] overflow-y-auto">
         <!-- Quitar asignación option -->
         {% if message.assigned_to %}
-        <button hx-post="{% url 'inbox:assign' workspace_id=workspace.id message_id=message.id %}"
-                hx-vals='{"assigned_to": ""}'
+        <button type="button" hx-post="{% url 'inbox:assign' workspace_id=workspace.id message_id=message.id %}"
+                hx-vals='{"assigned_to": ""{% if ui %}, "ui": "1", "only": "{{ only }}"{% endif %}}'
                 hx-target="#inbox-detail-panel"
                 hx-swap="innerHTML"
                 @click="assignOpen = false"
@@ -28,15 +26,13 @@
         <div class="border-t border-app-subtle my-0.5"></div>
         {% endif %}
         {% for membership in team_members %}
-        <button hx-post="{% url 'inbox:assign' workspace_id=workspace.id message_id=message.id %}"
-                hx-vals='{"assigned_to": "{{ membership.user.id }}"}'
+        <button type="button" hx-post="{% url 'inbox:assign' workspace_id=workspace.id message_id=message.id %}"
+                hx-vals='{"assigned_to": "{{ membership.user.id }}"{% if ui %}, "ui": "1", "only": "{{ only }}"{% endif %}}'
                 hx-target="#inbox-detail-panel"
                 hx-swap="innerHTML"
                 @click="assignOpen = false"
                 class="w-full text-left px-3 py-2 text-[12px] text-app-body hover:bg-app-1 transition-colors flex items-center gap-2 {% if message.assigned_to and message.assigned_to.id == membership.user.id %}font-semibold bg-app-1{% endif %}">
-            <div class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-app-inverse flex-shrink-0" style="background: var(--accent-indigo);">
-                {{ membership.user.email|make_list|first|upper }}
-            </div>
+            <span class="ib-av ib-av-sm ib-av-own" aria-hidden="true">{{ membership.user.email|slice:":2"|upper }}</span>
             {{ membership.user.get_short_name|default:membership.user.email }}
         </button>
         {% endfor %}

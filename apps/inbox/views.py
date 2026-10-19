@@ -1,7 +1,7 @@
 """Views for the Unified Social Inbox (F-3.1)."""
 
 import logging
-from datetime import timedelta
+from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -44,10 +44,6 @@ logger = logging.getLogger(__name__)
 
 MESSAGES_PER_PAGE = 50
 
-# Named windows for the date filter. "Last 7 days" is the question people ask;
-# making them pick two dates to express it is three interactions for one thought.
-DATE_RANGE_DAYS = {"7d": 7, "30d": 30, "90d": 90, "365d": 365}
-
 # How many messages to read when building the folder list. Folders are grouped
 # in Python because the post id lives under a different key per platform
 # (`video_id`, `media_id`), so there is no one JSON lookup that finds them all.
@@ -55,12 +51,6 @@ DATE_RANGE_DAYS = {"7d": 7, "30d": 30, "90d": 90, "365d": 365}
 # load all of them to draw a sidebar. 2,000 covers any realistic inbox and the
 # tail is older than anyone scrolls to.
 FOLDER_SCAN_LIMIT = 2000
-
-# "Hidden" and "Deleted" are offered inside the status dropdown, but they are
-# not statuses: they are moderation flags on the same row, and the Status
-# column only holds unread/open/resolved/archived. The view splits them out
-# before filtering against that column.
-MODERATION_STATUS_VALUES = frozenset({"hidden", "deleted"})
 
 
 def _avatar_url(user):
@@ -243,238 +233,190 @@ def _get_workspace(request, workspace_id):
 
 # --- Main Feed ---
 
+# Las tres vistas de la bandeja: todo lo pendiente junto, comentarios por publicación y chats por conversación.
+FEED_TABS = ("todo", "com", "chat")
+# Chip de plataforma -> plataformas que agrupa (Instagram también conecta por el login propio de Instagram).
+PLATFORM_FILTERS = {
+    "facebook": ("facebook",),
+    "instagram": ("instagram", "instagram_login"),
+    "youtube": ("youtube",),
+}
+PLATFORM_LABELS = {"facebook": "Facebook", "instagram": "Instagram", "youtube": "YouTube"}
+# YouTube no tiene mensajes directos.
+NO_CHAT_PLATFORMS = ("youtube",)
 
-def _filter_querystring(request):
-    """The active filters as a query string fragment, minus the folder itself.
 
-    So a link into a folder keeps the window, the sort and the search that were
-    already applied. `post` is dropped because the link supplies its own, and
-    blank values are dropped because the filter bar submits `?platform=&status=`
-    when its selects sit on "All".
-    """
-    from urllib.parse import urlencode
+def _feed_state(request, accounts):
+    """Parámetros de la bandeja ya validados: lo que no existe o no es visible vuelve al valor por defecto."""
+    ids = {str(a.id) for a in accounts}
+    tab = request.GET.get("tab")
+    platform = request.GET.get("platform", "")
+    account = request.GET.get("account", "")
+    return {
+        "tab": tab if tab in FEED_TABS else "todo",
+        "platform": platform if platform in PLATFORM_FILTERS else "",
+        "account": account if account in ids else "",
+        "only": "all" if request.GET.get("only") == "all" else "unans",
+        "mine": request.GET.get("mine") == "1",
+        "q": request.GET.get("q", "").strip()[:100],
+        # «Ver más» en No contestados: cuántos comentarios leer (de 100 en 100, tope 1000).
+        "limit": min(
+            max(int(request.GET["n"]) if request.GET.get("n", "").isdigit() else 0, MESSAGES_PER_PAGE * 2), 1000
+        ),
+        "acc": request.GET.get("acc", ""),
+    }
 
-    pairs = [
-        (key, value) for key in request.GET if key != "post" for value in request.GET.getlist(key) if value.strip()
+
+def _feed_context(request, workspace):
+    from collections import Counter
+
+    from django.db.models import Count
+
+    from .panel import conversations, legend, message_pills, pill, post_kind
+
+    membership = request.workspace_membership
+    # Cuentas que el miembro puede ver. Los mensajes se acotan a ellas, así que ningún filtro puede ampliar el alcance.
+    visible = visible_accounts(membership)
+    accounts = list(
+        visible_accounts(
+            membership,
+            SocialAccount.objects.filter(
+                workspace=workspace, connection_status=SocialAccount.ConnectionStatus.CONNECTED
+            ),
+        ).order_by("account_name", "platform")
+    )
+    st = _feed_state(request, accounts)
+    show_all = st["only"] == "all"
+
+    shown = [
+        a
+        for a in accounts
+        if (not st["platform"] or a.platform in PLATFORM_FILTERS[st["platform"]])
+        and (not st["account"] or str(a.id) == st["account"])
     ]
-    return ("&" + urlencode(pairs)) if pairs else ""
 
+    base = InboxMessage.objects.for_workspace(workspace.id).filter(social_account__in=visible)
+    if st["platform"]:
+        base = base.filter(social_account__platform__in=PLATFORM_FILTERS[st["platform"]])
+    if st["account"]:
+        base = base.filter(social_account_id=st["account"])
+    comments = base.filter(parent_message__isnull=True, is_outbound=False).exclude(
+        message_type=InboxMessage.MessageType.DM
+    )
+    dms = base.filter(message_type=InboxMessage.MessageType.DM)
+    if st["mine"]:
+        comments = comments.filter(assigned_to=request.user)
+    q = st["q"]
+    if q:
+        comments = comments.filter(Q(body__icontains=q) | Q(sender_name__icontains=q) | Q(sender_handle__icontains=q))
 
-def _filter_values(request, key):
-    """Multi-value query param with the blank "All …" sentinel stripped out."""
-    return [value for value in request.GET.getlist(key) if value]
+    pending_comments = comments.filter(InboxMessage.pending_q())
+    pending_dm_ids = set(dms.filter(InboxMessage.pending_q()).values_list("id", flat=True))
+    # shortcut: se leen a lo sumo 2000 mensajes directos por carga; paginar si una bandeja llega a acumular más.
+    convs = conversations(list(dms.select_related("social_account", "assigned_to")[:FOLDER_SCAN_LIMIT]), pending_dm_ids)
+    if st["mine"]:
+        convs = [c for c in convs if request.user.id in c["mine"]]
+    if q:
+        needle = q.lower()
+        convs = [
+            c
+            for c in convs
+            if any(needle in f"{m.body} {m.sender_name} {m.sender_handle}".lower() for m in c["messages"])
+        ]
+
+    com_by_account = dict(pending_comments.values_list("social_account_id").annotate(n=Count("id")))
+    chat_by_account = Counter(c["account"].id for c in convs if c["pending"])
+    com_count, chat_count = sum(com_by_account.values()), sum(chat_by_account.values())
+
+    kinds: dict = {}
+
+    def kind_of(message):
+        key = message.related_post_id
+        if key not in kinds:
+            kinds[key] = post_kind(message.related_post, message.platform)
+        return kinds[key]
+
+    items, tiles, posts, chats, selected, more = [], [], [], [], None, False
+    if st["tab"] == "todo":
+        rows = pending_comments if not show_all else comments.filter(deleted_on_platform__isnull=True)
+        fetched = list(
+            rows.select_related("social_account", "related_post__post").order_by("-received_at")[: st["limit"]]
+        )
+        more = len(fetched) == st["limit"]
+        for m in fetched:
+            items.append(
+                {"type": "com", "m": m, "at": m.received_at, "kind": kind_of(m), "pills": message_pills(m, show_all)}
+            )
+        for c in convs:
+            if not show_all and not c["pending"]:
+                continue
+            pills = [pill("nuevo")] if c["unread"] else []
+            if show_all:
+                pills.append(pill("pendiente" if c["pending"] else "contestado"))
+            if c["window"]:
+                pills.append(pill(c["window"]))
+            items.append(
+                {"type": "chat", "m": c["rep"], "c": c, "at": c["last"].received_at, "kind": "Chat", "pills": pills}
+            )
+        items.sort(key=lambda i: i["at"], reverse=True)
+    else:
+        pool = [a for a in shown if st["tab"] == "com" or a.platform not in NO_CHAT_PLATFORMS]
+        counts = com_by_account if st["tab"] == "com" else chat_by_account
+        selected = next((a for a in pool if str(a.id) == st["acc"]), pool[0] if pool else None)
+        tiles = [{"account": a, "n": counts.get(a.id, 0), "selected": a == selected} for a in pool]
+        if selected and st["tab"] == "com":
+            rows = comments.filter(social_account=selected, deleted_on_platform__isnull=True)
+            for g in group_by_post(
+                list(rows.select_related("social_account", "related_post__post")[:FOLDER_SCAN_LIMIT])
+            ):
+                if show_all or any(m.is_pending for m in g["messages"]):
+                    g["rep"] = g["messages"][0]
+                    g["kind"] = kind_of(g["rep"])
+                    g["count"] = len(g["messages"])
+                    posts.append(g)
+        elif selected:
+            for c in convs:
+                if c["account"].id != selected.id or not (show_all or c["pending"]):
+                    continue
+                pills = [pill("nuevo")] if c["unread"] else []
+                if show_all:
+                    pills.append(pill("pendiente" if c["pending"] else "contestado"))
+                if c["window"]:
+                    pills.append(pill(c["window"]))
+                chats.append({"c": c, "pills": pills})
+
+    return {
+        "workspace": workspace,
+        "st": st,
+        "show_all": show_all,
+        "social_accounts": accounts,
+        "platform_chips": [(key, PLATFORM_LABELS[key]) for key in PLATFORM_FILTERS],
+        "tabs": [
+            ("todo", "No contestados", com_count + chat_count),
+            ("com", "Comentarios", com_count),
+            ("chat", "Chats", chat_count),
+        ],
+        "tiles": tiles,
+        "selected": selected,
+        "items": items,
+        "more_n": st["limit"] + MESSAGES_PER_PAGE * 2 if more else 0,
+        "posts": posts,
+        "chats": chats,
+        "legend": legend(),
+        "sla_config": InboxSLAConfig.objects.filter(workspace=workspace, is_active=True).first(),
+    }
 
 
 @login_required
 @require_permission("use_inbox")
 def inbox_feed(request, workspace_id):
-    """Main inbox feed with filtering, pagination, and split-panel layout."""
+    """Bandeja: pestañas No contestados, Comentarios y Chats con sus filtros."""
     workspace = _get_workspace(request, workspace_id)
-
-    # Only what actually needs answering: top-level messages from other people.
-    # Replies live inside their parent's thread, and anything the connected
-    # account said itself is our own voice coming back through sync.
-    # Narrowed to the channels this member was assigned. An owner sees all of
-    # them; everyone else sees exactly what they were given, so a reviewer with
-    # one channel reads only their own comments.
-    qs = (
-        InboxMessage.objects.for_workspace(workspace.id)
-        .filter(parent_message__isnull=True, is_outbound=False)
-        .filter(social_account__in=visible_accounts(request.workspace_membership))
-        .select_related("social_account", "assigned_to")
-    )
-
-    # View shortcuts
-    view = request.GET.get("view", "all")
-    if view == "mine":
-        qs = qs.filter(assigned_to=request.user)
-    elif view == "unassigned":
-        qs = qs.filter(assigned_to__isnull=True)
-
-    # Filters. Every "All X" option submits an empty value, and the filter bar
-    # includes each control in the others' requests — so getlist() hands back
-    # [""], which is truthy and used to filter on platform__in=[""], emptying the
-    # inbox the moment any filter or the search box was touched. Drop the blanks.
-    platforms = _filter_values(request, "platform")
-    if platforms:
-        qs = qs.filter(social_account__platform__in=platforms)
-
-    accounts = _filter_values(request, "account")
-    if accounts:
-        qs = qs.filter(social_account_id__in=accounts)
-
-    types = _filter_values(request, "type")
-    if types:
-        qs = qs.filter(message_type__in=types)
-
-    statuses = _filter_values(request, "status")
-    moderation_states = {s for s in statuses if s in MODERATION_STATUS_VALUES}
-    real_statuses = [s for s in statuses if s not in moderation_states]
-    if real_statuses:
-        qs = qs.filter(status__in=real_statuses)
-
-    # Moderation state. Hidden and deleted rows stay in the database on purpose
-    # (a hidden one must be restorable, a deleted one keeps the thread and the
-    # audit trail) — which is also why they looked exactly like untouched rows,
-    # with no way to confirm a comment had actually been dealt with. The two
-    # "statuses" are that check: they list precisely what moderation actions
-    # left behind. No restoration, only the audit view.
-    if "hidden" in moderation_states:
-        qs = qs.filter(is_hidden=True)
-    if "deleted" in moderation_states:
-        qs = qs.filter(deleted_on_platform__isnull=False)
-
-    assigned = request.GET.get("assigned")
-    if assigned:
-        qs = qs.filter(assigned_to__isnull=True) if assigned == "unassigned" else qs.filter(assigned_to_id=assigned)
-
-    sentiments = _filter_values(request, "sentiment")
-    if sentiments:
-        qs = qs.filter(sentiment__in=sentiments)
-
-    # A named window, or explicit dates. The presets exist because "last 7 days"
-    # is the question people actually ask, and making them pick two dates for it
-    # is three interactions to express one thought.
-    #
-    # An explicit date_from wins: if someone typed a date, honouring a preset
-    # over it would silently discard what they asked for.
-    date_range = request.GET.get("range", "").strip()
-    date_from = request.GET.get("date_from")
-    if not date_from and date_range in DATE_RANGE_DAYS:
-        date_from = (timezone.now() - timedelta(days=DATE_RANGE_DAYS[date_range])).date().isoformat()
-    if date_from:
-        qs = qs.filter(received_at__date__gte=date_from)
-
-    date_to = request.GET.get("date_to")
-    if date_to:
-        qs = qs.filter(received_at__date__lte=date_to)
-
-    # Oldest first is not a novelty: working a backlog from the bottom means
-    # answering the person who has been waiting longest, which is the whole
-    # point of the SLA the inbox already tracks.
-    sort = "oldest" if request.GET.get("sort") == "oldest" else "newest"
-    qs = qs.order_by("received_at" if sort == "oldest" else "-received_at")
-
-    q = request.GET.get("q", "").strip()
-    if q:
-        qs = qs.filter(Q(body__icontains=q) | Q(sender_name__icontains=q) | Q(sender_handle__icontains=q))
-
-    # Folders, or the inside of one.
-    #
-    # `?post=` decides the depth, and it is one view rather than two because
-    # these are the same filtered list looked at from different heights — the
-    # filters, the channel scoping and the ordering all have to behave
-    # identically, and two views would drift.
-    #
-    # Grouping happens *after* every filter, so a folder's count always matches
-    # what is inside it. A count that disagrees with the list below it is worse
-    # than no count.
-    active_post_id = request.GET.get("post", "").strip()
-    folders, active_folder = [], None
-
-    # Which filters keep the publication folders, and which flatten the list.
-    #
-    # The distinction is not "filtered or not" — that was the first attempt and
-    # it was too blunt. Narrowing to unread, or to one platform, leaves the
-    # publications intact and the folders genuinely more useful: they answer
-    # "which video has the most left to answer" at a glance. So those keep
-    # folders, with each count reflecting only what passed the filter.
-    #
-    # Three cases go flat, each for its own reason:
-    #   - a text search is a hunt for specific words, and folders would mean
-    #     opening twenty of them to read twenty matches;
-    #   - My Queue and Unassigned are a to-do list, not a place to browse;
-    #   - filtering to direct messages only, because a DM belongs to no
-    #     publication and every one of them would pile into a single catch-all.
-    only_dms = bool(types) and set(types) == {"dm"}
-    is_flat = bool(q) or view != "all" or only_dms
-
-    if active_post_id:
-        # Matched in Python for the same reason the folders are: the id key
-        # differs by platform, so there is no single ORM lookup for it.
-        messages = [m for m in qs[:FOLDER_SCAN_LIMIT] if extract_platform_post_id(m) == active_post_id][
-            :MESSAGES_PER_PAGE
-        ]
-        active_folder = next((g for g in group_by_post(messages) if g["key"] == active_post_id), None)
-    elif is_flat:
-        messages = list(qs[:MESSAGES_PER_PAGE])
-    else:
-        # The folder list needs the whole filtered set to count correctly, not
-        # one page of it — a folder showing "3 of 12" because the rest fell off
-        # the page is a lie the user cannot see.
-        folders = group_by_post(list(qs[:FOLDER_SCAN_LIMIT]), oldest_first=(sort == "oldest"))
-        messages = []
-
-    if is_flat and not only_dms:
-        for message in messages:
-            message.post_label = label_for(message)
-
-    # SLA config for countdown display
-    sla_config = InboxSLAConfig.objects.filter(workspace=workspace, is_active=True).first()
-
-    # Team members for assignment dropdown
-    team_members = WorkspaceMembership.objects.filter(
-        workspace=workspace,
-    ).select_related("user")
-
-    # Connected accounts for filter dropdown
-    # The filter must offer the same channels the list can show, or picking one
-    # silently returns nothing.
-    social_accounts = visible_accounts(
-        request.workspace_membership,
-        SocialAccount.objects.filter(
-            workspace=workspace,
-            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
-        ),
-    )
-
-    context = {
-        "workspace": workspace,
-        "inbox_messages": messages,
-        "folders": folders,
-        "active_folder": active_folder,
-        "active_post_id": active_post_id,
-        # The template needs to know which of the two lists it is drawing, and
-        # "searching" is not the same question as "inside a folder".
-        "showing_folders": not active_post_id and not is_flat,
-        # Everything currently narrowing the list, ready to append to a link.
-        #
-        # Opening a folder used to be a bare `?post=<id>`, which threw away every
-        # active filter — so "last 3 months" narrowed the folder list and then
-        # the folder itself showed comments from years back. The filter appeared
-        # broken when it was the navigation losing it.
-        "filter_qs": _filter_querystring(request),
-        # A flat result still says which publication each comment came from —
-        # finding the words is only half of knowing what they were about.
-        "show_post_label": is_flat and not only_dms,
-        "sla_config": sla_config,
-        "team_members": team_members,
-        "social_accounts": social_accounts,
-        "current_view": view,
-        "active_filters": {
-            "platform": platforms,
-            "account": accounts,
-            "type": types,
-            "status": statuses,
-            "assigned": assigned,
-            "sentiment": sentiments,
-            "date_from": date_from,
-            "date_to": date_to,
-            "range": date_range,
-            "sort": sort,
-            "q": q,
-        },
-    }
-
-    if request.htmx:
-        # The whole page, not the partial, when the browser's back/forward
-        # button landed here. HTMX's history restore swaps the response into the
-        # entire `<body>`, so the `_message_list` fragment alone would leave the
-        # page torn apart — header, accounts column and split panel gone. Feeding
-        # it the full page makes "back" re-render the feed it came from.
-        if request.headers.get("HX-History-Restore-Request") == "true":
-            return render(request, "inbox/feed.html", context)
-        return render(request, "inbox/partials/_message_list.html", context)
+    context = _feed_context(request, workspace)
+    # La página completa cuando el botón atrás/adelante del navegador llegó aquí: htmx restaura el historial
+    # sustituyendo todo el <body>, y el fragmento solo dejaría la página rota.
+    if request.htmx and request.headers.get("HX-History-Restore-Request") != "true":
+        return render(request, "inbox/partials/_main.html", context)
     return render(request, "inbox/feed.html", context)
 
 
@@ -514,6 +456,198 @@ def message_detail(request, workspace_id, message_id):
     return render(request, "inbox/message_detail.html", context)
 
 
+# --- Hilo y chat de la bandeja ---
+
+# Un hilo muestra a lo sumo estos comentarios de una publicación. shortcut: sin paginar; paginar si una
+# publicación llega a acumular más.
+THREAD_LIMIT = 100
+
+
+def _show_all(request):
+    return request.GET.get("only", request.POST.get("only")) == "all"
+
+
+def _visible_message(request, workspace, message_id):
+    """El mensaje, solo si su canal es visible para el miembro (si no, 404)."""
+    return get_object_or_404(
+        InboxMessage.objects.select_related("social_account", "assigned_to").filter(
+            social_account__in=visible_accounts(request.workspace_membership)
+        ),
+        id=message_id,
+        workspace=workspace,
+    )
+
+
+def _caps(request, account):
+    """Qué puede hacer este miembro en este canal: rol y permiso del canal, igual que los endpoints."""
+    membership = request.workspace_membership
+    role = bool(membership.effective_permissions.get("reply_from_inbox"))
+    return {
+        "reply": role and can_on_channel(membership, account, "can_reply"),
+        "moderate": role and can_on_channel(membership, account, "can_moderate"),
+        "delete": role and can_on_channel(membership, account, "can_delete_comments"),
+        "role": role,
+    }
+
+
+def _saved_for(templates, message):
+    """Plantillas guardadas ya con sus variables sustituidas para responder a ``message``."""
+    account = message.social_account
+    variables = {
+        "sender_name": message.sender_name,
+        "account_name": account.account_name or account.account_handle,
+        "post_url": post_url(message) or "",
+    }
+    return [{"title": r.title, "body": r.render(variables)} for r in templates]
+
+
+def _team(workspace):
+    return WorkspaceMembership.objects.filter(workspace=workspace).select_related("user")
+
+
+def _thread_context(request, workspace, message, hl_id=None):
+    """Todos los comentarios de la publicación de ``message``, con sus respuestas anidadas."""
+    from collections import defaultdict
+
+    from .panel import message_pills, post_kind
+
+    account = message.social_account
+    key = extract_platform_post_id(message)
+    pool = (
+        InboxMessage.objects.for_workspace(workspace.id)
+        .filter(social_account=account, parent_message__isnull=True, is_outbound=False)
+        .exclude(message_type=InboxMessage.MessageType.DM)
+        .select_related("social_account", "related_post__post", "moderated_by", "assigned_to")
+        .order_by("-received_at")
+    )
+    templates = list(SavedReply.objects.for_workspace(workspace.id))
+    comments = [m for m in pool[:FOLDER_SCAN_LIMIT] if extract_platform_post_id(m) == key][:THREAD_LIMIT]
+    ids = [m.id for m in comments]
+    kids, sent = defaultdict(list), defaultdict(list)
+    for child in InboxMessage.objects.filter(parent_message_id__in=ids).select_related("social_account", "sent_by"):
+        kids[child.parent_message_id].append(child)
+    for reply in InboxReply.objects.filter(inbox_message_id__in=ids).select_related("author"):
+        sent[reply.inbox_message_id].append(reply)
+
+    show_all = _show_all(request)
+    notes = defaultdict(list)
+    for note in InternalNote.objects.filter(inbox_message_id__in=ids).select_related("author").order_by("created_at"):
+        notes[note.inbox_message_id].append(note)
+    rows = [
+        {
+            "m": m,
+            "notes": notes[m.id],
+            "saved": _saved_for(templates, m),
+            "pills": message_pills(m, show_all),
+            "replies": _thread_turns(m, sent[m.id], [], kids[m.id]),
+            "hl": str(m.id) == hl_id,
+        }
+        for m in comments
+    ]
+    # Se marcan como leídos al abrir el hilo, después de calcular las pastillas: esta vez aún se ven como Nuevo.
+    InboxMessage.objects.filter(id__in=ids, status=InboxMessage.Status.UNREAD).update(status=InboxMessage.Status.OPEN)
+    return {
+        "workspace": workspace,
+        "rows": rows,
+        "account": account,
+        "title": label_for(message) or "Publicación",
+        "kind": post_kind(message.related_post, account.platform),
+        "url": post_url(message),
+        "caps": _caps(request, account),
+        "team_members": _team(workspace),
+        "only": "all" if show_all else "",
+    }
+
+
+def _chat_context(request, workspace, message):
+    """La conversación de ``message`` en burbujas, con el estado de su ventana de respuesta."""
+    from .panel import conversations, pill, window_notice
+
+    account = message.social_account
+    convo = InboxMessage.objects.for_workspace(workspace.id).filter(
+        social_account=account, message_type=InboxMessage.MessageType.DM
+    )
+    if message.conversation_id:
+        convo = convo.filter(conversation_id=message.conversation_id)
+    else:
+        convo = convo.filter(id=message.id)
+    msgs = list(convo.select_related("sent_by", "social_account"))
+    conv = conversations(msgs, set())[0]
+    bubbles = [
+        {"out": m.is_outbound, "text": m.body, "at": m.received_at, "sent_by": m.sent_by, "pending": False}
+        for m in msgs
+    ]
+    # Respuestas enviadas desde aquí que la sincronización aún no devolvió.
+    bubbles += [
+        {"out": True, "text": r.body, "at": r.sent_at, "sent_by": r.author, "pending": True}
+        for r in InboxReply.objects.filter(inbox_message__in=msgs).select_related("author")
+    ]
+    bubbles.sort(key=lambda b: b["at"])
+    InboxMessage.objects.filter(
+        id__in=[m.id for m in msgs if not m.is_outbound], status=InboxMessage.Status.UNREAD
+    ).update(status=InboxMessage.Status.OPEN)
+
+    state = conv["window"]
+    notice = None
+    if conv["last_inbound"]:
+        level, text = window_notice(
+            state, conv["last_inbound"].received_at, conv["name"], account.get_platform_display()
+        )
+        notice = {"level": level, "text": text, "pill": pill(state)}
+    return {
+        "workspace": workspace,
+        "account": account,
+        "rep": conv["rep"],
+        "name": conv["name"],
+        "bubbles": bubbles,
+        "window": state,
+        "notice": notice,
+        "closed": state == "cerrado",
+        "needs_agent": state == "agente",
+        "caps": _caps(request, account),
+        "saved": _saved_for(list(SavedReply.objects.for_workspace(workspace.id)), conv["rep"]),
+        "notes": list(
+            InternalNote.objects.filter(inbox_message__in=msgs).select_related("author").order_by("created_at")
+        ),
+        "team_members": _team(workspace),
+        "only": "all" if _show_all(request) else "",
+    }
+
+
+def _panel_response(request, workspace, message):
+    """El panel de detalle que corresponde a ``message``: chat si es un mensaje directo, hilo si es un comentario."""
+    if message.message_type == InboxMessage.MessageType.DM:
+        return render(request, "inbox/partials/_chat.html", _chat_context(request, workspace, message))
+    return render(
+        request,
+        "inbox/partials/_thread.html",
+        _thread_context(request, workspace, message, hl_id=str(message.id)),
+    )
+
+
+@login_required
+@require_permission("use_inbox")
+def thread_detail(request, workspace_id, message_id):
+    """Hilo de comentarios de la publicación a la que pertenece el mensaje (resaltado con ``?hl=1``)."""
+    workspace = _get_workspace(request, workspace_id)
+    message = _visible_message(request, workspace, message_id)
+    if message.message_type == InboxMessage.MessageType.DM:
+        return _panel_response(request, workspace, message)
+    hl = str(message.id) if request.GET.get("hl") else None
+    return render(request, "inbox/partials/_thread.html", _thread_context(request, workspace, message, hl_id=hl))
+
+
+@login_required
+@require_permission("use_inbox")
+def chat_detail(request, workspace_id, message_id):
+    """Conversación a la que pertenece el mensaje directo."""
+    workspace = _get_workspace(request, workspace_id)
+    message = _visible_message(request, workspace, message_id)
+    if message.message_type != InboxMessage.MessageType.DM:
+        return _panel_response(request, workspace, message)
+    return render(request, "inbox/partials/_chat.html", _chat_context(request, workspace, message))
+
+
 # --- Reply ---
 
 
@@ -523,6 +657,14 @@ def _reply_error(request, message: str):
     422 rather than 200 so HTMX doesn't swap this into the thread as if it were
     a delivered reply — the whole point is that nothing was sent.
     """
+    if request.POST.get("ui"):
+        # Interfaz nueva: htmx 2 no cambia nada con un 4xx, así que va un 200 que el encabezado
+        # redirige al aviso «Fallido» de esa respuesta.
+        message_id = request.resolver_match.kwargs["message_id"]
+        response = render(request, "inbox/partials/_reply_failed.html", {"error_message": message})
+        response["HX-Retarget"] = f"#reply-err-{message_id}"
+        response["HX-Reswap"] = "innerHTML"
+        return response
     return render(
         request,
         "inbox/partials/_reply_error.html",
@@ -587,6 +729,15 @@ def send_reply(request, workspace_id, message_id):
         return _reply_error(
             request, "No se pudo identificar a quién responder en este chat; espera la próxima sincronización."
         )
+    # Pasadas 24 h, Meta solo admite la etiqueta de agente humano: la interfaz nueva exige marcarla.
+    if request.POST.get("ui") and message.message_type == InboxMessage.MessageType.DM:
+        from .panel import window_state
+
+        last = reply_extra.get("last_inbound_at")
+        if last and window_state(datetime.fromisoformat(last)) == "agente" and not request.POST.get("human_agent"):
+            return _reply_error(
+                request, "Pasaron más de 24 h: marca «Responder como agente humano» para poder enviarlo."
+            )
 
     # Only record a reply that actually left the building. This used to swallow
     # every failure and store the reply anyway with an empty platform_reply_id,
@@ -646,8 +797,25 @@ def send_reply(request, workspace_id, message_id):
     # soon as anything else had arrived since, and it bypassed the ordering that
     # _thread_turns does. Re-rendering costs one extra query and cannot get the
     # order wrong.
+    if request.POST.get("ui"):
+        return _panel_response(request, workspace, message)
     context = _detail_context(workspace, message)
     return render(request, "inbox/partials/_message_panel.html", context)
+
+
+# --- Marcar contestado ---
+
+
+@login_required
+@require_permission("reply_from_inbox")
+@require_channel_capability("can_reply", _account_for_message)
+@require_POST
+def mark_answered(request, workspace_id, message_id):
+    """Marca el hilo como contestado sin enviar nada (se respondió en la plataforma, o no requiere respuesta)."""
+    workspace = _get_workspace(request, workspace_id)
+    message = _visible_message(request, workspace, message_id)
+    message.mark_thread_answered()
+    return _panel_response(request, workspace, message)
 
 
 # --- Internal Note ---
@@ -677,6 +845,8 @@ def add_note(request, workspace_id, message_id):
         body=form.cleaned_data["body"],
     )
 
+    if request.POST.get("ui"):
+        return _panel_response(request, workspace, message)
     context = _detail_context(workspace, message)
     return render(request, "inbox/partials/_message_panel.html", context)
 
@@ -773,6 +943,8 @@ def toggle_hidden(request, workspace_id, message_id):
     message.moderated_by = request.user
     message.save(update_fields=["is_hidden", "moderated_by"])
 
+    if request.POST.get("ui"):
+        return _panel_response(request, workspace, message)
     return render(request, "inbox/partials/_message_panel.html", _detail_context(workspace, message))
 
 
@@ -829,6 +1001,8 @@ def delete_comment(request, workspace_id, message_id):
     message.moderated_by = request.user
     message.save(update_fields=["deleted_on_platform", "moderated_by"])
 
+    if request.POST.get("ui"):
+        return _panel_response(request, workspace, message)
     return render(request, "inbox/partials/_message_panel.html", _detail_context(workspace, message))
 
 
@@ -888,6 +1062,8 @@ def assign_message(request, workspace_id, message_id):
             },
         )
 
+    if request.POST.get("ui"):
+        return _panel_response(request, workspace, message)
     context = _detail_context(workspace, message)
     return render(request, "inbox/partials/_message_panel.html", context)
 

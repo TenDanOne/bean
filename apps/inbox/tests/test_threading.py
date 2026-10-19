@@ -163,12 +163,11 @@ class TestFeedShowsOnlyActionable:
         engine._upsert_message(account, _msg("standalone-ours", sender=CHANNEL_ID, minutes_ago=5))
 
         client.force_login(operator)
-        response = client.get(reverse("inbox:feed", kwargs={"workspace_id": workspace.id}))
+        response = client.get(reverse("inbox:feed", kwargs={"workspace_id": workspace.id}), {"only": "all"})
 
-        # A plain browse lists publications now, so the assertion moves down a
-        # level. What it checks is unchanged: our own words and replies stay out
-        # of the list of things needing an answer.
-        listed = [m.platform_message_id for folder in response.context["folders"] for m in folder["messages"]]
+        # Lo que se comprueba no cambió: nuestras propias palabras y respuestas no entran en la lista de lo que
+        # necesita respuesta.
+        listed = [i["m"].platform_message_id for i in response.context["items"]]
         assert listed == ["root"]
 
     def test_thread_carries_the_children(self, client, operator, workspace, account):

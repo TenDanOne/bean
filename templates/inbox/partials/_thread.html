@@ -1,0 +1,23 @@
+{% load common_extras inbox_extras %}
+{% comment %}
+Hilo de una publicación: el título solo va en la cabecera; cada comentario trae sus respuestas anidadas y sus
+acciones (Responder, Ocultar, Borrar, Marcar contestado). Se vuelve a pedir completo después de cada acción.
+{% endcomment %}
+<button type="button" class="ib-btn ib-btn-ghost ib-back" data-ib-back>{% icon "chevron-left" css_class="w-3.5 h-3.5" %} Volver</button>
+<div class="ib-card" style="margin-top: 0;">
+    <div class="ib-dh">
+        <span class="ib-th ib-th-xl {{ kind|thumb_shape }}" aria-hidden="true">{% icon kind|kind_icon css_class="w-[1em] h-[1em]" %}</span>
+        <div class="t">
+            <h2 tabindex="-1" data-ib-title>{{ title }}</h2>
+            <span>{{ kind }} · {{ account.account_name|default:account.account_handle }} · {{ account.get_platform_display }}{% if url %} · <a href="{{ url }}" target="_blank" rel="noopener noreferrer" style="color: var(--brand-700);">Ver en {{ account.get_platform_display }}</a>{% endif %}</span>
+        </div>
+    </div>
+    {% if not caps.reply %}
+    <p class="ib-hint" style="margin-bottom: 8px;">{% icon "lock" css_class="w-3 h-3 inline" %} {% if not caps.role %}Tu rol puede leer la bandeja pero no responder.{% else %}Puedes ver este canal pero no responder desde él.{% endif %}{% if workspace_owner %} Pide acceso a {{ workspace_owner.display_name }}.{% endif %}</p>
+    {% endif %}
+    <ul role="list" aria-label="Comentarios" style="list-style: none; margin: 0; padding: 0;" class="ib-clist">
+        {% for r in rows %}
+        <li>{% include "inbox/partials/_comment.html" %}</li>
+        {% endfor %}
+    </ul>
+</div>

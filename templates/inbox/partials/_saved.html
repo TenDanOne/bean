@@ -1,0 +1,11 @@
+{% comment %}Respuestas guardadas: inserta la plantilla ya renderizada en la caja de responder (inbox.js, sin inline).{% endcomment %}
+{% if saved %}
+<div class="ib-saved" x-data="{ o: false }" @keydown.escape="o = false" @click.outside="o = false">
+    <button type="button" class="ib-btn ib-btn-ghost" @click="o = !o" :aria-expanded="o">{% icon "bookmark" css_class="w-3.5 h-3.5" %} Respuestas guardadas</button>
+    <div class="ib-saved-list" x-show="o" x-cloak>
+        {% for r in saved %}
+        <button type="button" data-ib-saved data-body="{{ r.body }}" @click="o = false"><b>{{ r.title }}</b><span>{{ r.body|truncatewords:10 }}</span></button>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
