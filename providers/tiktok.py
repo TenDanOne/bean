@@ -21,6 +21,7 @@ from .types import (
     PostType,
     PublishContent,
     PublishResult,
+    PublishStatus,
     RateLimitConfig,
 )
 
@@ -418,6 +419,7 @@ class TikTokProvider(SocialProvider):
         return PublishResult(
             platform_post_id=publish_id,
             extra=body.get("data", {}),
+            pending=True,
         )
 
     def _publish_file_upload(
@@ -479,6 +481,7 @@ class TikTokProvider(SocialProvider):
         return PublishResult(
             platform_post_id=publish_id,
             extra=init_body.get("data", {}),
+            pending=True,
         )
 
     # ------------------------------------------------------------------
@@ -500,6 +503,20 @@ class TikTokProvider(SocialProvider):
             json={"publish_id": publish_id},
         )
         return resp.json().get("data", {}) or {}
+
+    def check_publish_status(self, access_token: str, publish_id: str) -> PublishStatus:
+        data = self._fetch_publish_status(access_token, publish_id)
+        status = data.get("status")
+        if status == "PUBLISH_COMPLETE":
+            ids = data.get("publicaly_available_post_id") or []
+            video_id = ids if isinstance(ids, str) else (ids[0] if ids else None)
+            return PublishStatus("published", str(video_id) if video_id else None)
+        if status in ("FAILED", "EXPIRED"):
+            return PublishStatus(
+                "failed", error=f"TikTok no pudo publicar el video: {data.get('fail_reason') or status}"
+            )
+        # PROCESSING_UPLOAD / PROCESSING_DOWNLOAD / SEND_TO_USER_INBOX: still in flight
+        return PublishStatus("pending")
 
     def _resolve_video_id(self, access_token: str, post_id: str) -> str | None:
         """Resolve a stored ``platform_post_id`` to a TikTok video ID.

@@ -143,6 +143,33 @@ def test_deletion_callback_archives_account_and_returns_code(client, fb_account)
 
 
 @override_settings(PLATFORM_CREDENTIALS_FROM_ENV=META_SETTINGS)
+def test_callback_matches_saved_meta_user_id_and_spares_other_orgs(client, fb_account, db):
+    from apps.organizations.models import Organization
+
+    fb_account.account_platform_id = "page-1"
+    fb_account.platform_user_id = "meta-user-9"
+    fb_account.save()
+    other_ws = Workspace.objects.create(name="Other", organization=Organization.objects.create(name="Other org"))
+    other = SocialAccount.objects.create(
+        workspace=other_ws,
+        platform="facebook",
+        account_platform_id="page-2",
+        platform_user_id="meta-user-8",
+        account_name="Other",
+        oauth_access_token="tok",
+    )
+    response = client.post(
+        reverse("meta_deauthorize_callback"),
+        {"signed_request": _signed({"algorithm": "HMAC-SHA256", "user_id": "meta-user-9"})},
+    )
+    assert response.status_code == 200
+    fb_account.refresh_from_db()
+    other.refresh_from_db()
+    assert fb_account.connection_status == "archived"
+    assert other.connection_status != "archived"
+
+
+@override_settings(PLATFORM_CREDENTIALS_FROM_ENV=META_SETTINGS)
 def test_deletion_callback_rejects_bad_signature_and_algorithm(client, fb_account):
     url = reverse("meta_data_deletion_callback")
     bad = _signed({"algorithm": "HMAC-SHA256", "user_id": "12345"}, secret="other")

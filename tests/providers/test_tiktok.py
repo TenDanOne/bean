@@ -394,6 +394,7 @@ class TestPublishPost:
         urls = [call.args[1] for call in mock_request.call_args_list]
         assert urls == [CREATOR_INFO_URL, VIDEO_INIT_URL]
         assert result.platform_post_id == "v_pub_url~123"
+        assert result.pending is True
 
     @patch.object(TikTokProvider, "_request")
     def test_unaudited_options_block_explicit_public_post_before_init(self, mock_request):
@@ -615,3 +616,26 @@ class TestPublishPost:
 
         assert excinfo.value.retryable is False
         mock_request.assert_not_called()
+
+
+class TestCheckPublishStatus:
+    @pytest.mark.parametrize(
+        ("data", "state", "post_id"),
+        [
+            (
+                {"status": "PUBLISH_COMPLETE", "publicaly_available_post_id": ["7300000000000000001"]},
+                "published",
+                "7300000000000000001",
+            ),
+            ({"status": "PROCESSING_UPLOAD"}, "pending", None),
+            ({"status": "FAILED", "fail_reason": "file_format_check_failed"}, "failed", None),
+        ],
+    )
+    @patch.object(TikTokProvider, "_request")
+    def test_maps_tiktok_status(self, mock_request, data, state, post_id):
+        mock_request.return_value = _make_response({"data": data})
+        st = TikTokProvider({"client_key": "k", "client_secret": "s"}).check_publish_status("tok", "v_pub_url~1")
+        assert st.state == state
+        assert st.platform_post_id == post_id
+        if state == "failed":
+            assert "file_format_check_failed" in st.error

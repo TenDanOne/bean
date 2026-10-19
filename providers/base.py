@@ -22,6 +22,7 @@ from .types import (
     PostType,
     PublishContent,
     PublishResult,
+    PublishStatus,
     RateLimitConfig,
     ReplyResult,
 )
@@ -150,6 +151,10 @@ class SocialProvider(ABC):
     @abstractmethod
     def publish_post(self, access_token: str, content: PublishContent) -> PublishResult:
         """Publish content to the platform."""
+
+    def check_publish_status(self, access_token: str, publish_id: str) -> PublishStatus:
+        """Poll a publish that returned ``PublishResult.pending=True``."""
+        raise NotImplementedError(f"{self.platform_name} does not support publish status polling")
 
     def publish_comment(self, access_token: str, post_id: str, text: str) -> CommentResult:
         """Post a comment on an existing post (e.g. first comment)."""

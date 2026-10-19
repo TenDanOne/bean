@@ -381,6 +381,13 @@ def oauth_callback(request, platform):
         ) and hasattr(provider, "get_user_pages"):
             pages = provider.get_user_pages(tokens.access_token)
             if pages:
+                platform_user_id = ""
+                if platform != PlatformCredential.Platform.LINKEDIN_COMPANY:
+                    try:
+                        platform_user_id = provider.get_user_id(tokens.access_token)
+                    except Exception:
+                        # Connecting must not fail over this; the callbacks fall back to account_platform_id.
+                        logger.warning("Could not fetch Meta user id for %s", platform, exc_info=True)
                 # Store in session for account selection
                 request.session["oauth_page_select"] = {
                     "workspace_id": workspace_id,
@@ -390,6 +397,7 @@ def oauth_callback(request, platform):
                         "refresh_token": tokens.refresh_token,
                     },
                     "pages": pages,
+                    "platform_user_id": platform_user_id,
                 }
                 return redirect("social_accounts:select_account")
             else:
@@ -519,6 +527,7 @@ def select_account(request):
                 access_token=access_token,
                 refresh_token=user_tokens.get("refresh_token"),
                 expires_in=None,
+                platform_user_id=page_data.get("platform_user_id", ""),
             )
             connected.append(page["name"])
 
@@ -921,17 +930,20 @@ def _create_or_update_account(
     refresh_token=None,
     expires_in=None,
     instance_url="",
+    platform_user_id="",
 ):
     """Create or update a SocialAccount from OAuth results."""
     token_expires_at = None
     if expires_in:
         token_expires_at = timezone.now() + timedelta(seconds=expires_in)
 
+    extra = {"platform_user_id": platform_user_id} if platform_user_id else {}
     account, created = SocialAccount.objects.update_or_create(
         workspace_id=workspace_id,
         platform=platform,
         account_platform_id=profile.platform_id,
         defaults={
+            **extra,
             "account_name": profile.name,
             "account_handle": profile.handle or "",
             "avatar_url": profile.avatar_url or "",

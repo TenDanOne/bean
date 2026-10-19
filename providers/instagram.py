@@ -215,6 +215,11 @@ class InstagramProvider(SocialProvider):
     # Accounts
     # ------------------------------------------------------------------
 
+    def get_user_id(self, access_token: str) -> str:
+        """App-scoped id of the Meta user who authorized (what Meta's deauth/deletion callbacks send)."""
+        resp = self._request("GET", f"{BASE_URL}/me", access_token=access_token, params={"fields": "id"})
+        return str(resp.json()["id"])
+
     def get_user_pages(self, access_token: str) -> list[dict]:
         """Fetch linked Instagram Business accounts for Facebook-login OAuth.
 

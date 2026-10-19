@@ -10,6 +10,7 @@ from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core import signing
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -96,10 +97,10 @@ def _meta_callback(request):
     if not data or not data.get("user_id"):
         return None, HttpResponse(status=400)
     user_id = str(data["user_id"])
-    # shortcut: Meta sends the app-scoped user id, but SocialAccount stores the page / IG business id,
-    # so matches are rare; upgrade by saving the user id at connect time and matching on it.
+    # Match the app-scoped user id saved at connect time; account_platform_id covers accounts
+    # connected before that field existed (and the odd case where the ids coincide).
     for account in SocialAccount.objects.filter(
-        platform__in=("facebook", "instagram"), account_platform_id=user_id
+        Q(platform_user_id=user_id) | Q(account_platform_id=user_id), platform__in=("facebook", "instagram")
     ).exclude(connection_status=SocialAccount.ConnectionStatus.ARCHIVED):
         account.archive()
     return user_id, None

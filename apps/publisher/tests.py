@@ -406,3 +406,102 @@ class PublishedPostLeavesQueueTest(TestCase):
         self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHED)
         self.assertEqual(self.pp.retry_count, 0)
         self.assertIsNone(self.pp.next_retry_at)
+
+
+class PendingPublishTest(TestCase):
+    """TikTok-style async publish: stays PUBLISHING until the platform confirms."""
+
+    def setUp(self):
+        from apps.composer.models import PlatformPost, Post
+        from apps.organizations.models import Organization
+        from apps.social_accounts.models import SocialAccount
+        from apps.workspaces.models import Workspace
+
+        org = Organization.objects.create(name="Org")
+        ws = Workspace.objects.create(organization=org, name="WS")
+        account = SocialAccount.objects.create(
+            workspace=ws,
+            platform="tiktok",
+            account_platform_id="tt-1",
+            account_name="tt",
+            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+        )
+        self.pp = PlatformPost.objects.create(
+            post=Post.objects.create(workspace=ws, caption="hi"),
+            social_account=account,
+            status=PlatformPost.Status.PUBLISHING,
+        )
+
+    def _check(self, status):
+        provider = MagicMock()
+        provider.check_publish_status.return_value = status
+        with (
+            patch("apps.publisher.engine.get_provider", return_value=provider),
+            patch("apps.publisher.engine._resolve_publish_credentials", return_value={}),
+            patch("apps.social_accounts.models.SocialAccount.get_fresh_access_token", return_value="tok"),
+        ):
+            PublishEngine()._check_pending_publishes()
+        self.pp.refresh_from_db()
+
+    def test_pending_publish_stays_publishing(self):
+        from apps.composer.models import PlatformPost
+
+        pending = {"success": True, "platform_post_id": "v_pub_url~1", "response": {}, "pending": True}
+        with patch.object(PublishEngine, "_dispatch_to_provider", return_value=pending):
+            PublishEngine()._publish_platform_post(self.pp)
+        self.pp.refresh_from_db()
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHING)
+        self.assertEqual(self.pp.platform_post_id, "v_pub_url~1")
+        self.assertIsNone(self.pp.published_at)
+
+    def test_complete_marks_published_with_video_id(self):
+        from apps.composer.models import PlatformPost
+        from providers.types import PublishStatus
+
+        self.pp.platform_post_id = "v_pub_url~1"
+        self.pp.save()
+        self._check(PublishStatus("published", "7300000000000000001"))
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHED)
+        self.assertEqual(self.pp.platform_post_id, "7300000000000000001")
+        self.assertIsNotNone(self.pp.published_at)
+
+    def test_failed_marks_failed_with_reason(self):
+        from apps.composer.models import PlatformPost
+        from providers.types import PublishStatus
+
+        self.pp.platform_post_id = "v_pub_url~1"
+        self.pp.save()
+        self._check(PublishStatus("failed", error="TikTok no pudo publicar el video: x"))
+        self.assertEqual(self.pp.status, PlatformPost.Status.FAILED)
+        self.assertIn("no pudo publicar", self.pp.publish_error)
+
+    def test_still_processing_stays_publishing(self):
+        from apps.composer.models import PlatformPost
+        from providers.types import PublishStatus
+
+        self.pp.platform_post_id = "v_pub_url~1"
+        self.pp.save()
+        self._check(PublishStatus("pending"))
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHING)
+
+    def test_timeout_fails_only_while_still_pending(self):
+        from apps.composer.models import PlatformPost
+        from providers.types import PublishStatus
+
+        PlatformPost.objects.filter(pk=self.pp.pk).update(
+            platform_post_id="v_pub_url~1", updated_at=timezone.now() - timedelta(hours=25)
+        )
+        self._check(PublishStatus("pending"))
+        self.assertEqual(self.pp.status, PlatformPost.Status.FAILED)
+        self.assertIn("no confirmó", self.pp.publish_error)
+
+    def test_late_drain_still_marks_published(self):
+        # Manual mode: the next drain may come days later; ask the platform before timing out.
+        from apps.composer.models import PlatformPost
+        from providers.types import PublishStatus
+
+        PlatformPost.objects.filter(pk=self.pp.pk).update(
+            platform_post_id="v_pub_url~1", updated_at=timezone.now() - timedelta(hours=72)
+        )
+        self._check(PublishStatus("published", "7300000000000000001"))
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHED)

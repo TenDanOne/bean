@@ -40,6 +40,9 @@ logger = logging.getLogger(__name__)
 # Retry backoff schedule (in seconds)
 RETRY_BACKOFF = [60, 300, 1800]  # 1min, 5min, 30min
 
+# A pending publish (TikTok processing) that the platform never confirms fails after this long.
+PENDING_PUBLISH_TIMEOUT = timedelta(hours=24)
+
 
 def _resolve_publish_credentials(account):
     """Resolve the credentials dict for publishing on behalf of `account`.
@@ -132,6 +135,7 @@ class PublishEngine:
 
         # Always process retries, even when no new posts are due
         self._process_retries()
+        self._check_pending_publishes()
 
         return published_count
 
@@ -248,29 +252,11 @@ class PublishEngine:
                         **(platform_post.platform_extra or {}),
                         **response_extra,
                     }
-                platform_post.status = PlatformPost.Status.PUBLISHED
-                platform_post.published_at = timezone.now()
-                platform_post.save()
-
-                # A published post leaves the queue: drop the QueueEntry that
-                # held this channel's slot so the queue shows only upcoming posts
-                # and the slot frees up as a gap. Best-effort and isolated: the
-                # publish has already succeeded, so a cleanup failure here must
-                # NOT fall through to the `except` below (which would schedule a
-                # retry and double-post). The PlatformPost + published_at are kept.
-                try:
-                    from apps.calendar.models import QueueEntry
-
-                    QueueEntry.objects.filter(
-                        post_id=platform_post.post_id,
-                        queue__social_account_id=platform_post.social_account_id,
-                    ).delete()
-                except Exception:
-                    logger.warning(
-                        "Failed to drop QueueEntry for published PlatformPost %s",
-                        platform_post.id,
-                        exc_info=True,
-                    )
+                if result.get("pending"):
+                    # Platform still processing: stay PUBLISHING; _check_pending_publishes resolves it.
+                    platform_post.save()
+                else:
+                    self._mark_published(platform_post)
 
                 # Log success
                 PublishLog.objects.create(
@@ -317,6 +303,56 @@ class PublishEngine:
             else:
                 self._fail_permanently(platform_post, error_msg)
             return {"success": False, "error": error_msg}
+
+    def _mark_published(self, platform_post):
+        platform_post.status = PlatformPost.Status.PUBLISHED
+        platform_post.published_at = timezone.now()
+        platform_post.save()
+
+        # A published post leaves the queue: drop the QueueEntry that
+        # held this channel's slot so the queue shows only upcoming posts
+        # and the slot frees up as a gap. Best-effort and isolated: the
+        # publish has already succeeded, so a cleanup failure here must
+        # NOT fall through to the `except` in the caller (which would schedule a
+        # retry and double-post). The PlatformPost + published_at are kept.
+        try:
+            from apps.calendar.models import QueueEntry
+
+            QueueEntry.objects.filter(
+                post_id=platform_post.post_id,
+                queue__social_account_id=platform_post.social_account_id,
+            ).delete()
+        except Exception:
+            logger.warning(
+                "Failed to drop QueueEntry for published PlatformPost %s",
+                platform_post.id,
+                exc_info=True,
+            )
+
+    def _check_pending_publishes(self):
+        """Resolve PUBLISHING posts whose platform is still processing (e.g. TikTok Direct Post)."""
+        pending = PlatformPost.objects.filter(
+            status=PlatformPost.Status.PUBLISHING, platform_post_id__gt=""
+        ).select_related("social_account__workspace", "post")
+        for pp in pending:
+            try:
+                account = pp.social_account
+                provider = get_provider(account.platform, _resolve_publish_credentials(account))
+                st = provider.check_publish_status(account.get_fresh_access_token(provider), pp.platform_post_id)
+                if st.state == "published":
+                    if st.platform_post_id:
+                        pp.platform_post_id = st.platform_post_id
+                    self._mark_published(pp)
+                    self._sync_parent_published_at(pp.post)
+                elif st.state == "failed":
+                    self._fail_permanently(pp, st.error, reason="platform reported failure")
+                # Timeout only after asking: with no 24/7 worker a drain may come days later.
+                elif timezone.now() - pp.updated_at > PENDING_PUBLISH_TIMEOUT:
+                    self._fail_permanently(pp, "La plataforma no confirmó la publicación", reason="pending timeout")
+            except NotImplementedError:
+                continue  # provider has no async publish; nothing to poll
+            except Exception:
+                logger.exception("Error checking publish status of PlatformPost %s", pp.id)
 
     def _dispatch_to_provider(self, platform_post):
         """Dispatch to the appropriate platform provider.
@@ -478,6 +514,7 @@ class PublishEngine:
                 "platform_post_id": result.platform_post_id,
                 "url": result.url,
                 "response": result.extra,
+                "pending": result.pending,
             }
         finally:
             # Clean up temp files regardless of success/failure

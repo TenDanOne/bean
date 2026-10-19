@@ -118,7 +118,7 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - Revisiones: juez PASA (1518 passed, 1 fallo preexistente); design-system-bean y legal-mx con huecos ya corregidos.
 - Railway: el Custom Start Command ya incluye migrate y aplicó solo las 6 migraciones de 30d253c. Si hay que migrar a mano: `.venv/Scripts/python.exe C:\Users\ultra\bean-prod-manage.py migrate --noinput` (toca producción: pedir OK al usuario antes).
 - Pendientes:
-  - **Login con Google:** falla con «Unauthorized» en el callback. Hay que reintentar y leer «Social login failed …» en Deploy Logs.
+  - **Login con Google:** resuelto (confirmado por el usuario 2026-10-18).
   - **Google OAuth en Testing:** los tokens de YouTube caducan cada 7 días; hay que verificar la marca.
   - **Sombras naranjas** `rgba(249,115,22)` que vienen de BrightBean en composer, media, notificaciones y social_accounts.
   - **TikTok T5 y Meta M5:** pendientes.

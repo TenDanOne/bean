@@ -279,6 +279,7 @@ class TestOAuthCallbackView:
 
         mock_provider = MagicMock()
         mock_provider.exchange_code.return_value = OAuthTokens(access_token="user-token", refresh_token="refresh")
+        mock_provider.get_user_id.return_value = "meta-user-1"
         mock_provider.get_user_pages.return_value = [
             {
                 "id": "17841400000000000",
@@ -298,6 +299,7 @@ class TestOAuthCallbackView:
         page_data = authenticated_client.session["oauth_page_select"]
         assert page_data["platform"] == "instagram"
         assert page_data["pages"][0]["id"] == "17841400000000000"
+        assert page_data["platform_user_id"] == "meta-user-1"
 
     def test_tiktok_callback_replays_pkce_verifier(self, authenticated_client, workspace, user):
         """The verifier stashed at connect is read from the session and replayed
@@ -334,6 +336,7 @@ class TestSelectAccountView:
                 "access_token": "user-token",
                 "refresh_token": "refresh-token",
             },
+            "platform_user_id": "meta-user-1",
             "pages": [
                 {
                     "id": "17841400000000000",
@@ -356,6 +359,7 @@ class TestSelectAccountView:
         )
         assert account.oauth_access_token == "user-token"
         assert account.oauth_refresh_token == "refresh-token"
+        assert account.platform_user_id == "meta-user-1"
 
     def test_facebook_page_without_access_token_is_not_connected(self, authenticated_client, workspace):
         session = authenticated_client.session

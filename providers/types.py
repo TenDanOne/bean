@@ -62,6 +62,17 @@ class PublishResult:
     platform_post_id: str
     url: str | None = None
     extra: dict = field(default_factory=dict)
+    # True when the platform accepted the job but is still processing it (TikTok Direct Post).
+    pending: bool = False
+
+
+@dataclass(frozen=True)
+class PublishStatus:
+    """Outcome of polling an in-flight publish: state is 'pending', 'published' or 'failed'."""
+
+    state: str
+    platform_post_id: str | None = None
+    error: str = ""
 
 
 @dataclass(frozen=True)

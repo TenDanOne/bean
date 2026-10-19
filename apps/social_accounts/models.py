@@ -43,6 +43,9 @@ class SocialAccount(models.Model):
         max_length=255,
         help_text="The account's native ID on the platform.",
     )
+    # App-scoped id of the Meta user who authorized (Facebook/Instagram). Plain column so Meta's
+    # deauth/deletion callbacks can filter on it.
+    platform_user_id = models.CharField(max_length=64, blank=True, default="", db_index=True)
     account_name = models.CharField(max_length=255)
     account_handle = models.CharField(max_length=255, blank=True, default="")
     avatar_url = models.URLField(max_length=2000, blank=True, default="")
