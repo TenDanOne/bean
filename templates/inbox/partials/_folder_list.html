@@ -67,7 +67,7 @@ publication, and putting it first would bury the real work.
                 class="flex-1 min-w-0 text-left py-3 px-1 -ml-1 rounded-lg cursor-pointer">
             <span class="block text-sm font-medium truncate text-app">{{ folder.label }}</span>
             <span class="block text-xs text-app-tertiary mt-0.5">
-                {{ folder.messages|length }} comentario{{ folder.messages|length|pluralize }}
+                {{ folder.messages|length }} comentario{{ folder.messages|length|pluralize }}{% if not folder.unread %} · 0 sin leer{% endif %}
                 {% if folder.published_at %}
                 {% comment %}
                 When the publication went out, not when someone commented. Two
@@ -83,16 +83,20 @@ publication, and putting it first would bury the real work.
         </button>
 
         {% if folder.url %}
-        <a href="{{ folder.url }}" target="_blank" rel="noopener"
-           class="flex-shrink-0 p-1 rounded text-app-ghost hover:text-app-secondary transition-colors"
-           title="Abrir en la plataforma">
+        <a href="{{ folder.url }}" target="_blank" rel="noopener noreferrer"
+           class="flex-shrink-0 p-1 rounded text-app-ghost hover:text-app-secondary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)]"
+           title="Abrir en la plataforma" aria-label="Abrir la publicación en la plataforma">
             {% icon "arrow-up-right-from-square" css_class="w-3.5 h-3.5" %}
         </a>
         {% endif %}
     </div>
     {% empty %}
     <div class="px-4 py-10 text-center">
-        <p class="text-sm text-app-tertiary">No hay nada por responder por ahora.</p>
+        <span class="mx-auto mb-3 w-12 h-12 rounded-2xl flex items-center justify-center text-app-ghost" style="background: var(--surface-2);">
+            {% icon "comments" css_class="w-6 h-6" %}
+        </span>
+        <p class="text-sm font-semibold text-app-secondary">Todo al día</p>
+        <p class="text-[12px] text-app-tertiary mt-1">No hay nada por responder por ahora.</p>
     </div>
     {% endfor %}
 </div>

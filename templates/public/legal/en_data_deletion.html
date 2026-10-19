@@ -1,0 +1,17 @@
+{% extends "public/legal_base.html" %}
+{% block doc %}
+    <details class="toc"><summary>On this page</summary><nav aria-label="On this page">
+        <a href="#bor-how">How to revoke access and request deletion</a><a href="#bor-what">What is deleted</a>
+    </nav></details>
+    <h3 id="bor-how">How to revoke access and request deletion</h3>
+    <p>You can revoke BEAN's access and ask us to delete your data as follows:</p>
+    <ul>
+        <li>In BEAN: disconnect the account from Social accounts; its tokens are deleted.</li>
+        <li>Facebook / Instagram: Facebook &gt; Settings &gt; Apps and Websites &gt; remove BEAN. Meta notifies us, BEAN disconnects the accounts linked to your user and deletes their tokens.</li>
+        <li>TikTok: TikTok &gt; Settings &gt; Manage apps (Security and permissions) &gt; remove BEAN.</li>
+        <li>YouTube / Google: Google Account &gt; Security &gt; Third-party apps &amp; services &gt; remove BEAN.</li>
+        <li>Full history deletion: email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> naming the connected account.</li>
+    </ul>
+    <h3 id="bor-what">What is deleted</h3>
+    <p>Disconnecting an account (or receiving Meta's notice) deletes its tokens. Full deletion of the publishing history, metrics and messages is handled by email: we reply within 20 business days and carry it out within the following 15 business days, unless a legal obligation requires keeping it.</p>
+{% endblock %}

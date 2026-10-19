@@ -3,6 +3,7 @@ Week view - 7 columns, hourly rows.
 Context: week_days, week_slots, workspace.
 {% endcomment %}
 
+{% include "calendar/partials/status_chips.html" %}
 <div class="bg-app overflow-auto" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both; max-height: calc(100vh - 200px);">
     <!-- Day headers -->
     <div class="grid grid-cols-[72px_repeat(7,minmax(0,1fr))] border-b border-app sticky top-0 bg-app z-10">

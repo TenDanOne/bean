@@ -42,7 +42,6 @@
 {% endblock %}
 
 {% block content %}
-{% url 'public_legal' as legal %}
 <section class="ld-hero" aria-labelledby="landing-title">
     <div>
         <span class="ld-kick">Herramienta interna de ITHOS</span>
@@ -97,15 +96,15 @@
         <div>{% icon "trash" css_class="w-6 h-6" %}<div><b>Retenci&oacute;n y borrado</b><p>Los tokens se eliminan al desconectar la cuenta o por el aviso de Meta; publicaciones, m&eacute;tricas y mensajes se conservan mientras la cuenta exista en BEAN y se borran al solicitarlo por correo, en los plazos ARCO. El acceso tambi&eacute;n se revoca desde cada plataforma.</p></div></div>
     </div>
     <div class="ld-links">
-        <a class="public-button secondary sm" href="{{ legal }}#privacidad">Pol&iacute;tica de privacidad</a>
-        <a class="public-button secondary sm" href="{{ legal }}#terminos">T&eacute;rminos del servicio</a>
-        <a class="public-button secondary sm" href="{{ legal }}#borrado-de-datos">Borrado de datos</a>
-        <a class="public-button secondary sm" href="{{ legal }}#contacto">Contacto</a>
+        <a class="public-button secondary sm" href="{% url 'legal_es_privacy' %}">Pol&iacute;tica de privacidad</a>
+        <a class="public-button secondary sm" href="{% url 'legal_es_terms' %}">T&eacute;rminos del servicio</a>
+        <a class="public-button secondary sm" href="{% url 'legal_es_data_deletion' %}">Borrado de datos</a>
+        <a class="public-button secondary sm" href="{% url 'legal_es_contact' %}">Contacto</a>
     </div>
 </section>
 
 <section class="ld-sec" lang="en" aria-labelledby="en-h">
     <h2 id="en-h">In English</h2>
-    <div class="ld-en"><b>BEAN by ITHOS</b> is a web application for ITHOS's own use to manage its social media accounts (YouTube, Facebook, Instagram, TikTok): connect authorized accounts, schedule and publish content. OAuth tokens are stored encrypted; we do not sell data, use it for advertising or to train AI models, and we share it only with infrastructure processors. See the <a class="public-link" href="{{ legal }}#privacy">privacy policy</a> and <a class="public-link" href="{{ legal }}#data-deletion">data deletion</a> instructions. BEAN is not affiliated with or endorsed by Meta, TikTok or Google.</div>
+    <div class="ld-en"><b>BEAN by ITHOS</b> is a web application for ITHOS's own use to manage its social media accounts (YouTube, Facebook, Instagram, TikTok): connect authorized accounts, schedule and publish content. OAuth tokens are stored encrypted; we do not sell data, use it for advertising or to train AI models, and we share it only with infrastructure processors. See the <a class="public-link" href="{% url 'legal_en_privacy' %}">privacy policy</a> and <a class="public-link" href="{% url 'legal_en_data_deletion' %}">data deletion</a> instructions. BEAN is not affiliated with or endorsed by Meta, TikTok or Google.</div>
 </section>
 {% endblock %}

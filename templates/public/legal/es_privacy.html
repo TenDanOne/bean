@@ -1,0 +1,51 @@
+{% extends "public/legal_base.html" %}
+{% block doc %}
+    <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+        <a href="#priv-quien">Qui&eacute;n opera BEAN</a><a href="#priv-datos">Datos que obtenemos</a><a href="#priv-terceros">Datos de terceros</a><a href="#priv-uso">Para qu&eacute; los usamos</a><a href="#priv-comparte">Con qui&eacute;n se comparten</a><a href="#priv-guardan">D&oacute;nde se guardan</a><a href="#priv-retencion">Retenci&oacute;n</a><a href="#priv-google">Servicios de API de Google (YouTube)</a><a href="#priv-arco">Derechos ARCO</a><a href="#priv-cambios">Cambios a esta pol&iacute;tica</a><a href="#priv-afiliacion">Sin afiliaci&oacute;n</a>
+    </nav></details>
+    <h3 id="priv-quien">Qui&eacute;n opera BEAN</h3>
+    <p>BEAN es una aplicaci&oacute;n de gesti&oacute;n de redes sociales operada por ITHOS en M&eacute;xico para sus propias cuentas. Responsable del tratamiento: {{ responsable.es }}, con domicilio en {{ domicilio }}. Contacto de privacidad: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+    <h3 id="priv-datos">Datos que obtenemos</h3>
+    <ul>
+        <li>Cuenta de BEAN: correo y nombre del usuario autorizado.</li>
+        <li>Facebook e Instagram (Meta): tu perfil; las P&aacute;ginas y el negocio vinculado a los que das acceso; el contenido publicado desde BEAN; sus m&eacute;tricas; los comentarios en tus publicaciones y su moderaci&oacute;n; y los mensajes de Messenger de la P&aacute;gina. Permisos que solicitamos y su finalidad: <code>pages_show_list</code> (listar tus P&aacute;ginas), <code>pages_manage_posts</code> (publicar en la P&aacute;gina), <code>pages_read_engagement</code> (leer interacciones), <code>pages_read_user_content</code> (leer comentarios de usuarios), <code>pages_manage_engagement</code> (responder y moderar comentarios), <code>pages_manage_metadata</code> (gestionar la configuraci&oacute;n de la P&aacute;gina), <code>pages_messaging</code> (mensajes de Messenger), <code>business_management</code> (negocio vinculado), <code>read_insights</code> (m&eacute;tricas de la P&aacute;gina, si las anal&iacute;ticas est&aacute;n activas), <code>instagram_basic</code> (perfil de Instagram), <code>instagram_content_publish</code> (publicar en Instagram), <code>instagram_manage_comments</code> (comentarios de Instagram) e <code>instagram_manage_insights</code> (m&eacute;tricas de Instagram).</li>
+        <li>YouTube (Google): tu canal, los videos publicados desde BEAN, las m&eacute;tricas del canal y los comentarios. Permisos y finalidad: <code>youtube.upload</code> (subir videos), <code>youtube.readonly</code> (leer tu canal y videos), <code>youtube.force-ssl</code> (leer y moderar comentarios) y <code>yt-analytics.readonly</code> (m&eacute;tricas de YouTube Analytics, si las anal&iacute;ticas est&aacute;n activas).</li>
+        <li>TikTok: tu perfil b&aacute;sico (identificador, nombre, avatar), los videos publicados desde BEAN y su estado de publicaci&oacute;n. Permisos y finalidad: <code>user.info.basic</code> (perfil b&aacute;sico), <code>video.publish</code> (publicar videos) y <code>video.list</code> (m&eacute;tricas por video, si las anal&iacute;ticas est&aacute;n activas).</li>
+        <li>Tokens OAuth de acceso y renovaci&oacute;n, necesarios para mantener la conexi&oacute;n; se guardan cifrados con AES-256-GCM.</li>
+    </ul>
+    <h3 id="priv-terceros">Datos de terceros</h3>
+    <p>Al leer comentarios y mensajes, BEAN recibe el nombre p&uacute;blico y el texto de las personas que comentan o escriben a tus cuentas. Los usamos &uacute;nicamente para mostrarlos en la bandeja social, de modo que puedas responder y moderar. No los usamos para ninguna otra finalidad.</p>
+    <h3 id="priv-uso">Para qu&eacute; los usamos</h3>
+    <p>Solo para autenticar al usuario autorizado, mantener las cuentas conectadas, programar y publicar el contenido que el propio usuario solicita, mostrarle m&eacute;tricas y permitirle responder y moderar comentarios y mensajes. No vendemos los datos, no los usamos para publicidad ni para crear perfiles publicitarios, y no los usamos para entrenar modelos de inteligencia artificial.</p>
+    <h3 id="priv-comparte">Con qui&eacute;n se comparten</h3>
+    <p>Los datos solo se comparten con encargados que prestan la infraestructura, y con las plataformas como destinatarias de lo que publicas:</p>
+    <ul>
+        <li>Railway (hospedaje de la aplicaci&oacute;n), Supabase (base de datos), Cloudflare R2 (archivos multimedia) y MailerSend (correo transaccional).</li>
+        <li>Sentry (registro de errores), solo cuando est&aacute; activo.</li>
+        <li>Meta, TikTok y Google, como destinatarias de las publicaciones y respuestas que env&iacute;as desde BEAN.</li>
+    </ul>
+    <p>No los compartimos con terceros para sus propios fines.</p>
+    <h3 id="priv-guardan">D&oacute;nde se guardan</h3>
+    <p>Base de datos PostgreSQL en Supabase y archivos multimedia en Cloudflare R2; la aplicaci&oacute;n corre en Railway. Los encargados solo procesan los datos para prestar la infraestructura.</p>
+    <h3 id="priv-retencion">Retenci&oacute;n</h3>
+    <ul>
+        <li>Tokens: se eliminan al desconectar la cuenta o cuando Meta nos notifica la revocaci&oacute;n.</li>
+        <li>Publicaciones, m&eacute;tricas y mensajes: se conservan mientras la cuenta exista en BEAN y se borran cuando lo solicitas por correo, en los plazos de los derechos ARCO (respuesta en 20 d&iacute;as h&aacute;biles; ejecuci&oacute;n en los 15 siguientes), salvo obligaci&oacute;n legal de conservarlos.</li>
+    </ul>
+    <h3 id="priv-google">Servicios de API de Google (YouTube)</h3>
+    <p>El uso y la transferencia a cualquier otra app de la informaci&oacute;n recibida de las APIs de Google se ajustar&aacute;n a la <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Pol&iacute;tica de Datos de Usuario de los Servicios de API de Google</a>, incluidos los requisitos de Uso Limitado (Limited Use).</p>
+    <ul>
+        <li><b>Acceso:</b> BEAN accede a tu canal de YouTube, tus videos, m&eacute;tricas y comentarios solo despu&eacute;s de que autorizas la conexi&oacute;n con tu cuenta de Google.</li>
+        <li><b>Uso:</b> usamos esos datos solo para publicar videos, mostrar m&eacute;tricas del canal y permitirte leer y moderar comentarios, es decir, para ofrecerte las funciones visibles en BEAN. No los usamos para publicidad ni para entrenar modelos de IA.</li>
+        <li><b>Almacenamiento:</b> se guardan en la base de datos de BEAN (Supabase); los tokens, cifrados con AES-256-GCM.</li>
+        <li><b>Intercambio:</b> no transferimos ni vendemos estos datos a terceros, salvo a los encargados listados arriba para prestar el servicio, para cumplir la ley, o como parte de una fusi&oacute;n o adquisici&oacute;n con tu consentimiento.</li>
+        <li><b>Acceso humano restringido:</b> nadie lee tus datos de Google, salvo con tu consentimiento expreso, por razones de seguridad (p. ej. investigar un abuso) o por requerimiento legal.</li>
+        <li><b>Borrado:</b> al desconectar la cuenta se eliminan los tokens; el resto de los datos se borra cuando lo solicitas por correo (secci&oacute;n Retenci&oacute;n). Tambi&eacute;n puedes revocar el acceso desde tu cuenta de Google; consulta <a href="{% url 'legal_es_data_deletion' %}">Borrado de datos</a>.</li>
+    </ul>
+    <h3 id="priv-arco">Derechos ARCO</h3>
+    <p>Conforme a la Ley Federal de Protecci&oacute;n de Datos Personales en Posesi&oacute;n de los Particulares (LFPDPPP) vigente (2025), tienes derecho a Acceder, Rectificar, Cancelar u Oponerte al tratamiento de tus datos personales. Para ejercerlos, escribe a <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> indicando tu nombre, la cuenta conectada y el derecho que ejerces. Respondemos en un m&aacute;ximo de 20 d&iacute;as h&aacute;biles y, si procede, lo hacemos efectivo en los 15 d&iacute;as h&aacute;biles siguientes.</p>
+    <h3 id="priv-cambios">Cambios a esta pol&iacute;tica</h3>
+    <p>Si cambiamos esta pol&iacute;tica, publicaremos la nueva versi&oacute;n en esta p&aacute;gina con su fecha de actualizaci&oacute;n y, si el cambio es relevante, te avisaremos por correo.</p>
+    <h3 id="priv-afiliacion">Sin afiliaci&oacute;n</h3>
+    <p>BEAN no est&aacute; afiliado ni avalado por Meta, TikTok ni Google. Los nombres de las plataformas se usan solo para identificar las cuentas con las que se integra.</p>
+{% endblock %}

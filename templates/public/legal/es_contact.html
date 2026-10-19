@@ -1,0 +1,12 @@
+{% extends "public/legal_base.html" %}
+{% block doc %}
+    <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+        <a href="#con-correo">Escr&iacute;benos</a><a href="#con-soporte">Soporte de conexi&oacute;n con TikTok</a><a href="#con-resp">Responsable</a>
+    </nav></details>
+    <h3 id="con-correo">Escr&iacute;benos</h3>
+    <p>BEAN es una aplicaci&oacute;n interna de ITHOS. Para dudas sobre acceso, una cuenta de TikTok conectada, privacidad o solicitudes de borrado, escribe a <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+    <h3 id="con-soporte">Soporte de conexi&oacute;n con TikTok</h3>
+    <p>Incluye el nombre del espacio de trabajo de BEAN, la hora aproximada del problema y el nombre visible de la cuenta de TikTok. Nunca incluyas tu client secret, token OAuth, contrase&ntilde;a u otras credenciales.</p>
+    <h3 id="con-resp">Responsable</h3>
+    <p>{{ responsable.es }}. Domicilio: {{ domicilio }}.</p>
+{% endblock %}

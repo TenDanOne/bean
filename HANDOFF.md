@@ -134,3 +134,17 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - **YouTube Shorts:** PostType.SHORT existe, pero nada en el composer lo asigna (engine.py:526 `_resolve_post_type`). Falta el selector Short/Video y la distinción en calendario y analíticas.
 - **Borrar publicación** desde BEAN (decisión del usuario 2026-10-18): IG con `instagram_manage_contents` (ya agregado en Meta), FB con `pages_manage_posts` y YouTube. TikTok no lo permite por API. Hay que añadir el scope a providers/instagram.py y a la política de privacidad, más un método `delete_post` en los providers y una acción con confirmación en la UI (va en el mockup).
 - **Permisos por rol** (después, cuando se configuren los roles): cada función nueva va como permiso propio en el RBAC existente (apps/members: roles, roles personalizados, capacidades por canal como `can_reply`). Lista: responder comentarios, contestar chats, moderar comentarios (ocultar/borrar) y borrar publicaciones. Valores por defecto conservadores: borrar publicaciones solo Propietario/Administrador.
+
+### 2026-10-19 — Pulido visual 2 (mockup aprobado `mockup-pulido-2`, borrado al implementar)
+- Hecho (sesión bean-fb; parte va dentro del commit 228bf0c de bean-db por archivos compartidos):
+  - Sidebar: logo BEAN by ITHOS siempre arriba, selector de workspace debajo, isotipo recortado en colapsado y cabecera móvil con logo (`templates/base.html`).
+  - Publicar: chips-filtro de estado arriba con conteo y sin palomita (`templates/calendar/partials/status_chips.html`, `STATUS_CHIPS` en `apps/calendar/views.py`; «En pausa» va dentro de «En revisión»). El mes ya no tiene scroll interno. Nuevo look de `--st-publishing-*` (fondo claro y punto pulsante); `.sidebar-badge-alert` usa `--st-scheduled-fg`.
+  - Bandeja: tarjeta de la publicación arriba del hilo (`_post_card` en `apps/inbox/views.py`), respuestas en hilo, filtros en una fila. «Tú · BEAN» solo si la respuesta es del usuario actual. Ya no truena con autor nulo (`_author_name`).
+  - Legal: una página por documento. ES `/privacidad/ /terminos/ /borrado-de-datos/ /contacto/` y EN `/en/privacy/ …` (`public_legal_doc`, `templates/public/legal_base.html` + `templates/public/legal/`). `/legal/*` redirige 301; callbacks de Meta intactos. Texto legal sin cambios (comparado palabra por palabra). `docs/APP-REVIEW.md` y `GUIA-USO.md` actualizados.
+  - Conectar: botones alineados al fondo. Plural «notificación/notificaciones». Migraciones 0004 de organizations/workspaces renombran «My Organization»/«My Workspace».
+- Juez: PASA, sin regresiones. Revisión con design-system-bean: PASA.
+- Pendientes:
+  - `.claude/agents/legal-mx.md` aún menciona `/legal/`.
+  - En la sidebar, `href="/"` en vez de `{% url %}`.
+  - Revisar Publicar en navegador (escritorio y móvil).
+  - Actualizar las URLs en las consolas de Meta, Google y TikTok a `/en/...` (las viejas siguen funcionando por 301).

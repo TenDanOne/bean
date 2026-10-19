@@ -15,7 +15,6 @@ from django.utils import timezone
 from django.utils.dateformat import format as date_format
 from django.views.decorators.http import require_POST
 
-from apps.approvals.templatetags.approval_extras import STATUS_META
 from apps.common.validators import is_valid_hex_color
 from apps.composer.models import ContentCategory, PlatformPost, Post
 from apps.members.decorators import require_permission
@@ -117,7 +116,7 @@ def _get_valid_channel_filter(request):
 # Chips-filtro de estado del calendario: clave -> (etiqueta, estados reales de PlatformPost que agrupa).
 STATUS_CHIPS = (
     ("draft", "Borrador", ("draft",)),
-    ("review", "En revisión", ("pending_review", "pending_client", "changes_requested")),
+    ("review", "En revisión", ("pending_review", "pending_client", "changes_requested", "on_hold")),
     ("approved", "Aprobado", ("approved",)),
     ("scheduled", "Programado", ("scheduled",)),
     ("publishing", "Publicando", ("publishing",)),
@@ -689,9 +688,6 @@ def calendar_view(request, workspace_id):
         "authors": authors,
         "categories": categories,
         "active_filters": active_filters,
-        "status_choices": [
-            (value, STATUS_META.get(value, {}).get("label", label)) for value, label in Post.Status.choices
-        ],
         "show_holidays": show_holidays,
         **publish_ctx,
     }

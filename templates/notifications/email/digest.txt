@@ -1,5 +1,5 @@
 Resumen diario de notificaciones - {{ date|date:"j \d\e F \d\e Y" }}
-{{ notifications|length }} notificación{{ notifications|length|pluralize:"es" }}
+{{ notifications|length }} notificaci{{ notifications|length|pluralize:"ón,ones" }}
 
 {% for n in notifications %}
 - {{ n.title }}{% if n.body %}: {{ n.body|truncatewords:20 }}{% endif %} (hace {{ n.created_at|timesince }})

@@ -19,49 +19,68 @@ def test_public_review_page_is_available_without_authentication(client):
     assert b"TikTok integration" in response.content
 
 
-def test_legal_page_is_public_with_both_languages_and_anchors(client):
-    response = client.get(reverse("public_legal"))
+LEGAL_PAGES = [
+    ("/privacidad/", "es", "Política de privacidad", "CUND000714T89"),
+    ("/terminos/", "es", "Términos de uso", "Jalisco"),
+    ("/borrado-de-datos/", "es", "Borrado de datos", "dario.curiel@unx.mx"),
+    ("/contacto/", "es", "Contacto", "Calle Diego Rivera 100"),
+    ("/en/privacy/", "en", "Privacy Policy", "CUND000714T89"),
+    ("/en/terms/", "en", "Terms of Service", "Jalisco"),
+    ("/en/data-deletion/", "en", "Data deletion", "dario.curiel@unx.mx"),
+    ("/en/contact/", "en", "Contact", "Calle Diego Rivera 100"),
+]
+
+
+@pytest.mark.parametrize(("url", "lang", "title", "marker"), LEGAL_PAGES)
+def test_legal_pages_are_public_with_title_and_lang(client, url, lang, title, marker):
+    response = client.get(url)
     html = response.content.decode()
 
     assert response.status_code == 200
-    for anchor in (
-        "privacidad",
-        "terminos",
-        "borrado-de-datos",
-        "contacto",
-        "privacy",
-        "terms",
-        "data-deletion",
-        "contact",
-    ):
-        assert f'id="{anchor}"' in html
-    assert "Privacy Policy" in html and "Pol&iacute;tica de privacidad" in html
-    assert "CUND000714T89" in html and "Calle Diego Rivera 100" in html
-    assert "dario.curiel@unx.mx" in html
+    assert f'<html lang="{lang}">' in html
+    assert f"<title>{title} | BEAN by ITHOS</title>" in html
+    assert f"<h1>{title}</h1>" in html
+    assert marker in html
+    assert 'aria-current="page"' in html
     assert "<script>" not in html  # CSP: el JS vive en static/js/legal.js
-    assert "js/legal.js" in html
+    assert "AGPL-3.0" in html
+
+
+def test_legal_language_switch_links_to_same_document(client):
+    html = client.get("/privacidad/").content.decode()
+    assert 'href="/en/privacy/" lang="en"' in html
+    html = client.get("/en/data-deletion/").content.decode()
+    assert 'href="/borrado-de-datos/" lang="es"' in html
 
 
 @pytest.mark.parametrize(
-    ("name", "anchor"),
+    ("old", "new"),
     [
-        ("public_privacy", "privacidad"),
-        ("public_terms", "terminos"),
-        ("public_data_deletion", "borrado-de-datos"),
-        ("public_support", "contacto"),
+        ("/legal/", "/privacidad/"),
+        ("/legal/privacy/", "/en/privacy/"),
+        ("/legal/terms/", "/en/terms/"),
+        ("/legal/support/", "/en/contact/"),
+        ("/legal/data-deletion/", "/en/data-deletion/"),
     ],
 )
-def test_old_legal_urls_redirect_permanently(client, name, anchor):
-    response = client.get(reverse(name))
+def test_old_legal_urls_redirect_permanently(client, old, new):
+    response = client.get(old)
 
     assert response.status_code == 301
-    assert response["Location"] == f"/legal/#{anchor}"
+    assert response["Location"] == new
+
+
+def test_old_url_names_still_resolve():
+    assert reverse("public_legal") == "/legal/"
+    assert reverse("public_privacy") == "/legal/privacy/"
+    assert reverse("meta_data_deletion_callback") == "/legal/data-deletion/callback/"
+    assert reverse("public_data_deletion_status", args=["abc"]) == "/legal/data-deletion/status/abc/"
 
 
 def test_landing_links_to_legal_and_shows_disclaimer(client):
     html = client.get("/").content.decode()
 
-    assert "/legal/#privacidad" in html and "/legal/#borrado-de-datos" in html
+    assert 'href="/privacidad/"' in html and 'href="/borrado-de-datos/"' in html
     assert "no est&aacute; afiliado ni avalado por Meta, TikTok ni Google" in html
 
 
@@ -113,7 +132,8 @@ def test_review_keeps_noindex(client):
 def test_data_deletion_page_is_public(client):
     response = client.get(reverse("public_data_deletion"), follow=True)
     assert response.status_code == 200
-    assert b'id="borrado-de-datos"' in response.content and b'id="data-deletion"' in response.content
+    assert response.redirect_chain == [("/en/data-deletion/", 301)]
+    assert b"bor-how" in response.content
 
 
 @pytest.fixture

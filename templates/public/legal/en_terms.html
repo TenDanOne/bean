@@ -1,0 +1,29 @@
+{% extends "public/legal_base.html" %}
+{% block doc %}
+    <details class="toc"><summary>On this page</summary><nav aria-label="On this page">
+        <a href="#ter-service">Service</a><a href="#ter-use">Acceptable use</a><a href="#ter-content">Content and accounts</a><a href="#ter-platforms">Platform terms</a><a href="#ter-avail">Availability and liability</a><a href="#ter-law">Governing law</a><a href="#ter-code">Open source</a>
+    </nav></details>
+    <h3 id="ter-service">Service</h3>
+    <p>BEAN is an ITHOS tool to manage and publish content on its own social media accounts. Access is invitation-only for authorized users; it is not offered to the public or sold.</p>
+    <h3 id="ter-use">Acceptable use</h3>
+    <ul>
+        <li>Connect only accounts you manage or are authorized to use.</li>
+        <li>Do not publish illegal or misleading content, or content that infringes third-party rights.</li>
+        <li>Do not use BEAN for spam, abusive automation or to circumvent platform limits.</li>
+    </ul>
+    <h3 id="ter-content">Content and accounts</h3>
+    <p>You are responsible for the content you publish and the accounts you connect. You can disconnect them at any time; see <a href="{% url 'legal_en_data_deletion' %}">Data deletion</a>.</p>
+    <h3 id="ter-platforms">Platform terms</h3>
+    <p>By using BEAN you agree to comply with the terms of each platform you connect:</p>
+    <ul>
+        <li><a href="https://developers.facebook.com/terms/" rel="noopener">Meta Platform Terms</a> (Facebook and Instagram).</li>
+        <li><a href="https://www.tiktok.com/legal/page/global/terms-of-service/en" rel="noopener">TikTok Terms of Service</a> and the <a href="https://www.tiktok.com/legal/page/global/tik-tok-developer-terms-of-service/en" rel="noopener">TikTok Developer Terms of Service</a>.</li>
+        <li><a href="https://www.youtube.com/t/terms" rel="noopener">YouTube Terms of Service</a>.</li>
+    </ul>
+    <h3 id="ter-avail">Availability and liability</h3>
+    <p>The service is provided &ldquo;as is&rdquo; with no guarantee of continuous availability; scheduled posts go out when the queue is processed. We may suspend access in case of misuse. To the extent permitted by law, ITHOS is not liable for indirect damages, for outages of third-party platforms or for content published by users, and its total liability is limited to what you have paid for the service, which to date is zero.</p>
+    <h3 id="ter-law">Governing law</h3>
+    <p>These terms are governed by the laws of Mexico. For any dispute, the parties submit to the competent courts of Jalisco, Mexico.</p>
+    <h3 id="ter-code">Open source</h3>
+    <p>BEAN by ITHOS is based on BrightBean Studio (AGPL-3.0). See the <a href="https://github.com/TenDanOne/bean" rel="noopener">source code</a>.</p>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "public/legal_base.html" %}
+{% block doc %}
+    <details class="toc"><summary>On this page</summary><nav aria-label="On this page">
+        <a href="#con-mail">Write to us</a><a href="#con-support">TikTok connection support</a><a href="#con-owner">Responsible party</a>
+    </nav></details>
+    <h3 id="con-mail">Write to us</h3>
+    <p>BEAN is an internal company application. For questions about access, a connected TikTok account, privacy, or deletion requests, contact us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+    <h3 id="con-support">TikTok connection support</h3>
+    <p>Include the BEAN workspace name, the approximate time of the issue, and the TikTok account display name. Never include your client secret, OAuth token, password, or other credentials in a support request.</p>
+    <h3 id="con-owner">Responsible party</h3>
+    <p>{{ responsable.en }}. Address: {{ domicilio }}.</p>
+{% endblock %}

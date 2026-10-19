@@ -21,7 +21,7 @@ showed three columns — 896px simply cannot hold four cards wide enough for
     <!-- Platform grid -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {% for value, label in platform_choices %}
-        <div class="grid gap-3 content-start p-4 transition-colors"
+        <div class="flex flex-col gap-3 h-full p-4 transition-colors"
              style="background: {% if value in configured_platforms %}var(--surface-0){% else %}var(--warm-50){% endif %}; border: 1px {% if value in configured_platforms %}solid{% else %}dashed{% endif %} var(--border); border-radius: 14px; box-shadow: var(--shadow-xs);">
             <div class="flex items-center gap-3 min-w-0">
                 <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center" style="background: var(--warm-100); border: 1px solid var(--border-subtle); border-radius: 10px;">
@@ -43,7 +43,7 @@ showed three columns — 896px simply cannot hold four cards wide enough for
                 {% if account_name %}Conectada · {{ account_name }}{% elif value in configured_platforms %}Lista para conectar{% else %}No configurada{% endif %}
             </div>
             {% if value in configured_platforms %}
-            <form method="post" action="{% url 'social_accounts:connect' workspace_id=workspace_id %}">
+            <form method="post" class="mt-auto" action="{% url 'social_accounts:connect' workspace_id=workspace_id %}">
                 {% csrf_token %}
                 <input type="hidden" name="platform" value="{{ value }}">
                 <button type="submit" class="bbs-btn {% if account_name %}bbs-btn-ghost{% else %}bbs-btn-primary{% endif %} w-full text-xs py-1.5">
@@ -52,7 +52,7 @@ showed three columns — 896px simply cannot hold four cards wide enough for
                 </button>
             </form>
             {% else %}
-            <span class="bbs-btn bbs-btn-ghost bbs-denied w-full text-xs py-1.5" aria-disabled="true"
+            <span class="bbs-btn bbs-btn-ghost bbs-denied w-full text-xs py-1.5 mt-auto" aria-disabled="true"
                   title="Credenciales de la plataforma sin configurar. Consulta a tu administrador.">
                 Faltan credenciales de la plataforma
             </span>

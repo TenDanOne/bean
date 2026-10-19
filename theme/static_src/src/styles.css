@@ -150,7 +150,7 @@
   --st-review-bg:#FAEBC8;    --st-review-fg:#7A4E0B;    --st-review-dot:#C98A1B;
   --st-approved-bg:#E6EBCC;  --st-approved-fg:#424C1A;  --st-approved-dot:#94A43F;
   --st-scheduled-bg:#D9ECEF; --st-scheduled-fg:#0E4A56; --st-scheduled-dot:#1C7D8C;
-  --st-publishing-bg:#0E4A56;--st-publishing-fg:#FFFFFF;--st-publishing-dot:#7CC7D3;
+  --st-publishing-bg:#F0F7F8;--st-publishing-fg:#0E4A56;--st-publishing-dot:#1C7D8C;
   --st-published-bg:#DCEFE3; --st-published-fg:#2A5F45; --st-published-dot:#2F6B4F;
   --st-failed-bg:#FBE2DE;    --st-failed-fg:#9B2318;    --st-failed-dot:#B42318;
   --st-paused-bg:#F1EDE4;    --st-paused-fg:#5A4636;    --st-paused-dot:#8B7355;
@@ -281,7 +281,7 @@ body {
   color: var(--text-secondary);
 }
 .sidebar-badge-alert {
-  background: var(--st-publishing-bg);
+  background: var(--st-scheduled-fg);
   color: var(--on-primary);
 }
 /* Avatar de canal + insignia monocroma de plataforma */
@@ -2129,13 +2129,29 @@ button.filter-select:active {
   background: var(--st-bg); color: var(--st-fg); border: 1.5px dashed var(--st-dot);
 }
 .post-chip .chip-dot { display: none; }
-.st-publishing, .status-publishing { animation: st-pulse 1.8s ease-in-out infinite; }
+/* «Publicando»: borde sólido + punto pulsante (único pulso; la pastilla no pulsa). */
+.st-publishing, .status-publishing { border-style: solid; }
+.st-publishing::before, .status-publishing::before {
+  content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px;
+  background: var(--st-dot); animation: st-pulse 1.8s ease-in-out infinite;
+}
 @keyframes st-pulse { 50% { box-shadow: 0 0 0 3px rgba(28, 125, 140, 0.28); } }
 @media (prefers-reduced-motion: reduce) {
-  .st-publishing, .status-publishing { animation: none; }
+  .st-publishing::before, .status-publishing::before { animation: none; }
 }
 /* Leyenda del calendario: misma pastilla, informativa */
 .st-legend { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-full); }
+/* Chips-filtro de estado sobre el calendario: activo = color del estado; apagado = neutro (sin palomita). */
+.st-chip { cursor: pointer; font-family: inherit; gap: 6px; padding: 3px 10px; font-size: 12px; }
+.st-chip em {
+  font-style: normal; font-weight: 700; min-width: 20px; padding: 0 6px; text-align: center;
+  border-radius: var(--radius-full); background: rgba(255, 255, 255, 0.65);
+}
+.st-chip:hover { filter: brightness(0.97); }
+.st-chip[aria-pressed="false"] {
+  background: var(--surface-0); color: var(--text-tertiary); border: 1.5px solid var(--border-control);
+}
+.st-chip[aria-pressed="false"] em { background: var(--warm-100); }
 
 /* ═══ Primeros pasos: pastilla en el pie del sidebar + panel anclado ═══ */
 .ck-pill {

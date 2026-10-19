@@ -1,0 +1,16 @@
+{% comment %}
+Chips-filtro de estado sobre el calendario, con conteo del rango visible.
+Context: status_chips (key, label, statuses, count, active). Sin palomita: activo = color del estado, apagado = neutro.
+El estado vive en PlatformPost; cada chip agrupa uno o más estados reales (data-statuses).
+{% endcomment %}
+<div role="group" aria-label="Filtrar por estado" class="px-3 sm:px-4 lg:px-6 py-2 flex flex-wrap items-center gap-1.5">
+    <span class="text-[11px] font-bold uppercase tracking-wider text-app-tertiary mr-1">Estados</span>
+    {% for chip in status_chips %}
+    <button type="button" data-status-chip data-statuses="{{ chip.statuses }}"
+            aria-pressed="{% if chip.active %}true{% else %}false{% endif %}"
+            @click="toggleStatus($el)"
+            class="st-pill st-chip st-{{ chip.key }} inline-flex items-center rounded-full font-semibold">
+        {{ chip.label }} <em>{{ chip.count }}</em>
+    </button>
+    {% endfor %}
+</div>

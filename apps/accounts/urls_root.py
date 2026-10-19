@@ -4,6 +4,24 @@ from . import views
 
 urlpatterns = [
     path("review/", views.public_review, name="public_review"),
+    path("privacidad/", views.public_legal_doc, {"lang": "es", "doc": "privacy"}, name="legal_es_privacy"),
+    path("terminos/", views.public_legal_doc, {"lang": "es", "doc": "terms"}, name="legal_es_terms"),
+    path(
+        "borrado-de-datos/",
+        views.public_legal_doc,
+        {"lang": "es", "doc": "data_deletion"},
+        name="legal_es_data_deletion",
+    ),
+    path("contacto/", views.public_legal_doc, {"lang": "es", "doc": "contact"}, name="legal_es_contact"),
+    path("en/privacy/", views.public_legal_doc, {"lang": "en", "doc": "privacy"}, name="legal_en_privacy"),
+    path("en/terms/", views.public_legal_doc, {"lang": "en", "doc": "terms"}, name="legal_en_terms"),
+    path(
+        "en/data-deletion/",
+        views.public_legal_doc,
+        {"lang": "en", "doc": "data_deletion"},
+        name="legal_en_data_deletion",
+    ),
+    path("en/contact/", views.public_legal_doc, {"lang": "en", "doc": "contact"}, name="legal_en_contact"),
     path("legal/", views.public_legal, name="public_legal"),
     path("legal/privacy/", views.public_privacy, name="public_privacy"),
     path("legal/terms/", views.public_terms, name="public_terms"),

@@ -31,13 +31,13 @@ they always had — noting something is not publishing it.
 
     <!-- Mode tabs -->
     <div class="flex items-center gap-1 mb-2">
-        <button @click="mode = 'reply'"
-                class="text-[12px] font-semibold px-3 py-1 rounded-full transition-all"
+        <button type="button" @click="mode = 'reply'" :aria-pressed="mode === 'reply'"
+                class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)] text-[12px] font-semibold px-3 py-1 rounded-full transition-all"
                 :class="mode === 'reply' ? 'bg-app text-app shadow-sm border border-app' : 'text-app-tertiary hover:text-app-body'">
             Responder
         </button>
-        <button @click="mode = 'note'"
-                class="text-[12px] font-semibold px-3 py-1 rounded-full transition-all"
+        <button type="button" @click="mode = 'note'" :aria-pressed="mode === 'note'"
+                class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)] text-[12px] font-semibold px-3 py-1 rounded-full transition-all"
                 :class="mode === 'note' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'text-app-tertiary hover:text-app-body'">
             Nota interna
         </button>
@@ -45,8 +45,8 @@ they always had — noting something is not publishing it.
         <!-- Saved replies dropdown -->
         {% if saved_replies %}
         <div class="relative ml-auto" x-data="{ srOpen: false }">
-            <button @click="srOpen = !srOpen"
-                    class="text-[11px] font-medium text-app-tertiary hover:text-app-body flex items-center gap-1 transition-colors">
+            <button type="button" @click="srOpen = !srOpen" :aria-expanded="srOpen" aria-haspopup="true"
+                    class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)] rounded text-[11px] font-medium text-app-tertiary hover:text-app-body flex items-center gap-1 transition-colors">
                 {% icon "bookmark" css_class="w-3.5 h-3.5" %}
                 Respuestas guardadas
             </button>

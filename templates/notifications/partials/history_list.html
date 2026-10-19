@@ -83,7 +83,7 @@
 {# Pagination #}
 {% if has_prev or has_next %}
 <div class="flex items-center justify-between px-5 py-4 border-t border-app-subtle bg-stone-50/50">
-    <span class="text-xs text-app-tertiary font-medium tabular-nums">{{ total }} notificación{{ total|pluralize:"es" }}</span>
+    <span class="text-xs text-app-tertiary font-medium tabular-nums">{{ total }} notificaci{{ total|pluralize:"ón,ones" }}</span>
     <div class="flex items-center gap-2">
         {% if has_prev %}
         <a

@@ -31,7 +31,7 @@ from .forms import (
     SLAConfigForm,
     StatusForm,
 )
-from .grouping import extract_platform_post_id, group_by_post, label_for
+from .grouping import _published_at, extract_platform_post_id, group_by_post, label_for, post_url
 from .models import (
     InboxMessage,
     InboxReply,
@@ -106,6 +106,33 @@ def _turn_from_message(message):
     }
 
 
+def _author_name(user):
+    """Display name of an author, tolerating a deleted account (FK is SET_NULL)."""
+    return user.display_name if user is not None else "Usuario eliminado"
+
+
+def _post_card(message):
+    """The publication a comment is about, for the card above the thread.
+
+    None for direct messages (no publication) and when we hold no data at all.
+    """
+    if message.message_type == InboxMessage.MessageType.DM:
+        return None
+    title = label_for(message)
+    if not title:
+        return None
+    account = message.social_account
+    return {
+        "title": title,
+        "platform": account.platform,
+        "platform_display": account.get_platform_display(),
+        "account": account.account_name or account.account_handle,
+        "published_at": _published_at([message])
+        or (message.related_post.published_at if message.related_post_id else None),
+        "url": post_url(message),
+    }
+
+
 def _thread_turns(root, replies, notes, children):
     """The conversation as uniform turns, oldest first.
 
@@ -132,10 +159,10 @@ def _thread_turns(root, replies, notes, children):
                 "side": "right",
                 "kind": "reply",
                 "pending": True,
-                "name": reply.author.display_name,
+                "name": _author_name(reply.author),
                 "handle": "",
                 "avatar_url": _avatar_url(reply.author),
-                "initial": (reply.author.display_name or "?")[0].upper(),
+                "initial": (_author_name(reply.author) or "?")[0].upper(),
                 "body": reply.body,
                 "at": reply.sent_at,
                 "sent_by": reply.author,
@@ -150,10 +177,10 @@ def _thread_turns(root, replies, notes, children):
                 "side": "none",
                 "kind": "note",
                 "pending": False,
-                "name": note.author.display_name,
+                "name": _author_name(note.author),
                 "handle": "",
                 "avatar_url": _avatar_url(note.author),
-                "initial": (note.author.display_name or "?")[0].upper(),
+                "initial": (_author_name(note.author) or "?")[0].upper(),
                 "body": note.body,
                 "at": note.created_at,
                 "sent_by": None,
@@ -189,6 +216,7 @@ def _detail_context(workspace, message):
         "message": message,
         "thread": thread,
         "root_turn": root_turn,
+        "post_card": _post_card(message),
         "sla_config": sla_config,
         "saved_replies": saved_replies,
         "team_members": team_members,

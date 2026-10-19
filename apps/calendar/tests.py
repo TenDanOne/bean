@@ -1275,3 +1275,84 @@ class QueueEntryEndpointTests(TestCase):
         self.assertContains(resp, "Quitar de la cola")
         body = resp.content.decode()
         self.assertLess(body.index("EARLIER caption"), body.index("LATER caption"))
+
+
+class CalendarStatusChipTests(TestCase):
+    """Filtro `status` multivalor y conteos por estado de los chips del calendario."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(email="chips@example.com", password="pw", tos_accepted_at=timezone.now())
+        self.org = Organization.objects.create(name="Org")
+        self.ws = Workspace.objects.create(organization=self.org, name="WS", timezone="UTC")
+        OrgMembership.objects.create(user=self.user, organization=self.org, org_role=OrgMembership.OrgRole.OWNER)
+        WorkspaceMembership.objects.create(
+            user=self.user, workspace=self.ws, workspace_role=WorkspaceMembership.WorkspaceRole.OWNER
+        )
+        self.sa = SocialAccount.objects.create(
+            workspace=self.ws,
+            platform="youtube",
+            account_platform_id="yt-chips",
+            account_name="YT",
+            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+        )
+        self.when = datetime(2027, 3, 10, 12, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+        for status in ("draft", "scheduled", "scheduled", "pending_client"):
+            self._pp(self.ws, self.sa, status)
+        self.client.force_login(self.user)
+        self.url = reverse("calendar:calendar", kwargs={"workspace_id": self.ws.id})
+
+    def _pp(self, ws, sa, status):
+        post = Post.objects.create(workspace=ws, caption=status, scheduled_at=self.when)
+        return PlatformPost.objects.create(post=post, social_account=sa, status=status, scheduled_at=self.when)
+
+    def _get(self, query=""):
+        return self.client.get(
+            f"{self.url}?mode=calendar&view=month&date=2027-03-10{query}", headers={"HX-Request": "true"}
+        )
+
+    @staticmethod
+    def _counts(resp):
+        return {c["key"]: c["count"] for c in resp.context["status_chips"]}
+
+    def test_counts_per_chip_group_states(self):
+        counts = self._counts(self._get())
+        self.assertEqual(counts["draft"], 1)
+        self.assertEqual(counts["scheduled"], 2)
+        self.assertEqual(counts["review"], 1)  # pending_client cae en «En revisión»
+        self.assertEqual(counts["published"], 0)
+
+    def test_default_all_chips_active(self):
+        self.assertTrue(all(c["active"] for c in self._get().context["status_chips"]))
+
+    def test_status_filter_limits_posts_but_not_counts(self):
+        resp = self._get("&status=scheduled")
+        active = {c["key"] for c in resp.context["status_chips"] if c["active"]}
+        self.assertEqual(active, {"scheduled"})
+        shown = [pp for week in resp.context["calendar_weeks"] for d in week for pp in d["posts"]]
+        self.assertEqual({pp.status for pp in shown}, {"scheduled"})
+        self.assertEqual(self._counts(resp)["draft"], 1)  # el conteo ignora el filtro de estado
+
+    def test_multivalue_status(self):
+        resp = self._get("&status=draft&status=pending_client")
+        shown = [pp for week in resp.context["calendar_weeks"] for d in week for pp in d["posts"]]
+        self.assertCountEqual([pp.status for pp in shown], ["draft", "pending_client"])
+
+    def test_invalid_status_is_ignored(self):
+        resp = self._get("&status=bogus")
+        self.assertTrue(all(c["active"] for c in resp.context["status_chips"]))
+        total = sum(d["total_posts"] for week in resp.context["calendar_weeks"] for d in week)
+        self.assertEqual(total, 4)
+
+    def test_counts_do_not_cross_workspaces(self):
+        other = Workspace.objects.create(organization=self.org, name="Other", timezone="UTC")
+        other_sa = SocialAccount.objects.create(
+            workspace=other,
+            platform="youtube",
+            account_platform_id="yt-other",
+            account_name="YT2",
+            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+        )
+        self._pp(other, other_sa, "published")
+        counts = self._counts(self._get())
+        self.assertEqual(counts["published"], 0)
+        self.assertEqual(counts["scheduled"], 2)

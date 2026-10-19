@@ -1,11 +1,12 @@
 {% load humanize %}
 <!-- Filter bar -->
-<div class="px-4 py-2.5 border-b border-app-subtle flex items-center gap-2 flex-wrap flex-shrink-0" style="background: var(--surface-1);">
+<div class="px-4 py-2.5 border-b border-app-subtle flex items-center gap-2 flex-wrap flex-shrink-0" style="background: var(--surface-1);"
+     x-data="{ filtersOpen: {% if active_filters.platform or active_filters.type or active_filters.status or active_filters.range %}true{% else %}false{% endif %} }">
     <!-- Carries the active view shortcut into every filter request; without it,
          filtering from "Mine" or "Unassigned" silently drops you back to "All". -->
     <input type="hidden" name="view" value="{{ current_view|default:'all' }}">
     <!-- Search -->
-    <div class="relative w-full order-first">
+    <div class="relative flex-1 min-w-[8rem] order-1">
         {% icon "magnifying-glass" css_class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-app-ghost pointer-events-none" %}
         <input type="text"
                name="q"
@@ -19,6 +20,15 @@
                hx-include="[name='platform'],[name='type'],[name='status'],[name='sentiment'],[name='view'],[name='range'],[name='sort']">
     </div>
 
+    <!-- Filtros: una sola fila compacta; los selects se despliegan aquí (siguen en el DOM, así hx-include los lee aunque estén ocultos) -->
+    <button type="button" @click="filtersOpen = !filtersOpen" :aria-expanded="filtersOpen" aria-controls="inbox-filters-panel"
+            class="filter-select order-2 flex items-center gap-1.5 cursor-pointer flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)]">
+        {% icon "filter" css_class="w-3.5 h-3.5" %}
+        <span class="text-[12px] font-semibold">Filtros</span>
+        {% icon "chevron-down" css_class="w-2.5 h-2.5" %}
+    </button>
+
+    <div id="inbox-filters-panel" x-show="filtersOpen" x-cloak x-transition class="order-4 w-full flex items-center gap-2 flex-wrap">
     <!-- Platform filter -->
     <select name="platform" class="filter-select"
             hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}"
@@ -117,11 +127,13 @@
     Working a backlog from the bottom means answering whoever has been waiting
     longest, which is what the SLA this inbox tracks is about.
     {% endcomment %}
+    </div>
+
     <button type="button"
         id="sort-button"
         x-data="{ sort: '{{ active_filters.sort|default:'newest' }}' }"
         @click="sort = sort === 'oldest' ? 'newest' : 'oldest'; htmx.ajax('GET', '{% url 'inbox:feed' workspace_id=workspace.id %}', { source: $el, target: '#inbox-message-list', swap: 'innerHTML', values: { sort: sort } })"
-        class="filter-select flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+        class="filter-select order-3 flex items-center gap-1.5 cursor-pointer flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--primary)]"
         hx-include="[name='q'],[name='platform'],[name='type'],[name='status'],[name='sentiment'],[name='view'],[name='range']"
         :title="sort === 'oldest' ? 'Primero el comentario sin responder más antiguo; clic para ver los más recientes' : 'Primero el comentario sin responder más reciente; clic para ver los más antiguos'">
         <template x-if="sort === 'oldest'">

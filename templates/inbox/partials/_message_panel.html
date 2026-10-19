@@ -127,6 +127,34 @@
         Its badges sit above it because they are about the message as a task —
         how it sounded, how long it has been waiting — not about what was said.
         {% endcomment %}
+        {% comment %}
+        Tarjeta de la publicación. Los mensajes directos no tienen una (post_card
+        es None) y sin datos del post tampoco se muestra. Todo texto sale con
+        autoescape; el enlace externo lleva noopener noreferrer.
+        {% endcomment %}
+        {% if post_card %}
+        <div class="flex items-center gap-3 rounded-xl px-3.5 py-3 mb-4" data-testid="post-card"
+             style="background: var(--surface-1); border: 1px solid var(--border);">
+            <span class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-app-secondary" style="background: var(--surface-2);">
+                {% platform_icon post_card.platform size="5" %}
+            </span>
+            <div class="min-w-0 flex-1">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-app-tertiary">Publicación</p>
+                <p class="text-[13px] font-semibold text-app truncate" title="{{ post_card.title }}">{{ post_card.title }}</p>
+                <p class="text-[11px] text-app-tertiary truncate">
+                    {{ post_card.account }}{% if post_card.published_at %} · Publicado el {{ post_card.published_at|date:"j/m/Y" }}{% endif %}
+                </p>
+            </div>
+            {% if post_card.url %}
+            <a href="{{ post_card.url }}" target="_blank" rel="noopener noreferrer"
+               class="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-[12px] font-semibold rounded-full whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+               style="color: var(--primary); border: 1px solid var(--border);">
+                Ver en {{ post_card.platform_display }} ↗
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <div class="flex items-center gap-2 mb-2">
             {% if sla_config and sla_config.is_active and message.status != 'resolved' and message.status != 'archived' %}
             {% include "inbox/partials/_sla_badge.html" %}
@@ -141,9 +169,13 @@
             timeline and one bubble. Child messages used to render in a block of
             their own below this one, which split a single conversation in two.
             {% endcomment %}
-            {% for turn in thread %}
-            {% include "inbox/partials/_thread_bubble.html" with turn=turn %}
-            {% endfor %}
+            {% if thread %}
+            <div class="space-y-3 ml-4 pl-4" style="border-left: 2px solid var(--border);" aria-label="Respuestas">
+                {% for turn in thread %}
+                {% include "inbox/partials/_thread_bubble.html" with turn=turn %}
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
     </div>
 

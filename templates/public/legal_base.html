@@ -1,0 +1,88 @@
+{% extends "public/base.html" %}
+{% load static %}
+
+{% block html_lang %}{{ lang }}{% endblock %}
+{% block title %}{{ doc_title }} | BEAN by ITHOS{% endblock %}
+
+{% block head_extra %}
+<style>
+    .lg-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0 10px; }
+    .lg-sw { display: inline-flex; background: var(--warm-100); border: 1px solid var(--warm-300); border-radius: 10px; padding: 2px; }
+    .lg-sw a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 36px; border-radius: 8px; font-size: .8125rem; font-weight: 600; color: var(--text-secondary); text-decoration: none; }
+    .lg-sw a[aria-current="true"] { background: var(--brand-100); color: var(--brand-800); font-weight: 750; }
+    .public-main { padding: 12px 0 48px; }
+    .lg-head { padding: 0 0 4px; }
+    .lg-head h1 { margin: 0; font-family: var(--font-display); font-size: clamp(1.7rem, 4vw, 2.3rem); letter-spacing: -.03em; line-height: 1.1; }
+    .lg-head p { margin: 4px 0 0; color: var(--text-tertiary); font-size: .875rem; }
+    .lg-lay { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 40px; align-items: start; padding: 14px 0 24px; }
+    .lg-aside { position: sticky; top: 12px; }
+    .lg-aside nav { display: grid; gap: 2px; border-left: 1px solid var(--border); }
+    .lg-aside nav a { display: block; padding: 7px 12px; margin-left: -1px; border-left: 2px solid transparent; color: var(--text-secondary); font-weight: 600; text-decoration: none; }
+    .lg-aside nav a:hover { color: var(--text-primary); }
+    .lg-aside nav a[aria-current="page"] { border-left-color: var(--brand-700); color: var(--brand-800); font-weight: 750; }
+    .lg-select { display: none; width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-0); color: var(--text-primary); font: inherit; font-weight: 600; }
+    .lg-aside a:focus-visible, .lg-doc a:focus-visible, .lg-sw a:focus-visible, .lg-doc summary:focus-visible, .lg-select:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+    .lg-sec { counter-reset: sec; }
+    .lg-sec h3 { counter-increment: sec; margin: 22px 0 6px; font-size: 1.0625rem; font-weight: 700; scroll-margin-top: 12px; }
+    .lg-sec h3::before { content: counter(sec, upper-roman) ". "; color: var(--brand-700); }
+    .lg-sec p, .lg-sec li { max-width: 75ch; color: var(--text-secondary); line-height: 1.7; }
+    .lg-sec ul { padding-left: 20px; margin: 6px 0; }
+    .lg-sec a { color: var(--brand-700); font-weight: 600; }
+    .toc { margin: 0 0 4px; }
+    .toc summary { cursor: pointer; font-size: .75rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-tertiary); padding: 4px 0; }
+    .toc nav { display: grid; counter-reset: toc; padding: 2px 0 6px; }
+    .toc nav a { counter-increment: toc; padding: 3px 6px; font-size: .875rem; text-decoration: none; }
+    .toc nav a::before { content: counter(toc, upper-roman) ". "; color: var(--text-tertiary); }
+    .toc nav a:hover { text-decoration: underline; }
+    .lg-foot { border-top: 1px solid var(--border); padding: 16px 0 28px; color: var(--text-tertiary); font-size: .875rem; }
+    .lg-foot img { height: 26px; width: auto; display: block; margin-bottom: 8px; }
+    .lg-foot a { color: var(--brand-700); font-weight: 650; }
+    @media (max-width: 960px) {
+        .lg-lay { grid-template-columns: 1fr; gap: 12px; }
+        .lg-aside { position: static; }
+        .lg-aside nav { display: none; }
+        .lg-select { display: block; }
+    }
+</style>
+{% endblock %}
+
+{% block site_header %}
+<header class="lg-top">
+    <a class="public-brand" href="{% url 'dashboard' %}"><img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS"></a>
+    <nav class="lg-sw" aria-label="Idioma / Language">
+        <a href="{{ switch.es }}" lang="es" hreflang="es"{% if lang == "es" %} aria-current="true"{% endif %}>ES</a>
+        <a href="{{ switch.en }}" lang="en" hreflang="en"{% if lang == "en" %} aria-current="true"{% endif %}>EN</a>
+    </nav>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="lg-head">
+    <h1>{{ doc_title }}</h1>
+    <p>{{ updated }}</p>
+</div>
+
+<div class="lg-lay">
+    <aside class="lg-aside">
+        <nav aria-label="{% if lang == 'es' %}Documentos legales{% else %}Legal documents{% endif %}">
+            {% for item in nav %}<a href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>{% endfor %}
+        </nav>
+        <select class="lg-select" id="lg-select" aria-label="{% if lang == 'es' %}Documento legal{% else %}Legal document{% endif %}">
+            {% for item in nav %}<option value="{{ item.url }}"{% if item.active %} selected{% endif %}>{{ item.label }}</option>{% endfor %}
+        </select>
+    </aside>
+
+    <article class="lg-doc lg-sec" lang="{{ lang }}">
+        {% block doc %}{% endblock %}
+    </article>
+</div>
+<script src="{% static 'js/legal.js' %}" defer></script>
+{% endblock %}
+
+{% block site_footer %}
+<footer class="lg-foot">
+    <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS">
+    {% if lang == "es" %}BEAN by ITHOS est&aacute; basado en BrightBean Studio (AGPL-3.0). <a href="https://github.com/TenDanOne/bean" rel="noopener">C&oacute;digo fuente</a>
+    {% else %}BEAN by ITHOS is based on BrightBean Studio (AGPL-3.0). <a href="https://github.com/TenDanOne/bean" rel="noopener">Source code</a>{% endif %}
+</footer>
+{% endblock %}

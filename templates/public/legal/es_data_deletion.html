@@ -1,0 +1,17 @@
+{% extends "public/legal_base.html" %}
+{% block doc %}
+    <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+        <a href="#bor-como">C&oacute;mo revocar el acceso y pedir el borrado</a><a href="#bor-plazo">Qu&eacute; se elimina</a>
+    </nav></details>
+    <h3 id="bor-como">C&oacute;mo revocar el acceso y pedir el borrado</h3>
+    <p>Puedes revocar el acceso de BEAN y pedir que borremos tus datos as&iacute;:</p>
+    <ul>
+        <li>En BEAN: desconecta la cuenta desde Cuentas sociales; sus tokens se eliminan.</li>
+        <li>Facebook / Instagram: Facebook &gt; Configuraci&oacute;n &gt; Apps y sitios web &gt; quita BEAN. Meta nos notifica, BEAN desconecta las cuentas vinculadas a tu usuario y elimina sus tokens.</li>
+        <li>TikTok: TikTok &gt; Configuraci&oacute;n &gt; Gestionar apps (Seguridad y permisos) &gt; quita BEAN.</li>
+        <li>YouTube / Google: Cuenta de Google &gt; Seguridad &gt; Conexiones con apps y servicios de terceros &gt; quita BEAN.</li>
+        <li>Borrado completo del historial: escr&iacute;benos a <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> indicando la cuenta conectada.</li>
+    </ul>
+    <h3 id="bor-plazo">Qu&eacute; se elimina</h3>
+    <p>Al desconectar una cuenta (o al recibir el aviso de Meta) se eliminan sus tokens. El borrado completo del historial de publicaciones, m&eacute;tricas y mensajes se atiende por correo: respondemos en un m&aacute;ximo de 20 d&iacute;as h&aacute;biles y lo hacemos efectivo en los 15 d&iacute;as h&aacute;biles siguientes, salvo obligaci&oacute;n legal de conservarlo.</p>
+{% endblock %}

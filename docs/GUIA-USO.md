@@ -66,7 +66,7 @@ Para automatizarlo: un cron externo (p. ej. cron-job.org) con `POST https://bean
 - **Disconnect** (en la lista de cuentas) revoca el acceso de BEAN y conserva el historial.
 - **Delete** borra la cuenta de BEAN; la pantalla avisa cuántos posts quedan afectados.
 - También puedes quitar BEAN desde Facebook (Configuración → Apps y sitios web) o TikTok; BEAN recibe el aviso.
-- Para pedir el borrado de todos tus datos: `https://bean.ithos.mx/legal/#borrado-de-datos`.
+- Para pedir el borrado de todos tus datos: `https://bean.ithos.mx/borrado-de-datos/`.
 
 ## 9. Si algo falla
 
@@ -77,4 +77,4 @@ Para automatizarlo: un cron externo (p. ej. cron-job.org) con `POST https://bean
 | TikTok: «can only post to private accounts» | La app aún no pasó la auditoría: publica con «Only you» |
 | Instagram: error de Página | Comprueba que la cuenta sea profesional y esté ligada a una Página |
 | Instagram rechaza imagen | Debe ser JPEG |
-| Soporte | `https://bean.ithos.mx/legal/support/` |
+| Soporte | `https://bean.ithos.mx/contacto/` |

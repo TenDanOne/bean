@@ -219,8 +219,11 @@
             </div>
             <!-- Empty state shown when no message is selected -->
             <div class="inbox-empty-detail">
-                {% icon "comment" css_class="w-12 h-12" %}
-                <p class="text-sm font-medium" style="color: var(--text-tertiary);">Selecciona un mensaje para ver los detalles</p>
+                <span class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background: var(--surface-2);">
+                    {% icon "comment" css_class="w-8 h-8" %}
+                </span>
+                <p class="text-sm font-semibold" style="color: var(--text-secondary);">Selecciona un comentario</p>
+                <p class="text-[12px] max-w-[16rem] text-center leading-relaxed" style="color: var(--text-tertiary);">Elige uno de la lista para leer el hilo, responder o dejar una nota interna.</p>
             </div>
         </div>
 

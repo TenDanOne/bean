@@ -39,10 +39,13 @@ that consistency is worth more than the pixels.
         which side a bubble belongs to even before you read it.
         {% endcomment %}
         <div class="px-3.5 py-2.5 rounded-xl {% if turn.side == 'right' %}rounded-tr-sm{% else %}rounded-tl-sm{% endif %}"
-             style="{% if turn.side == 'none' %}background: var(--warning-50); border: 1px solid rgba(234,179,8,0.25);{% elif turn.side == 'right' %}background: var(--primary-soft); border: 1px solid var(--primary-muted);{% else %}background: var(--surface-1); border: 1px solid var(--border);{% endif %}">
+             style="{% if turn.side == 'none' %}background: var(--warning-50); border: 1px dashed var(--warning-500);{% elif turn.side == 'right' %}background: var(--primary-soft); border: 1px solid var(--primary-muted);{% else %}background: var(--surface-1); border: 1px solid var(--border);{% endif %}">
 
             <div class="flex items-center gap-2 flex-wrap mb-1">
-                <span class="text-[12px] font-semibold" style="color: {% if turn.side == 'none' %}var(--warning-700){% else %}var(--text-primary){% endif %};">{{ turn.name }}</span>
+                <span class="text-[12px] font-semibold" style="color: {% if turn.side == 'none' %}var(--warning-700){% else %}var(--text-primary){% endif %};">{% if turn.side == 'right' and turn.sent_by %}{% if turn.sent_by == user %}Tú{% else %}{{ turn.sent_by.display_name }}{% endif %} · BEAN{% else %}{{ turn.name }}{% endif %}</span>
+                {% if turn.side == 'right' and turn.sent_by and turn.name %}
+                <span class="text-[11px] text-app-tertiary truncate">{{ turn.name }}</span>
+                {% endif %}
                 {% if turn.handle %}
                 <span class="text-[11px] text-app-tertiary truncate">@{{ turn.handle }}</span>
                 {% endif %}

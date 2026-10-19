@@ -1,0 +1,29 @@
+{% extends "public/legal_base.html" %}
+{% block doc %}
+    <details class="toc"><summary>En esta p&aacute;gina</summary><nav aria-label="En esta p&aacute;gina">
+        <a href="#ter-servicio">Servicio</a><a href="#ter-uso">Uso aceptable</a><a href="#ter-contenido">Contenido y cuentas</a><a href="#ter-plataformas">T&eacute;rminos de las plataformas</a><a href="#ter-disp">Disponibilidad y responsabilidad</a><a href="#ter-ley">Ley aplicable</a><a href="#ter-codigo">C&oacute;digo abierto</a>
+    </nav></details>
+    <h3 id="ter-servicio">Servicio</h3>
+    <p>BEAN es una herramienta de ITHOS para gestionar y publicar contenido en sus propias cuentas de redes sociales. El acceso es solo por invitaci&oacute;n a usuarios autorizados; no se ofrece al p&uacute;blico ni se vende.</p>
+    <h3 id="ter-uso">Uso aceptable</h3>
+    <ul>
+        <li>Conecta &uacute;nicamente cuentas que administras o para las que tienes autorizaci&oacute;n.</li>
+        <li>No publiques contenido ilegal, enga&ntilde;oso o que infrinja derechos de terceros.</li>
+        <li>No uses BEAN para spam, automatizaci&oacute;n abusiva ni para eludir los l&iacute;mites de las plataformas.</li>
+    </ul>
+    <h3 id="ter-contenido">Contenido y cuentas</h3>
+    <p>Eres responsable del contenido que publicas y de las cuentas que conectas. Puedes desconectarlas en cualquier momento; consulta <a href="{% url 'legal_es_data_deletion' %}">Borrado de datos</a>.</p>
+    <h3 id="ter-plataformas">T&eacute;rminos de las plataformas</h3>
+    <p>Al usar BEAN aceptas cumplir los t&eacute;rminos de cada plataforma que conectas:</p>
+    <ul>
+        <li><a href="https://developers.facebook.com/terms/" rel="noopener">Meta Platform Terms</a> (Facebook e Instagram).</li>
+        <li><a href="https://www.tiktok.com/legal/page/global/terms-of-service/es" rel="noopener">T&eacute;rminos de servicio de TikTok</a> y los <a href="https://www.tiktok.com/legal/page/global/tik-tok-developer-terms-of-service/es" rel="noopener">T&eacute;rminos de Desarrollador de TikTok</a>.</li>
+        <li><a href="https://www.youtube.com/t/terms" rel="noopener">T&eacute;rminos de servicio de YouTube</a>.</li>
+    </ul>
+    <h3 id="ter-disp">Disponibilidad y responsabilidad</h3>
+    <p>El servicio se ofrece &laquo;tal cual&raquo;, sin garant&iacute;a de disponibilidad continua; las publicaciones programadas salen cuando se procesa la cola. Podemos suspender el acceso ante uso indebido. En la medida que permita la ley, ITHOS no responde por da&ntilde;os indirectos, por interrupciones de las plataformas de terceros ni por contenido publicado por los usuarios, y su responsabilidad total se limita a lo que hayas pagado por el servicio, que a la fecha es cero.</p>
+    <h3 id="ter-ley">Ley aplicable</h3>
+    <p>Estos t&eacute;rminos se rigen por las leyes de M&eacute;xico. Para cualquier controversia, las partes se someten a los tribunales competentes de Jalisco, M&eacute;xico.</p>
+    <h3 id="ter-codigo">C&oacute;digo abierto</h3>
+    <p>BEAN by ITHOS est&aacute; basado en BrightBean Studio (AGPL-3.0). Consulta el <a href="https://github.com/TenDanOne/bean" rel="noopener">c&oacute;digo fuente</a>.</p>
+{% endblock %}

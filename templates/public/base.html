@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{% block html_lang %}es{% endblock %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -87,35 +87,39 @@
 </head>
 <body class="public-shell">
     <div class="public-wrap">
+        {% block site_header %}
         <header class="public-header">
             <a class="public-brand" href="{% url 'dashboard' %}">
                 <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS">
             </a>
             <nav class="public-nav" aria-label="Navegaci&oacute;n">
-                <a href="{% url 'public_legal' %}#privacidad">Privacidad / Privacy</a>
-                <a href="{% url 'public_legal' %}#terminos">T&eacute;rminos / Terms</a>
-                <a href="{% url 'public_legal' %}#borrado-de-datos">Borrado de datos / Data deletion</a>
-                <a href="{% url 'public_legal' %}#contacto">Contacto / Contact</a>
+                <a href="{% url 'legal_es_privacy' %}">Privacidad</a>
+                <a href="{% url 'legal_es_terms' %}">T&eacute;rminos</a>
+                <a href="{% url 'legal_es_data_deletion' %}">Borrado de datos</a>
+                <a href="{% url 'legal_es_contact' %}">Contacto</a>
             </nav>
         </header>
+        {% endblock %}
 
         <main class="public-main">
             {% block content %}{% endblock %}
         </main>
 
+        {% block site_footer %}
         <footer class="public-footer">
             <div class="public-footer-brand">
                 <img src="{% static 'marca/bean-by-ithos.svg' %}" alt="BEAN by ITHOS">
                 BEAN &middot; Gesti&oacute;n de redes sociales de ITHOS &middot; M&eacute;xico
             </div>
             <nav aria-label="Legal">
-                <a class="public-link" href="{% url 'public_legal' %}#privacidad">Privacidad / Privacy</a>
-                <a class="public-link" href="{% url 'public_legal' %}#terminos">T&eacute;rminos / Terms</a>
-                <a class="public-link" href="{% url 'public_legal' %}#borrado-de-datos">Borrado de datos / Data deletion</a>
-                <a class="public-link" href="{% url 'public_legal' %}#contacto">Contacto / Contact</a>
+                <a class="public-link" href="{% url 'legal_es_privacy' %}">Privacidad</a>
+                <a class="public-link" href="{% url 'legal_es_terms' %}">T&eacute;rminos</a>
+                <a class="public-link" href="{% url 'legal_es_data_deletion' %}">Borrado de datos</a>
+                <a class="public-link" href="{% url 'legal_es_contact' %}">Contacto</a>
             </nav>
             <div class="public-agpl">BEAN by ITHOS est&aacute; basado en BrightBean Studio (AGPL-3.0). <a class="public-link" href="https://github.com/TenDanOne/bean" rel="noopener">C&oacute;digo fuente</a></div>
         </footer>
+        {% endblock %}
     </div>
 </body>
 </html>
