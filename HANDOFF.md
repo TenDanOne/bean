@@ -148,3 +148,29 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
   - En la sidebar, `href="/"` en vez de `{% url %}`.
   - Revisar Publicar en navegador (escritorio y móvil).
   - Actualizar las URLs en las consolas de Meta, Google y TikTok a `/en/...` (las viejas siguen funcionando por 301).
+
+## RETOMAR AQUÍ — 2026-10-19 (Fase 6: lotes A1 y A2 en main)
+- En main: 228bf0c (lotes A1+A2) + 6cf3a12 (sesión bean-fb: pulido visual 2, legal partido, chips de estado, migraciones 0004 de nombres por defecto). Juez: PASA; pytest 1591 passed + 1 preexistente.
+- Hecho:
+  - aprobación obligatoria real;
+  - overrides persistentes;
+  - recuperación de PUBLISHING atascado;
+  - reintentos con next_retry_at;
+  - validación de medios;
+  - chunks en TikTok y resumable en YouTube (solo con mocks);
+  - CSV robusto;
+  - arrastre con hora;
+  - tokens frescos y long-lived de Meta (verificar «Expires: Never» en el debugger);
+  - notificaciones reales y digest;
+  - archivadas;
+  - login (contraseña sin la actual si entras con Google; borrar cuenta escribiendo el correo).
+- Pendientes menores de A2-8:
+  - pestaña Preferencias;
+  - placeholder de /settings/;
+  - menú de Ajustes por permisos;
+  - «Repetir recorrido» en el menú;
+  - errores XHR de la biblioteca de medios;
+  - borrar un recurso en uso.
+- Pendientes del juez: DNS rebinding del CSV (usar resolve_public_ip), archivos R2 huérfanos y CSV sin process_media_asset, YouTube 308 sin leer Range, keep_time cuando pp.scheduled_at es nulo.
+- Cron: el usuario está configurando cron-job.org → POST /cron/run cada 5 min (pendiente confirmar el Test run 200).
+- Siguiente: Lote B (bandeja nueva + Shorts + tipos de post + borrar publicación), con mockup primero.
