@@ -122,3 +122,15 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
   - **Google OAuth en Testing:** los tokens de YouTube caducan cada 7 días; hay que verificar la marca.
   - **Sombras naranjas** `rgba(249,115,22)` que vienen de BrightBean en composer, media, notificaciones y social_accounts.
   - **TikTok T5 y Meta M5:** pendientes.
+
+### Fase 6 (aprobada por el usuario; arranca después de conectar Meta) — Bandeja completa + Shorts
+- Va con mockup primero. Dos apartados: «Publicaciones y comentarios» (FB, IG, YouTube) y «Chats» (Messenger y DMs de IG).
+- Bugs actuales que hay que arreglar:
+  - **Responder en FB:** a comentarios hace POST `/{comment_id}/messages` (debería ser `/comments`); a DMs de FB/IG pasa el id del mensaje, no el de la conversación (`/me/messages` con `recipient`). Archivos: providers/facebook.py:688 e instagram.py:537.
+  - **Webhook de IG:** ignora `field` = comments/mentions (apps/inbox/webhooks.py:161).
+  - **Suscripciones:** no hay código que cree `subscribed_apps` en Meta.
+  - **Moderación FB/IG:** no implementada (solo YouTube).
+- Añadir `instagram_manage_messages` a providers/instagram.py y a la política de privacidad (el usuario ya lo agrega en Meta).
+- **YouTube Shorts:** PostType.SHORT existe, pero nada en el composer lo asigna (engine.py:526 `_resolve_post_type`). Falta el selector Short/Video y la distinción en calendario y analíticas.
+- **Borrar publicación** desde BEAN (decisión del usuario 2026-10-18): IG con `instagram_manage_contents` (ya agregado en Meta), FB con `pages_manage_posts` y YouTube. TikTok no lo permite por API. Hay que añadir el scope a providers/instagram.py y a la política de privacidad, más un método `delete_post` en los providers y una acción con confirmación en la UI (va en el mockup).
+- **Permisos por rol** (después, cuando se configuren los roles): cada función nueva va como permiso propio en el RBAC existente (apps/members: roles, roles personalizados, capacidades por canal como `can_reply`). Lista: responder comentarios, contestar chats, moderar comentarios (ocultar/borrar) y borrar publicaciones. Valores por defecto conservadores: borrar publicaciones solo Propietario/Administrador.

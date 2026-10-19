@@ -891,7 +891,7 @@ def delete_account(request, workspace_id, account_id):
                 "workspace_id": workspace_id,
                 "error": "El nombre no coincide, así que no se eliminó nada.",
             },
-            status=422,
+            status=200,  # htmx 2 doesn't swap 4xx; the error must reach the screen
         )
 
     from apps.composer.models import Post

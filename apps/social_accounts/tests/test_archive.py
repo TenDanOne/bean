@@ -149,13 +149,16 @@ class TestPermanentDelete:
 
         assert response.status_code == 200
         assert response.context["impact"] == {"posts": 1, "messages": 1}
+        # The confirm replaces the card, so it must keep the id its own form targets.
+        assert f'id="account-{account.id}"' in response.content.decode()
 
     def test_wrong_name_deletes_nothing(self, client, owner, workspace, account, content):
         client.force_login(owner)
 
         response = client.post(_delete_url(workspace, account), {"confirm_name": "not the name"})
 
-        assert response.status_code == 422
+        assert response.status_code == 200
+        assert "no coincide" in response.content.decode()
         assert SocialAccount.objects.filter(id=account.id).exists()
         assert Post.objects.count() == 1
 
