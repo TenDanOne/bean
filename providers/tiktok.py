@@ -462,7 +462,11 @@ class TikTokProvider(SocialProvider):
         if code == "url_ownership_unverified":
             message = "Verifica en el portal de TikTok el dominio de tus medios (S3_CUSTOM_DOMAIN)."
         if code == "unaudited_client_can_only_post_to_private_accounts":
-            message = f"TikTok rechazó la publicación: {UNAUDITED_CLIENT_HINT}"
+            message = (
+                "TikTok rechazó la publicación: mientras la app no pase la auditoría, la CUENTA de TikTok "
+                "debe ser privada (app de TikTok → Perfil → Menú → Ajustes y privacidad → Privacidad → "
+                "Cuenta privada) y la publicación debe ir con «Solo yo»."
+            )
         raise PublishError(
             message,
             platform=self.platform_name,
