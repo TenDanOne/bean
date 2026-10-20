@@ -35,6 +35,7 @@ from .types import (
     PublishResult,
     RateLimitConfig,
     ReplyResult,
+    is_video_url,
 )
 
 logger = logging.getLogger(__name__)
@@ -300,13 +301,14 @@ class InstagramLoginProvider(SocialProvider):
         if content.text:
             payload["caption"] = content.text
 
-        if content.post_type == PostType.REEL:
+        if content.post_type in (PostType.REEL, PostType.VIDEO):
+            # A lone video in the feed is published as a Reel (same as instagram.py).
             payload["media_type"] = "REELS"
             payload["video_url"] = content.media_urls[0]
         elif content.post_type == PostType.STORY:
             url = content.media_urls[0]
             payload["media_type"] = "STORIES"
-            if url.lower().endswith((".mp4", ".mov")):
+            if is_video_url(url):
                 payload["video_url"] = url
             else:
                 payload["image_url"] = url
@@ -322,7 +324,7 @@ class InstagramLoginProvider(SocialProvider):
         child_ids: list[str] = []
 
         for url in content.media_urls:
-            is_video = url.lower().endswith((".mp4", ".mov"))
+            is_video = is_video_url(url)
             child_payload: dict = {"is_carousel_item": True}
             if is_video:
                 child_payload["media_type"] = "VIDEO"

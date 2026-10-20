@@ -267,6 +267,7 @@ class PublishEngine:
                     platform_post.save()
                 else:
                     self._mark_published(platform_post)
+                    self._notify_thumbnail_error(platform_post)
 
                 # Log success
                 PublishLog.objects.create(
@@ -313,6 +314,30 @@ class PublishEngine:
             else:
                 self._fail_permanently(platform_post, error_msg)
             return {"success": False, "error": error_msg}
+
+    def _notify_thumbnail_error(self, platform_post):
+        """The video is PUBLISHED but the platform rejected the custom thumbnail: tell the author."""
+        reason = (platform_post.platform_extra or {}).get("thumbnail_error")
+        author = platform_post.post.author
+        if not reason or author is None:
+            return
+        try:
+            from apps.notifications.engine import notify
+            from apps.notifications.models import EventType
+
+            notify(
+                user=author,
+                event_type=EventType.POST_PUBLISHED,
+                title="Video publicado sin miniatura",
+                body=f"El video se publicó pero YouTube rechazó la miniatura: {reason}",
+                data={
+                    "platform_post_id": str(platform_post.id),
+                    "post_id": str(platform_post.post_id),
+                    "workspace_id": str(platform_post.post.workspace_id),
+                },
+            )
+        except Exception:
+            logger.warning("Could not notify thumbnail error for %s", platform_post.id, exc_info=True)
 
     def _mark_published(self, platform_post):
         platform_post.status = PlatformPost.Status.PUBLISHED
@@ -409,6 +434,7 @@ class PublishEngine:
             platform,
             [pm.media_asset.media_type for pm in attachments if pm.media_asset.file],
             (platform_post.platform_extra or {}).get("post_type"),
+            [pm.media_asset.duration for pm in attachments if pm.media_asset.file and pm.media_asset.is_video],
         )
         if media_error:
             raise PublishError(media_error, platform=platform, retryable=False)
@@ -456,7 +482,7 @@ class PublishEngine:
 
             # Merge per-platform extras (e.g. YouTube privacy_status, custom
             # tags, thumbnail) on top of the base extra dict.
-            extra = {"tags": platform_post.post.tags or []}
+            extra: dict = {}  # internal post tags are not public YouTube tags; only platform_extra["tags"]
             platform_extra = platform_post.platform_extra or {}
             extra.update(platform_extra)
 
@@ -482,7 +508,9 @@ class PublishEngine:
                 from apps.media_library.models import MediaAsset
 
                 try:
-                    thumb_asset = MediaAsset.objects.get(id=thumb_asset_id)
+                    thumb_asset = MediaAsset.objects.for_workspace_with_shared(
+                        platform_post.post.workspace_id, platform_post.post.workspace.organization_id
+                    ).get(id=thumb_asset_id)
                     if thumb_asset.file:
                         suffix = os.path.splitext(thumb_asset.filename)[1] or ".jpg"
                         tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)  # noqa: SIM115
@@ -499,7 +527,9 @@ class PublishEngine:
             cover_asset_id = extra.pop("cover_image_asset_id", None)
             if cover_asset_id:
                 try:
-                    cover_asset = MediaAsset.objects.get(id=cover_asset_id)
+                    cover_asset = MediaAsset.objects.for_workspace_with_shared(
+                        platform_post.post.workspace_id, platform_post.post.workspace.organization_id
+                    ).get(id=cover_asset_id)
                     if cover_asset.file:
                         suffix = os.path.splitext(cover_asset.filename)[1] or ".jpg"
                         tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)  # noqa: SIM115

@@ -55,7 +55,9 @@ Context: day_slots, target_date, workspace.
                     {% include "social_accounts/partials/_platform_icon.html" with platform=pp.social_account.platform size="3" %}
                 </span>
                 {% with first_media=pp.post.media_attachments.all.0 %}
-                {% if first_media and first_media.media_asset.thumbnail %}
+                {% if pp.display_thumbnail_url %}
+                <img src="{{ pp.display_thumbnail_url }}" alt="" class="w-5 h-5 rounded object-cover flex-shrink-0">
+                {% elif first_media and first_media.media_asset.thumbnail %}
                 <img src="{{ first_media.media_asset.thumbnail.url }}" alt="" class="w-5 h-5 rounded object-cover flex-shrink-0">
                 {% elif first_media and not first_media.media_asset.is_video %}
                 <img src="{{ first_media.media_asset.file.url }}" alt="" class="w-5 h-5 rounded object-cover flex-shrink-0">

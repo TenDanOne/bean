@@ -2,6 +2,7 @@
 
 import base64
 import contextlib
+import io
 import json
 import logging
 import re
@@ -12,6 +13,7 @@ import httpx
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, SuspiciousOperation, ValidationError
+from django.core.files.base import ContentFile
 from django.db import models, transaction
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -24,7 +26,7 @@ from apps.common.validators import (
     parse_and_truncate_tag_string,
     parse_and_truncate_youtube_tag_string,
 )
-from apps.composer.services import media_error_for_platform
+from apps.composer.services import media_duration_notice, media_error_for_platform
 from apps.members.channels import visible_accounts
 from apps.members.decorators import require_permission
 from apps.members.models import WorkspaceMembership
@@ -125,6 +127,17 @@ def _preview_thumbnail_url(request, workspace, account):
     return asset.file.url if asset and asset.file else ""
 
 
+def _workspace_asset_id(workspace, raw):
+    """``raw`` as a string id when it is an asset this workspace may use (own or org-shared), else ``None``."""
+    raw = (raw or "").strip()
+    if not raw or not _is_valid_uuid(raw):
+        return None
+    from apps.media_library.models import MediaAsset
+
+    ok = MediaAsset.objects.for_workspace_with_shared(workspace.id, workspace.organization_id).filter(id=raw).exists()
+    return raw if ok else None
+
+
 def _parse_selected_account_ids(raw):
     """Split a comma-separated ``selected_accounts`` value into account IDs.
 
@@ -219,6 +232,9 @@ def _post_type_from_form(post_data, acc_id, platform) -> str | None:
     return value if value in allowed else None
 
 
+_PLACEHOLDER_RE = re.compile(r"\{\{[^{}]*\}\}")
+
+
 def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_approval=True):
     """400 JSON when this save may not go out: approval gate or media unfit for a platform.
 
@@ -236,16 +252,33 @@ def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_appro
                 status=400,
             )
 
+    # Un borrador puede guardar marcadores de plantilla; programar o publicar no.
+    texts = [request.POST.get(k, "") for k in ("title", "caption", "first_comment")]
+    texts += [v for k, v in request.POST.items() if k.startswith("override_")]
+    if any(_PLACEHOLDER_RE.search(t) for t in texts):
+        return JsonResponse(
+            {
+                "errors": {
+                    "placeholders": "Hay marcadores {{…}} de la plantilla sin rellenar. Complétalos antes de programar o publicar."
+                }
+            },
+            status=400,
+        )
+
     from apps.media_library.models import MediaAsset
 
-    media_types = []
+    media_rows = []  # (media_type, duration)
     if post_id:
-        media_types += list(PostMedia.objects.filter(post_id=post_id).values_list("media_asset__media_type", flat=True))
+        media_rows += list(
+            PostMedia.objects.filter(post_id=post_id).values_list("media_asset__media_type", "media_asset__duration")
+        )
     pending = request.session.get(f"pending_media_{workspace.id}", [])
     if pending:
-        media_types += list(
-            MediaAsset.objects.filter(id__in=pending, workspace=workspace).values_list("media_type", flat=True)
+        media_rows += list(
+            MediaAsset.objects.filter(id__in=pending, workspace=workspace).values_list("media_type", "duration")
         )
+    media_types = [t for t, _ in media_rows]
+    video_durations = [d for t, d in media_rows if t == "video"]
     account_ids = set(_parse_selected_account_ids(request.POST.get("selected_accounts", "")))
     targets = {
         (platform, _post_type_from_form(request.POST, str(acc_id), platform))
@@ -259,7 +292,9 @@ def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_appro
         q = Queue.objects.filter(id=queue_id, workspace=workspace).select_related("social_account").first()
         if q and q.social_account_id:
             targets.add((q.social_account.platform, None))
-    errors = sorted({e for e in (media_error_for_platform(p, media_types, t) for p, t in targets) if e})
+    errors = sorted(
+        {e for e in (media_error_for_platform(p, media_types, t, video_durations) for p, t in targets) if e}
+    )
     if errors:
         return JsonResponse({"errors": {"media": " ".join(errors)}}, status=400)
     return None
@@ -321,7 +356,7 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
             privacy_status = request.POST.get(f"yt_privacy_status_{acc_id}", "public")
             if privacy_status not in ("public", "unlisted", "private"):
                 privacy_status = "public"
-            thumb_id = request.POST.get(f"yt_thumbnail_asset_id_{acc_id}", "").strip() or None
+            thumb_id = _workspace_asset_id(workspace, request.POST.get(f"yt_thumbnail_asset_id_{acc_id}", ""))
             pp.platform_extra = {
                 "privacy_status": privacy_status,
                 "self_declared_made_for_kids": request.POST.get(f"yt_made_for_kids_{acc_id}") == "true",
@@ -600,6 +635,8 @@ def compose(request, workspace_id, post_id=None):
             initial["caption"] = template_data["caption"]
         if template_data and template_data.get("first_comment"):
             initial["first_comment"] = template_data["first_comment"]
+        if template_data and template_data.get("title"):
+            initial["title"] = template_data["title"]
         form = PostForm(initial=initial)
         platform_post_list = []
         selected_account_ids = []
@@ -638,6 +675,14 @@ def compose(request, workspace_id, post_id=None):
             ordered = [by_id[m] for m in template_media_ids if m in by_id]
             request.session[session_key] = [str(a.id) for a in ordered]
             pending_assets = ordered
+        # Per-account settings and custom texts for the accounts that were kept.
+        for acc_id in selected_account_ids:
+            extra = (template_data.get("platform_extras") or {}).get(acc_id)
+            if extra:
+                platform_extras[acc_id] = dict(extra)
+            override = (template_data.get("platform_overrides") or {}).get(acc_id)
+            if override:
+                platform_overrides[acc_id] = override
 
     # When opening from calendar with a specific account, show only that account.
     if account_filter:
@@ -767,6 +812,8 @@ def compose(request, workspace_id, post_id=None):
         tid = extra.get("thumbnail_asset_id")
         if tid and tid in asset_url_map:
             extra["thumbnail_url"] = asset_url_map[tid]
+        elif tid:
+            extra["thumbnail_asset_id"] = None  # not usable in this workspace (e.g. stale or foreign template)
         cid = extra.get("cover_image_asset_id")
         if cid and cid in asset_url_map:
             extra["cover_image_url"] = asset_url_map[cid]
@@ -796,6 +843,10 @@ def compose(request, workspace_id, post_id=None):
         "categories": categories,
         "queues": queues,
         "template_data_json": json.dumps(template_data) if template_data else "null",
+        "initial_tags": post.tags if post else (template_data or {}).get("tags") or [],
+        "initial_category_id": str(post.category_id)
+        if post and post.category_id
+        else (template_data or {}).get("category_id") or "",
         "workflow_mode": workflow_mode,
         "show_submit_button": show_submit_button,
         "show_resubmit_button": show_resubmit_button,
@@ -1482,6 +1533,7 @@ def preview(request, workspace_id):
                     # creator most wants to eyeball before publishing — never
                     # appeared anywhere except its own uploader box.
                     "thumbnail_url": _preview_thumbnail_url(request, workspace, account),
+                    "post_type": _post_type_from_form(request.POST, account.id, account.platform) or "",
                 }
             )
 
@@ -1501,6 +1553,7 @@ def preview(request, workspace_id):
                         "url": asset.file.url if asset.file else "",
                         "is_video": asset.is_video,
                         "filename": asset.filename,
+                        "duration": asset.duration,
                     }
                 )
         except Post.DoesNotExist:
@@ -1511,14 +1564,26 @@ def preview(request, workspace_id):
         session_key = f"pending_media_{workspace.id}"
         pending_ids = request.session.get(session_key, [])
         if pending_ids:
-            for asset in MediaAsset.objects.filter(id__in=pending_ids, workspace=workspace):
+            by_id = {str(a.id): a for a in MediaAsset.objects.filter(id__in=pending_ids, workspace=workspace)}
+            # Keep the order the user attached them in (id__in has none).
+            for asset in (by_id[i] for i in pending_ids if i in by_id):
                 media_items.append(
                     {
                         "url": asset.file.url if asset.file else "",
                         "is_video": asset.is_video,
                         "filename": asset.filename,
+                        "duration": asset.duration,
                     }
                 )
+
+    # Duration rules (Short <= 3 min, Reel 3-90 s) shown live; unknown durations get a notice.
+    videos = [m for m in media_items if m["is_video"]]
+    if videos:
+        durations = [m["duration"] for m in videos]
+        for p in previews:
+            p["format_notice"] = media_error_for_platform(
+                p["account"].platform, ["video"], p["post_type"], durations
+            ) or media_duration_notice(p["post_type"], durations)
 
     return render(
         request,
@@ -1579,6 +1644,44 @@ def thumbnail_picker(request, workspace_id):
     )
 
 
+_THUMBNAIL_MIMES = {"image/jpeg", "image/png"}
+_THUMBNAIL_MAX_BYTES = 2 * 1024 * 1024  # YouTube thumbnails.set limit
+_THUMBNAIL_MAX_SIZE = (1280, 720)
+_THUMBNAIL_MAX_PIXELS = 50_000_000
+
+
+def _fit_thumbnail(uploaded_file):
+    """Return ``(file, error)``: the thumbnail as-is when it already fits (<= 1280x720 and <= 2 MB),
+    else resized to a JPEG with Pillow, else a Spanish error when it can't be fixed."""
+    too_big = uploaded_file.size > _THUMBNAIL_MAX_BYTES
+    try:
+        from PIL import Image
+    except ImportError:
+        if too_big:
+            return None, "La miniatura pesa más de 2 MB. Reduce su tamaño e inténtalo de nuevo."
+        return uploaded_file, ""
+    try:
+        img = Image.open(uploaded_file)
+        # Decompression bomb guard: size is in the header, check it before decoding.
+        if img.width * img.height > _THUMBNAIL_MAX_PIXELS:
+            return None, "La imagen de la miniatura es demasiado grande (máximo 50 megapíxeles)."
+        img.load()
+    except Exception:
+        return None, "No se pudo leer la imagen de la miniatura."
+    if not too_big and img.width <= _THUMBNAIL_MAX_SIZE[0] and img.height <= _THUMBNAIL_MAX_SIZE[1]:
+        uploaded_file.seek(0)
+        return uploaded_file, ""
+    img = img.convert("RGB")
+    img.thumbnail(_THUMBNAIL_MAX_SIZE)
+    for quality in (90, 80, 70, 60, 50, 40):
+        buf = io.BytesIO()
+        img.save(buf, "JPEG", quality=quality)
+        if buf.tell() <= _THUMBNAIL_MAX_BYTES:
+            name = uploaded_file.name.rsplit(".", 1)[0] + ".jpg"
+            return ContentFile(buf.getvalue(), name=name), ""
+    return None, "No se pudo reducir la miniatura a menos de 2 MB."
+
+
 @login_required
 @require_POST
 @require_permission("upload_media")
@@ -1594,23 +1697,28 @@ def thumbnail_upload(request, workspace_id):
     if not uploaded_file:
         return JsonResponse({"error": "No se envió ningún archivo"}, status=400)
 
-    content_type = uploaded_file.content_type or ""
-    if not content_type.startswith("image/"):
-        return JsonResponse({"error": "Solo se permiten archivos de imagen"}, status=400)
+    from apps.media_library.quotas import StorageQuotaExceededError
+    from apps.media_library.services import create_asset
+    from apps.media_library.validators import sniff_mime
 
-    from apps.media_library.models import MediaAsset
+    # Real type from magic bytes (the client Content-Type is not trusted): only JPG/PNG.
+    if sniff_mime(uploaded_file) not in _THUMBNAIL_MIMES:
+        return JsonResponse({"error": "La miniatura debe ser una imagen JPG o PNG."}, status=400)
+    uploaded_file, error = _fit_thumbnail(uploaded_file)
+    if error:
+        return JsonResponse({"error": error}, status=400)
 
-    asset = MediaAsset.objects.create(
-        organization=workspace.organization,
-        workspace=workspace,
-        uploaded_by=request.user,
-        file=uploaded_file,
-        filename=uploaded_file.name,
-        media_type=MediaAsset.MediaType.IMAGE,
-        mime_type=content_type,
-        file_size=uploaded_file.size,
-        source="upload",
-    )
+    try:
+        asset = create_asset(
+            organization=workspace.organization,
+            workspace=workspace,
+            uploaded_file=uploaded_file,
+            uploaded_by=request.user,
+        )
+    except ValidationError as exc:
+        return JsonResponse({"error": " ".join(exc.messages)}, status=400)
+    except StorageQuotaExceededError:
+        return JsonResponse({"error": "Se alcanzó el límite de almacenamiento de la organización."}, status=413)
 
     url = ""
     if asset.thumbnail:
@@ -2258,26 +2366,37 @@ def upload_media(request, workspace_id, post_id=None):
     """Upload a file directly from the composer and optionally attach to a post."""
     workspace = _get_workspace(request, workspace_id)
     uploaded_file = request.FILES.get("file")
+    upload_id = request.POST.get("upload_id")  # direct-to-R2 upload already in storage
 
-    if not uploaded_file:
+    if not uploaded_file and not upload_id:
         return JsonResponse({"error": "No se envió ningún archivo"}, status=400)
 
+    from apps.media_library.models import PendingUpload
     from apps.media_library.quotas import StorageQuotaExceededError
-    from apps.media_library.services import create_asset
+    from apps.media_library.services import create_asset, finalize_pending_upload
     from apps.media_library.tasks import process_media_asset
+    from apps.media_library.views import finalize_upload_error
 
     # Same validation as the library: sniffed type, size cap, org quota.
     try:
-        asset = create_asset(
-            organization=workspace.organization,
-            workspace=workspace,
-            uploaded_file=uploaded_file,
-            uploaded_by=request.user,
-        )
-    except ValidationError as exc:
-        return JsonResponse({"error": " ".join(exc.messages)}, status=400)
-    except StorageQuotaExceededError:
-        return JsonResponse({"error": "Se alcanzó el límite de almacenamiento de la organización."}, status=413)
+        if upload_id:
+            asset = finalize_pending_upload(workspace=workspace, upload_id=upload_id, uploaded_by=request.user)
+        else:
+            asset = create_asset(
+                organization=workspace.organization,
+                workspace=workspace,
+                uploaded_file=uploaded_file,
+                uploaded_by=request.user,
+            )
+    except (
+        PendingUpload.DoesNotExist,
+        ValidationError,
+        StorageQuotaExceededError,
+        ValueError,
+        FileNotFoundError,
+    ) as exc:
+        message, status = finalize_upload_error(exc)
+        return JsonResponse({"error": message}, status=status)
     process_media_asset(str(asset.id))  # metadata, duration and thumbnail
 
     if post_id:
@@ -3277,6 +3396,15 @@ def template_list(request, workspace_id):
     )
 
 
+#: platform_extra keys that are user settings (the rest is publish output) and travel with a template.
+_TEMPLATE_EXTRA_KEYS = {
+    "privacy_status", "self_declared_made_for_kids", "tags", "thumbnail_asset_id", "post_type", "board_id",
+    "link_url", "alt_text", "tag_products", "allow_comments", "show_similar_products", "cover_image_asset_id",
+    "disable_comment", "disable_duet", "disable_stitch", "brand_organic_toggle", "brand_content_toggle",
+    "is_aigc", "privacy_level", "video_cover_timestamp_ms",
+}  # fmt: skip
+
+
 @login_required
 @require_POST
 @require_permission("create_posts")
@@ -3291,13 +3419,28 @@ def save_as_template(request, workspace_id, post_id):
 
     description = request.POST.get("template_description", "").strip()
 
+    platform_posts = list(post.platform_posts.all())
     template_data = {
+        "title": post.title,
         "caption": post.caption,
         "first_comment": post.first_comment,
         "category_id": str(post.category_id) if post.category_id else None,
         "tags": post.tags,
-        "platform_account_ids": [str(pp.social_account_id) for pp in post.platform_posts.all()],
+        "platform_account_ids": [str(pp.social_account_id) for pp in platform_posts],
         "media_asset_ids": [str(pm.media_asset_id) for pm in post.media_attachments.all()],
+        # Per-account settings; publish results merged into platform_extra (ids, etags…) are left out.
+        "platform_extras": {
+            str(pp.social_account_id): {k: v for k, v in (pp.platform_extra or {}).items() if k in _TEMPLATE_EXTRA_KEYS}
+            for pp in platform_posts
+        },
+        "platform_overrides": {
+            str(pp.social_account_id): {
+                "title": pp.platform_specific_title or "",
+                "caption": pp.platform_specific_caption or "",
+                "comment": pp.platform_specific_first_comment or "",
+            }
+            for pp in platform_posts
+        },
     }
 
     PostTemplate.objects.create(

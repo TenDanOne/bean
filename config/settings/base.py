@@ -323,6 +323,14 @@ if STORAGE_BACKEND.lower() == "s3":
         CSP_MEDIA_SRC = (*CSP_MEDIA_SRC, _storage_origin)  # type: ignore[assignment]
         CSP_IMG_SRC = (*CSP_IMG_SRC, _storage_origin)  # type: ignore[assignment]
 
+    # Direct browser→R2 uploads (presigned POST) go to the S3 endpoint host, not the public custom domain.
+    _upload_origins = set()
+    for _host in (AWS_S3_ENDPOINT_URL, AWS_S3_CUSTOM_DOMAIN):
+        if _host:
+            _p = urlparse(_host if "://" in _host else f"https://{_host}")
+            _upload_origins.add(f"{_p.scheme}://{_p.hostname}")
+    CSP_CONNECT_SRC = (*CSP_CONNECT_SRC, *sorted(_upload_origins))  # type: ignore[assignment]
+
 # Media Library
 MEDIA_LIBRARY_MAX_IMAGE_SIZE = 20 * 1024 * 1024  # 20MB
 MEDIA_LIBRARY_MAX_VIDEO_SIZE = 1024 * 1024 * 1024  # 1GB

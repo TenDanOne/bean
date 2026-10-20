@@ -7,6 +7,8 @@ app_name = "media_library"
 urlpatterns = [
     path("", views.library_index, name="index"),
     path("upload/", views.upload, name="upload"),
+    path("upload/presign/", views.upload_presign, name="upload_presign"),
+    path("upload/finalize/", views.upload_finalize, name="upload_finalize"),
     path("search/", views.search, name="search"),
     # Folders
     path("folders/create/", views.folder_create, name="folder_create"),

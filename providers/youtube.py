@@ -266,29 +266,38 @@ class YouTubeProvider(SocialProvider):
             upload_body = self._upload_resumable(upload_uri, content.media_files[0])
             video_id = upload_body.get("id", "")
 
-            # Step 3 (optional): upload custom thumbnail
+            # Step 3 (optional): upload custom thumbnail. The video is already live, so a
+            # rejection is reported in result.extra["thumbnail_error"] instead of failing the publish.
             thumbnail_path = content.extra.get("thumbnail_file")
             if video_id and thumbnail_path:
-                try:
-                    with open(thumbnail_path, "rb") as tf:
-                        thumb_data = tf.read()
-                    # Guess content type from extension
-                    ext = thumbnail_path.lower().rsplit(".", 1)[-1]
-                    thumb_ct = "image/png" if ext == "png" else "image/jpeg"
-                    self._request(
-                        "POST",
-                        f"{UPLOAD_BASE}/thumbnails/set",
-                        access_token=access_token,
-                        params={"videoId": video_id, "uploadType": "media"},
-                        headers={
-                            "Content-Type": thumb_ct,
-                            "Content-Length": str(len(thumb_data)),
-                        },
-                        data=thumb_data,
-                        timeout=60.0,
-                    )
-                except Exception:
-                    logger.exception("Custom thumbnail upload failed for video %s", video_id)
+                if content.post_type == PostType.SHORT:
+                    upload_body["thumbnail_error"] = "YouTube no aplica miniaturas personalizadas a los Shorts."
+                else:
+                    try:
+                        with open(thumbnail_path, "rb") as tf:
+                            thumb_data = tf.read()
+                        # Real content type from magic bytes, not from the file extension.
+                        if thumb_data.startswith(b"\x89PNG\r\n\x1a\n"):
+                            thumb_ct = "image/png"
+                        elif thumb_data.startswith(b"\xff\xd8\xff"):
+                            thumb_ct = "image/jpeg"
+                        else:
+                            raise ValueError("el archivo no es JPG ni PNG")
+                        self._request(
+                            "POST",
+                            f"{UPLOAD_BASE}/thumbnails/set",
+                            access_token=access_token,
+                            params={"videoId": video_id, "uploadType": "media"},
+                            headers={
+                                "Content-Type": thumb_ct,
+                                "Content-Length": str(len(thumb_data)),
+                            },
+                            data=thumb_data,
+                            timeout=60.0,
+                        )
+                    except Exception as exc:
+                        logger.exception("Custom thumbnail upload failed for video %s", video_id)
+                        upload_body["thumbnail_error"] = str(exc)[:300] or exc.__class__.__name__
 
             return PublishResult(
                 platform_post_id=video_id,

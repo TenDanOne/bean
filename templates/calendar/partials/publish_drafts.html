@@ -25,7 +25,9 @@ Shows all draft platform posts in a table. Loaded via HTMX into #tab-content.
                     {% with first_att=pp.post.media_attachments.all.0 %}
                     {% if first_att %}
                     <div class="w-10 h-10 rounded-lg overflow-hidden bg-app-2 flex-shrink-0 relative">
-                        {% if first_att.media_asset.thumbnail %}
+                        {% if pp.display_thumbnail_url %}
+                            <img src="{{ pp.display_thumbnail_url }}" alt="" class="w-full h-full object-cover">
+                        {% elif first_att.media_asset.thumbnail %}
                             <img src="{{ first_att.media_asset.thumbnail.url }}" alt="" class="w-full h-full object-cover">
                         {% elif first_att.media_asset.media_type == 'image' or first_att.media_asset.media_type == 'gif' %}
                             <img src="{{ first_att.media_asset.file.url }}" alt="" class="w-full h-full object-cover">

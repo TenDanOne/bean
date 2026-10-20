@@ -29,6 +29,7 @@ from .types import (
     PublishResult,
     RateLimitConfig,
     ReplyResult,
+    is_video_url,
 )
 
 logger = logging.getLogger(__name__)
@@ -313,7 +314,7 @@ class InstagramProvider(SocialProvider):
             payload["media_type"] = "REELS"
             payload["video_url"] = content.media_urls[0]
         elif content.post_type == PostType.STORY:
-            if content.media_urls and content.media_urls[0].endswith((".mp4", ".mov")):
+            if content.media_urls and is_video_url(content.media_urls[0]):
                 payload["media_type"] = "STORIES"
                 payload["video_url"] = content.media_urls[0]
             else:
@@ -337,7 +338,7 @@ class InstagramProvider(SocialProvider):
         child_ids: list[str] = []
 
         for url in content.media_urls:
-            is_video = url.lower().endswith((".mp4", ".mov"))
+            is_video = is_video_url(url)
             child_payload: dict = {
                 "is_carousel_item": True,
             }

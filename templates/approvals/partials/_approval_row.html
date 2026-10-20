@@ -14,7 +14,9 @@ can_approve, display_timezone, and the parent Alpine scope (selectedPosts, diffO
 
         {# media thumbnail #}
         {% with att=post.media_attachments.all.0 %}
-        {% if att.media_asset.thumbnail %}
+        {% if post.display_thumbnail_url %}
+        <img src="{{ post.display_thumbnail_url }}" alt="" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
+        {% elif att.media_asset.thumbnail %}
         <img src="{{ att.media_asset.thumbnail.url }}" alt="" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
         {% elif att.media_asset.file and att.media_asset.media_type == 'image' %}
         <img src="{{ att.media_asset.file.url }}" alt="" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">

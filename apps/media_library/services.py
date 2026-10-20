@@ -258,6 +258,36 @@ def register_uploaded_asset(
     return asset
 
 
+def finalize_pending_upload(*, workspace, upload_id, uploaded_by, folder=None) -> "MediaAsset":
+    """Register the asset for a browser-side presigned upload (idempotent).
+
+    Trust boundary: type, size and org quota are re-derived from the stored object
+    (``inspect_uploaded_object``), never from what the browser declared. Raises
+    ``PendingUpload.DoesNotExist`` (unknown / other workspace), ``ValueError``
+    (expired), ``FileNotFoundError`` (bytes never arrived), ``ValidationError`` or
+    ``StorageQuotaExceededError``. The caller enqueues ``process_media_asset``.
+    """
+    from django.db import transaction
+
+    from .models import PendingUpload
+
+    pending = PendingUpload.objects.get(id=upload_id, workspace_id=workspace.id)
+    if pending.finalized_at and pending.media_asset_id:
+        return pending.media_asset  # type: ignore[return-value]
+    if pending.expires_at < timezone.now():
+        raise ValueError("La carga expiró; vuelve a intentarlo.")
+    inspected = inspect_uploaded_object(pending)
+    with transaction.atomic():
+        locked = PendingUpload.objects.select_for_update().get(id=upload_id, workspace_id=workspace.id)
+        if locked.finalized_at and locked.media_asset_id:
+            return locked.media_asset  # type: ignore[return-value]
+        asset = register_uploaded_asset(pending=locked, inspected=inspected, uploaded_by=uploaded_by, folder=folder)
+        locked.finalized_at = timezone.now()
+        locked.media_asset = asset
+        locked.save(update_fields=["finalized_at", "media_asset"])
+    return asset
+
+
 def create_version(asset, file, change_description, created_by):
     """Create a new version of an asset."""
     latest = asset.versions.order_by("-version_number").first()

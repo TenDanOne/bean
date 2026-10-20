@@ -51,7 +51,9 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
                         <div class="flex gap-1.5 mt-2.5">
                             {% for att in pp.post.media_attachments.all|slice:":4" %}
                             <div class="w-12 h-12 rounded-lg overflow-hidden bg-app-2 flex-shrink-0 relative">
-                                {% if att.media_asset.thumbnail %}
+                                {% if forloop.first and pp.display_thumbnail_url %}
+                                    <img src="{{ pp.display_thumbnail_url }}" alt="" class="w-full h-full object-cover">
+                                {% elif att.media_asset.thumbnail %}
                                     <img src="{{ att.media_asset.thumbnail.url }}" alt="" class="w-full h-full object-cover">
                                 {% elif att.media_asset.media_type == 'image' or att.media_asset.media_type == 'gif' %}
                                     <img src="{{ att.media_asset.file.url }}" alt="" class="w-full h-full object-cover">

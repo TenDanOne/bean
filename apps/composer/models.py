@@ -14,8 +14,10 @@ Models:
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django.utils.functional import cached_property
 
 from apps.common.managers import WorkspaceScopedManager
 from apps.common.validators import validate_hex_color
@@ -321,6 +323,14 @@ class Post(models.Model):
             return self.caption
         return self.caption[:100] + "…"
 
+    @cached_property
+    def display_thumbnail_url(self):
+        """Custom thumbnail chosen on any target (YouTube), else ``""``; lists use it over the media thumbnail."""
+        for pp in self.platform_posts.all():
+            if url := pp.display_thumbnail_url:
+                return url
+        return ""
+
     @property
     def platform_posts_summary(self):
         """Summary of target platforms."""
@@ -503,6 +513,24 @@ class PlatformPost(models.Model):
         if self.platform_specific_title is not None:
             return self.platform_specific_title
         return self.post.title
+
+    @cached_property
+    def display_thumbnail_url(self):
+        """URL of the custom thumbnail in ``platform_extra["thumbnail_asset_id"]``, else ``""``."""
+        asset_id = (self.platform_extra or {}).get("thumbnail_asset_id")
+        if not asset_id:
+            return ""
+        from apps.media_library.models import MediaAsset
+
+        try:
+            asset = MediaAsset.objects.filter(id=asset_id, workspace_id=self.post.workspace_id).first()
+        except (ValueError, ValidationError):
+            return ""
+        if asset is None:
+            return ""
+        if asset.thumbnail:
+            return asset.thumbnail.url
+        return asset.file.url if asset.file else ""
 
     @property
     def post_type_label(self):

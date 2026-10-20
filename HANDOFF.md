@@ -190,3 +190,9 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
   - **CSV y subidas:** DNS rebinding del CSV, archivos huérfanos en R2, Range del 308 en YouTube.
   - **Webhooks y bandeja:** suscripción de webhooks de IG sin confirmar; message_detail huérfano; el badge cuenta mensajes y la pestaña cuenta conversaciones.
   - **Cron:** cron-job.org sin confirmar.
+
+### Pendientes del usuario (2026-10-19, los hará después)
+- Reconectar Facebook e Instagram en BEAN (scopes nuevos, user id de Meta, token long-lived) y probar la bandeja con comentarios y DMs reales. Verificar «Expires: Never» en el debugger de tokens.
+- Crear la app en TikTok for Developers y pedir la auditoría (sin ella, los posts salen privados).
+- Verificación de Google OAuth (Producción + permisos sensibles de YouTube) para que los tokens no caduquen cada 7 días.
+- Cron: cron-job.org → POST /cron/run cada 5 min. HECHO: Test run 200 OK (5,7 s).

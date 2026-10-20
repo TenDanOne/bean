@@ -16,7 +16,9 @@
             <div class="flex items-start gap-4">
                 <!-- Media thumbnail -->
                 {% with first_media=post.media_attachments.first %}
-                {% if first_media and first_media.media_asset.thumbnail %}
+                {% if post.display_thumbnail_url %}
+                <img src="{{ post.display_thumbnail_url }}" alt="" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" style="border: 1px solid var(--border);">
+                {% elif first_media and first_media.media_asset.thumbnail %}
                 <img src="{{ first_media.media_asset.thumbnail.url }}" alt="" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" style="border: 1px solid var(--border);">
                 {% endif %}
                 {% endwith %}

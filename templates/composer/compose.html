@@ -701,7 +701,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
                         <!-- Tipo -->
                         <div x-data="{ t: platformExtras[accId]?.post_type || 'video' }">
                             <label class="block text-[11px] font-semibold text-app-ghost uppercase tracking-wider mb-1">Tipo</label>
-                            <select :name="'yt_post_type_' + accId" x-model="t"
+                            <select :name="'yt_post_type_' + accId" x-model="t" @change="$nextTick(() => triggerPreviewUpdate())"
                                     class="bb-select w-full text-sm px-3 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all">
                                 <option value="video">Video</option>
                                 <option value="short">Short</option>
@@ -806,7 +806,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
                                    hints: { feed: 'Publicación en el feed: foto o video, 1:1 o 4:5.', reel: 'Reel: video vertical 9:16, de 3 a 90 segundos.', story: 'Story: vertical 9:16, desaparece en 24 h. No admite pie de foto largo.', carousel: 'Carrusel: de 2 a 10 fotos o videos.' } }"
                          class="relief p-4 space-y-2">
                         <span class="text-xs font-semibold text-app-secondary" x-text="charLimits[accId]?.name + ' - Tipo de publicación'"></span>
-                        <select :name="'ig_post_type_' + accId" x-model="t"
+                        <select :name="'ig_post_type_' + accId" x-model="t" @change="$nextTick(() => triggerPreviewUpdate())"
                                 class="bb-select w-full text-sm px-3 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all">
                             <option value="feed">Feed</option>
                             <option value="reel">Reel</option>
@@ -1155,6 +1155,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                 <input type="text" :name="'override_title_' + accId"
                                        x-init="$el.value = platformOverrides[accId]?.title || ''"
                                        class="w-full text-sm px-3 py-2 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
+                                       @input="debouncedPreviewUpdate()"
                                        :placeholder="'Personalizar ' + (charLimits[accId]?.title_label || 'título') + '…'"
                                        :maxlength="charLimits[accId]?.title_max_length || 255">
                             </div>
@@ -1164,6 +1165,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                   style="font-family: system-ui, -apple-system, sans-serif;"
                                   :placeholder="'Personalizar ' + (charLimits[accId]?.caption_label || 'texto') + ' para esta plataforma...'"
                                   x-init="$el.value = platformOverrides[accId]?.caption || ''"
+                                  @input="debouncedPreviewUpdate()"
                                   rows="3"></textarea>
 
                     </div>
@@ -1175,6 +1177,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                     <p class="text-[11px] text-app-ghost mb-2">Sale en el siguiente procesamiento de pendientes, unos minutos después de publicar.</p>
                     <textarea name="first_comment"
                               class="comment-editor"
+                              @input="debouncedPreviewUpdate()"
                               placeholder="Primer comentario publicado después de la publicación principal…"
                               rows="1">{{ form.first_comment.value|default:"" }}</textarea>
                 </div>
@@ -1191,7 +1194,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                             class="w-full text-sm px-4 py-2.5 text-app-body outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all duration-150">
                         <option value="">Sin categoría</option>
                         {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if post and post.category_id == cat.id %}selected{% endif %}
+                        <option value="{{ cat.id }}" {% if initial_category_id == cat.id|stringformat:"s" %}selected{% endif %}
                                 style="padding-left: 24px;">
                             ● {{ cat.name }}
                         </option>
@@ -1204,7 +1207,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
 
                 <!-- Tags (dropdown with search & create) -->
                 <div class="relative" x-data="{
-                    tags: {{ post.tags|json_attr }},
+                    tags: {{ initial_tags|json_attr }},
                     tagDropdownOpen: false,
                     tagSearch: '',
                     allTags: [{% for tag in all_tags %}'{{ tag.name|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
@@ -2022,6 +2025,7 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
 {{ platform_extras|json_script:"composer-platform-extras" }}
 {{ platform_overrides|json_script:"composer-platform-overrides" }}
 {{ media_items|json_script:"composer-media-items" }}
+<script src="{% static 'js/direct-upload.js' %}" nonce="{{ request.csp_nonce }}"></script>
 <script nonce="{{ request.csp_nonce }}">
 function composerApp() {
     return {
@@ -2161,6 +2165,7 @@ function composerApp() {
                 this.platformExtras[accId].thumbnail_url = e.detail.url;
                 this.showThumbnailPicker = false;
                 this.thumbnailPickerAccId = null;
+                this.triggerPreviewUpdate();
             });
 
             {% if can_publish and request.GET.action == "publish_now" %}
@@ -2259,6 +2264,7 @@ function composerApp() {
             if (!this.platformExtras[accId]) return;
             delete this.platformExtras[accId].thumbnail_asset_id;
             delete this.platformExtras[accId].thumbnail_url;
+            this.triggerPreviewUpdate();
         },
 
         triggerThumbnailUpload(accId) {
@@ -2272,7 +2278,7 @@ function composerApp() {
             const file = event.target.files && event.target.files[0];
             event.target.value = '';
             if (!file) return;
-            if (!file.type.startsWith('image/')) {
+            if (!['image/jpeg', 'image/png'].includes(file.type)) {
                 this.formError = 'La miniatura debe ser una imagen (JPG o PNG).';
                 setTimeout(() => { this.formError = ''; }, 4000);
                 return;
@@ -2283,7 +2289,7 @@ function composerApp() {
         handleThumbnailDrop(accId, event) {
             const file = event.dataTransfer.files && event.dataTransfer.files[0];
             if (!file) return;
-            if (!file.type.startsWith('image/')) {
+            if (!['image/jpeg', 'image/png'].includes(file.type)) {
                 this.formError = 'La miniatura debe ser una imagen (JPG o PNG).';
                 setTimeout(() => { this.formError = ''; }, 4000);
                 return;
@@ -2306,6 +2312,7 @@ function composerApp() {
                     if (!this.platformExtras[accId]) this.platformExtras[accId] = {};
                     this.platformExtras[accId].thumbnail_asset_id = data.asset_id;
                     this.platformExtras[accId].thumbnail_url = data.url;
+                    this.triggerPreviewUpdate();
                     return data;
                 })
                 .catch(err => {
@@ -2325,10 +2332,13 @@ function composerApp() {
             this.selectedAccounts.forEach(accId => {
                 if (this.charLimits[accId]?.platform === 'youtube') {
                     if (!this.platformExtras[accId]) this.platformExtras[accId] = {};
+                    // Never overwrite a thumbnail the user already chose.
+                    if (this.platformExtras[accId].thumbnail_asset_id) return;
                     this.platformExtras[accId].thumbnail_asset_id = assetId;
                     this.platformExtras[accId].thumbnail_url = url;
                 }
             });
+            this.triggerPreviewUpdate();
         },
 
         // ── Unsplash ────────────────────────────────────────────────
@@ -2608,10 +2618,12 @@ function composerApp() {
             this.frameError = '';
             const accId = this.framePickerAccId;
             const canvas = document.createElement('canvas');
-            canvas.width = v.videoWidth;
-            canvas.height = v.videoHeight;
+            // Max 1280x720 keeping the aspect ratio (YouTube thumbnails: <= 2 MB).
+            const fit = Math.min(1, 1280 / v.videoWidth, 720 / v.videoHeight);
+            canvas.width = Math.round(v.videoWidth * fit);
+            canvas.height = Math.round(v.videoHeight * fit);
             try {
-                canvas.getContext('2d').drawImage(v, 0, 0);
+                canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
                 if (this.framePickerMode === 'timestamp') {
                     // TikTok: the API picks the cover by timestamp; the capture
                     // is only a local preview. Downscale it before storing in
@@ -2634,18 +2646,21 @@ function composerApp() {
                     this.closeFramePicker();
                     return;
                 }
-                canvas.toBlob((blob) => {
+                const name = 'video-frame-' + this.formatTimecode(v.currentTime).replaceAll(':', '-') + '.jpg';
+                const encode = (quality) => canvas.toBlob((blob) => {
                     if (!blob) {
                         this.frameCapturing = false;
                         this.frameError = 'No se pudo capturar este fotograma.';
                         return;
                     }
-                    const name = 'video-frame-' + this.formatTimecode(v.currentTime).replaceAll(':', '-') + '.jpg';
+                    // Lower the quality until the JPEG fits in 2 MB.
+                    if (blob.size > 2 * 1024 * 1024 && quality > 0.4) return encode(quality - 0.1);
                     this._uploadThumbnailBlob(accId, blob, name)
                         .then(() => { this.closeFramePicker(); })
                         .catch(() => {})
                         .finally(() => { this.frameCapturing = false; });
-                }, 'image/jpeg', 0.9);
+                }, 'image/jpeg', quality);
+                encode(0.9);
             } catch (e) {
                 this.frameCapturing = false;
                 this.frameError = 'No se pueden capturar fotogramas de este video (almacenamiento de origen cruzado). Sube una miniatura en su lugar.';
@@ -2728,12 +2743,12 @@ function composerApp() {
             const images = files.filter(f => f.type.startsWith('image/'));
 
             if (videos.length > 1) {
-                alert('Solo se puede subir un archivo de video a la vez.');
+                this._flashError('Solo se puede subir un archivo de video a la vez.');
                 return;
             }
 
             if (videos.length === 1 && images.length > 0) {
-                alert('No puedes combinar imágenes y video. Sube solo imágenes o un único video.');
+                this._flashError('No puedes combinar imágenes y video. Sube solo imágenes o un único video.');
                 return;
             }
 
@@ -2741,6 +2756,11 @@ function composerApp() {
                 this.uploadQueue.push(file);
             }
             this._processQueue();
+        },
+
+        _flashError(msg) {
+            this.formError = msg;
+            setTimeout(() => { this.formError = ''; }, 5000);
         },
 
         _processQueue() {
@@ -2791,63 +2811,85 @@ function composerApp() {
                 if (placeholder) placeholder.replaceWith(video);
             }
 
-            // Upload with progress tracking
+            // Upload: straight to R2 (presigned POST) when available, through the server otherwise.
             const self = this;
-            const formData = new FormData();
-            formData.append('file', file);
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
                 || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
-
-            const xhr = new XMLHttpRequest();
             const ring = thumb.querySelector('.upload-progress-ring');
             const circumference = 87.96;
+            const setProgress = (pct) => { ring.style.strokeDashoffset = circumference * (1 - pct); };
 
-            xhr.upload.addEventListener('progress', function(e) {
-                if (e.lengthComputable) {
-                    const pct = e.loaded / e.total;
-                    ring.style.strokeDashoffset = circumference * (1 - pct);
-                }
-            });
-
-            xhr.addEventListener('load', function() {
+            const fail = (msg) => {
                 self.isUploading = false;
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    // Replace the upload placeholder with the server-rendered thumb
-                    thumb.insertAdjacentHTML('afterend', xhr.responseText);
-                    const inserted = thumb.nextElementSibling;
-                    thumb.remove();
-                    if (inserted && window.htmx) {
-                        window.htmx.process(inserted.parentElement);
-                    }
-                    if (self.autosavedPostId && !self.uploadUrl.includes(self.autosavedPostId)) {
-                        self.uploadUrl = `/workspace/{{ workspace.id }}/compose/${self.autosavedPostId}/upload-media/`;
-                    }
-                    // Auto-set YouTube thumbnail to latest uploaded image
-                    if (file.type.startsWith('image/')) {
-                        self._applyYoutubeThumbnail(
-                            xhr.getResponseHeader('X-Uploaded-Asset-Id'),
-                            xhr.getResponseHeader('X-Uploaded-Asset-Url'),
-                        );
-                    }
-                    document.body.dispatchEvent(new CustomEvent('previewUpdate'));
-                } else {
-                    self._showUploadError(thumb, file);
+                self._showUploadError(thumb, file, msg);
+                self._processQueue();
+            };
+
+            // formData carries either the file itself (server path) or the upload_id of a finished R2 upload.
+            const send = (formData, trackProgress) => {
+                const xhr = new XMLHttpRequest();
+                if (trackProgress) {
+                    xhr.upload.addEventListener('progress', function(e) {
+                        if (e.lengthComputable) setProgress(e.loaded / e.total);
+                    });
                 }
-                self._processQueue();
-            });
 
-            xhr.addEventListener('error', function() {
-                self.isUploading = false;
-                self._showUploadError(thumb, file);
-                self._processQueue();
-            });
+                xhr.addEventListener('load', function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        self.isUploading = false;
+                        // Replace the upload placeholder with the server-rendered thumb
+                        thumb.insertAdjacentHTML('afterend', xhr.responseText);
+                        const inserted = thumb.nextElementSibling;
+                        thumb.remove();
+                        if (inserted && window.htmx) {
+                            window.htmx.process(inserted.parentElement);
+                        }
+                        if (self.autosavedPostId && !self.uploadUrl.includes(self.autosavedPostId)) {
+                            self.uploadUrl = `/workspace/{{ workspace.id }}/compose/${self.autosavedPostId}/upload-media/`;
+                        }
+                        // Auto-set YouTube thumbnail to latest uploaded image
+                        if (file.type.startsWith('image/')) {
+                            self._applyYoutubeThumbnail(
+                                xhr.getResponseHeader('X-Uploaded-Asset-Id'),
+                                xhr.getResponseHeader('X-Uploaded-Asset-Url'),
+                            );
+                        }
+                        document.body.dispatchEvent(new CustomEvent('previewUpdate'));
+                        self._processQueue();
+                    } else {
+                        let msg = '';
+                        try { msg = JSON.parse(xhr.responseText).error || ''; } catch (e) { /* not JSON */ }
+                        fail(msg);
+                    }
+                });
 
-            xhr.open('POST', this.uploadUrl);
-            xhr.setRequestHeader('X-CSRFToken', csrfToken);
-            xhr.send(formData);
+                xhr.addEventListener('error', function() { fail(''); });
+
+                xhr.open('POST', self.uploadUrl);
+                xhr.setRequestHeader('X-CSRFToken', csrfToken);
+                xhr.send(formData);
+            };
+
+            const viaServer = () => {
+                const formData = new FormData();
+                formData.append('file', file);
+                send(formData, true);
+            };
+
+            window.beanDirectUpload(file, {
+                presignUrl: '{% url "media_library:upload_presign" workspace_id=workspace.id %}',
+                csrf: csrfToken,
+                onProgress: setProgress,
+            }).then((uploadId) => {
+                const formData = new FormData();
+                formData.append('upload_id', uploadId);
+                send(formData, false);
+            }).catch((err) => {
+                if (err.fallback) viaServer(); else fail(err.message);
+            });
         },
 
-        _showUploadError(thumb, file) {
+        _showUploadError(thumb, file, msg) {
             const self = this;
             thumb.classList.add('upload-failed');
             const overlay = thumb.querySelector('.upload-overlay');
@@ -2855,8 +2897,15 @@ function composerApp() {
             thumb.insertAdjacentHTML('beforeend', `
                 <button type="button" class="retry-btn">
                     {% icon "arrows-rotate" css_class="w-3.5 h-3.5" %}
-                    Retry
+                    Reintentar
                 </button>`);
+            if (msg) {
+                const note = document.createElement('div');
+                note.className = 'absolute inset-x-0 bottom-0 px-1 py-0.5 text-[10px] leading-tight bg-black/70 text-white';
+                note.style.zIndex = '4';
+                note.textContent = msg;
+                thumb.appendChild(note);
+            }
             const retryBtn = thumb.querySelector('.retry-btn');
             retryBtn.addEventListener('click', function(e) {
                 e.stopPropagation();

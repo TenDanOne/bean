@@ -372,7 +372,24 @@ _VIDEO_REQUIRED_PLATFORMS = {"youtube": "YouTube", "tiktok": "TikTok"}
 _MEDIA_REQUIRED_PLATFORMS = {"instagram": "Instagram", "instagram_login": "Instagram"}
 
 
-def media_error_for_platform(platform: str, media_types, post_type: str | None = None) -> str | None:
+#: Duración permitida (segundos, mín/máx) por tipo de publicación.
+_DURATION_LIMITS = {"short": (None, 180), "reel": (3, 90)}
+_DURATION_MESSAGES = {
+    "short": "Un Short debe durar 3 minutos o menos.",
+    "reel": "Un Reel debe durar entre 3 y 90 segundos.",
+}
+
+
+def media_duration_notice(post_type: str | None, video_durations) -> str | None:
+    """Aviso si el tipo exige duración pero la de algún video aún no se conoce (0/None)."""
+    if post_type in _DURATION_LIMITS and any(not d for d in video_durations):
+        return "La duración del video se validará al procesarlo."
+    return None
+
+
+def media_error_for_platform(
+    platform: str, media_types, post_type: str | None = None, video_durations=()
+) -> str | None:
     """Mensaje en español si los medios no sirven para *platform*, o ``None``.
 
     ``media_types`` es la lista de ``MediaAsset.media_type`` del post. Se usa al
@@ -380,6 +397,11 @@ def media_error_for_platform(platform: str, media_types, post_type: str | None =
     falla claro y sin reintentos en lugar de reventar en la API de la plataforma.
     """
     types = list(media_types)
+    limits = _DURATION_LIMITS.get(post_type or "")
+    if limits:
+        low, high = limits
+        if any(d and ((low and d < low) or d > high) for d in video_durations):
+            return _DURATION_MESSAGES[post_type or ""]
     if post_type == "reel" and "video" not in types:
         return "Un Reel requiere un video."
     if post_type == "carousel" and len(types) < 2:

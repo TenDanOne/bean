@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 from dataclasses import dataclass, field
 from datetime import datetime
+from urllib.parse import urlparse
 
 
 class PostType(enum.Enum):
@@ -19,6 +20,11 @@ class PostType(enum.Enum):
     POLL = "poll"
     PIN = "pin"
     SHORT = "short"
+
+
+def is_video_url(url: str) -> bool:
+    """True if the URL path (ignoring the presigned query string) ends in a video extension."""
+    return urlparse(url).path.lower().endswith((".mp4", ".mov"))
 
 
 class MediaType(enum.Enum):

@@ -10,12 +10,16 @@ Context: previews (list of dicts with account, title, caption, first_comment, ch
         <!-- Platform label + char badge -->
         <div class="px-3.5 py-2 border-b flex items-center gap-2" style="border-color: #E7E5E4;">
             {% include "partials/_platform_icon.html" with platform=p.account.platform size="sm" %}
-            <span class="text-[11px] font-semibold text-app-tertiary flex-1">Vista previa de {{ p.account.platform|title }}</span>
+            <span class="text-[11px] font-semibold text-app-tertiary flex-1">Vista previa de {{ p.account.platform|title }}{% if p.post_type %} · {{ p.post_type|capfirst }}{% endif %}</span>
             <span class="text-[10px] font-semibold tabular-nums px-2 py-0.5 rounded-full
                          {% if p.is_over_limit %}bg-red-50 text-red-600{% else %}bg-app-2 text-app-tertiary{% endif %}">
                 {{ p.char_count }}/{{ p.char_limit }}
             </span>
         </div>
+
+        {% if p.format_notice %}
+        <p class="px-3.5 py-1.5 text-[11px] text-app-ghost" role="status">{{ p.format_notice }}</p>
+        {% endif %}
 
         {% if p.account.platform == "youtube" %}
         {# ─── YouTube ─── video-first layout like a YouTube upload preview #}
@@ -35,6 +39,9 @@ Context: previews (list of dicts with account, title, caption, first_comment, ch
                 </div>
                 <span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium text-app-inverse" style="background: rgba(0,0,0,0.65);">Miniatura personalizada</span>
             </div>
+            {% if p.post_type == "short" %}
+            <p class="px-3.5 py-1.5 text-[11px] text-app-ghost">YouTube no aplica miniaturas personalizadas a los Shorts.</p>
+            {% endif %}
             {% elif media_items %}
             {% with m=media_items.0 %}
             <div class="relative bg-black" style="aspect-ratio: 16/9;">

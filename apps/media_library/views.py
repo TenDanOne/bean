@@ -18,8 +18,10 @@ from .services import (
     ProtectedAssetError,
     create_asset,
     create_folder,
+    create_pending_upload,
     create_version,
     delete_asset,
+    finalize_pending_upload,
     restore_version,
 )
 from .tasks import process_image_edit, process_media_asset, process_video_trim
@@ -183,6 +185,86 @@ def upload(request, workspace_id):
         )
 
     return JsonResponse({"results": results})
+
+
+@login_required
+@require_permission("upload_media")
+@require_POST
+def upload_presign(request, workspace_id):
+    """Direct-to-R2 upload, step 1: presigned POST for the browser. 409 when storage is not S3 (use ``upload``)."""
+    from .storage import is_s3_backend
+    from .validators import ALL_ALLOWED_MIMES, MAX_FILE_SIZES, determine_file_type
+
+    workspace = _get_workspace_or_404(request, workspace_id)
+    if not is_s3_backend():
+        return JsonResponse({"error": "Carga directa no disponible", "fallback": True}, status=409)
+    try:
+        data = json.loads(request.body or b"{}")
+        filename = str(data.get("filename") or "").strip()[:255]
+        content_type = str(data.get("content_type") or "")
+        size = int(data.get("size") or 0)
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Solicitud inválida"}, status=400)
+    file_type = determine_file_type(content_type)
+    if not filename or content_type not in ALL_ALLOWED_MIMES or not file_type:
+        return JsonResponse({"error": "Tipo de archivo no permitido"}, status=400)
+    if size > MAX_FILE_SIZES.get(file_type, 0):
+        return JsonResponse({"error": "Archivo demasiado grande"}, status=400)
+
+    pending, presigned = create_pending_upload(
+        organization=workspace.organization,
+        workspace=workspace,
+        created_by=request.user,
+        declared_filename=filename,
+        content_type=content_type,
+        requested_media_type=file_type,
+    )
+    return JsonResponse({"upload_id": str(pending.id), "url": presigned["url"], "fields": presigned["fields"]})
+
+
+def finalize_upload_error(exc):
+    """(message, status) for the errors ``finalize_pending_upload`` can raise."""
+    from .models import PendingUpload
+    from .quotas import StorageQuotaExceededError
+
+    if isinstance(exc, StorageQuotaExceededError):
+        return "Se alcanzó el límite de almacenamiento de la organización.", 413
+    if isinstance(exc, ValidationError):
+        return " ".join(exc.messages), 400
+    if isinstance(exc, PendingUpload.DoesNotExist):
+        return "Carga no encontrada", 404
+    return str(exc), 400  # ValueError (expired) / FileNotFoundError (never arrived)
+
+
+@login_required
+@require_permission("upload_media")
+@require_POST
+def upload_finalize(request, workspace_id):
+    """Direct-to-R2 upload, step 3: validate the stored object, register the asset and queue processing."""
+    from .models import PendingUpload
+    from .quotas import StorageQuotaExceededError
+
+    workspace = _get_workspace_or_404(request, workspace_id)
+    folder_id = request.POST.get("folder_id")
+    folder = get_object_or_404(MediaFolder, pk=folder_id, workspace=workspace) if folder_id else None
+    try:
+        asset = finalize_pending_upload(
+            workspace=workspace,
+            upload_id=request.POST.get("upload_id", ""),
+            uploaded_by=request.user,
+            folder=folder,
+        )
+    except (
+        PendingUpload.DoesNotExist,
+        ValidationError,
+        StorageQuotaExceededError,
+        ValueError,
+        FileNotFoundError,
+    ) as exc:
+        message, status = finalize_upload_error(exc)
+        return JsonResponse({"error": message}, status=status)
+    process_media_asset(str(asset.id))
+    return JsonResponse({"id": str(asset.id), "status": "ok"})
 
 
 # ──────────────────────────────────────────────────────────────

@@ -237,6 +237,8 @@
     </div>
 
     <!-- ── Upload Dropzone / Progress ── -->
+    <p x-show="uploadNotice" x-cloak role="alert" class="mx-3 sm:mx-4 lg:mx-6 mt-4 text-sm"
+       style="color: var(--text-secondary, #57534E);" x-text="uploadNotice"></p>
     <div x-show="uploading || dragOver" x-cloak
          class="mx-3 sm:mx-4 lg:mx-6 mt-4"
          @dragover.prevent="dragOver = true"
@@ -321,6 +323,7 @@
 
 {% block extra_js %}
 <script src="{% static 'js/media-library.js' %}"></script>
+<script src="{% static 'js/direct-upload.js' %}"></script>
 <script nonce="{{ request.csp_nonce }}">
 function mediaLibrary() {
   return {
@@ -328,6 +331,7 @@ function mediaLibrary() {
     dragOver: false,
     uploading: false,
     uploadQueue: [],
+    uploadNotice: '',
     detailOpen: false,
     showNewFolder: false,
     currentFolder: '{{ current_folder|default:"" }}',
@@ -348,7 +352,8 @@ function mediaLibrary() {
     startUpload(files) {
       const maxFiles = {{ max_bulk_upload }};
       if (files.length > maxFiles) {
-        alert(`Máximo ${maxFiles} archivos por carga.`);
+        this.uploadNotice = `Máximo ${maxFiles} archivos por carga.`;
+        setTimeout(() => { this.uploadNotice = ''; }, 5000);
         files = files.slice(0, maxFiles);
       }
 
@@ -366,53 +371,77 @@ function mediaLibrary() {
       const total = this.uploadQueue.length;
       const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-      this.uploadQueue.forEach((item, index) => {
-        const formData = new FormData();
-        formData.append('files', item.file);
-        if (this.currentFolder) {
-          formData.append('folder_id', this.currentFolder);
-        }
-
-        const xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            this.uploadQueue[index].progress = Math.round((e.loaded / e.total) * 100);
-          }
-        });
-
-        xhr.addEventListener('load', () => {
-          completed++;
-          if (xhr.status >= 200 && xhr.status < 300) {
-            this.uploadQueue[index].status = 'complete';
-            this.uploadQueue[index].progress = 100;
-          } else {
-            this.uploadQueue[index].status = 'error';
-            this.uploadQueue[index].error = 'Falló la carga';
-          }
-          if (completed === total) {
-            setTimeout(() => {
-              this.uploading = false;
-              this.uploadQueue = [];
-              htmx.trigger('#asset-grid', 'uploadsComplete');
-            }, 800);
-          }
-        });
-
-        xhr.addEventListener('error', () => {
-          completed++;
+      const finish = (index, error) => {
+        completed++;
+        if (error) {
           this.uploadQueue[index].status = 'error';
-          this.uploadQueue[index].error = 'Error de red';
-          if (completed === total) {
-            setTimeout(() => {
-              this.uploading = false;
-              htmx.trigger('#asset-grid', 'uploadsComplete');
-            }, 800);
-          }
-        });
+          this.uploadQueue[index].error = error;
+        } else {
+          this.uploadQueue[index].status = 'complete';
+          this.uploadQueue[index].progress = 100;
+        }
+        if (completed === total) {
+          setTimeout(() => {
+            this.uploading = false;
+            this.uploadQueue = [];
+            htmx.trigger('#asset-grid', 'uploadsComplete');
+          }, 800);
+        }
+      };
 
-        xhr.open('POST', '{% url "media_library:upload" workspace_id=workspace.id %}');
-        xhr.setRequestHeader('X-CSRFToken', csrfToken);
-        xhr.send(formData);
+      const errorOf = (xhr, fallback) => {
+        try { return JSON.parse(xhr.responseText).error || fallback; } catch (e) { return fallback; }
+      };
+
+      this.uploadQueue.forEach((item, index) => {
+        // formData carries either the file (server path) or the upload_id of a finished R2 upload.
+        const send = (formData, url, trackProgress) => {
+          const xhr = new XMLHttpRequest();
+          if (trackProgress) {
+            xhr.upload.addEventListener('progress', (e) => {
+              if (e.lengthComputable) {
+                this.uploadQueue[index].progress = Math.round((e.loaded / e.total) * 100);
+              }
+            });
+          }
+          xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              // The bulk endpoint answers 200 with a per-file result.
+              let failure = null;
+              try {
+                const r = (JSON.parse(xhr.responseText).results || [])[0];
+                if (r && r.status === 'error') failure = (r.errors || []).join(' ') || 'Falló la carga';
+              } catch (e) { /* HTML grid response: ok */ }
+              finish(index, failure);
+            } else {
+              finish(index, errorOf(xhr, 'Falló la carga'));
+            }
+          });
+          xhr.addEventListener('error', () => finish(index, 'Error de red'));
+          xhr.open('POST', url);
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+          xhr.send(formData);
+        };
+
+        const viaServer = () => {
+          const formData = new FormData();
+          formData.append('files', item.file);
+          if (this.currentFolder) formData.append('folder_id', this.currentFolder);
+          send(formData, '{% url "media_library:upload" workspace_id=workspace.id %}', true);
+        };
+
+        window.beanDirectUpload(item.file, {
+          presignUrl: '{% url "media_library:upload_presign" workspace_id=workspace.id %}',
+          csrf: csrfToken,
+          onProgress: (pct) => { this.uploadQueue[index].progress = Math.round(pct * 100); },
+        }).then((uploadId) => {
+          const formData = new FormData();
+          formData.append('upload_id', uploadId);
+          if (this.currentFolder) formData.append('folder_id', this.currentFolder);
+          send(formData, '{% url "media_library:upload_finalize" workspace_id=workspace.id %}', false);
+        }).catch((err) => {
+          if (err.fallback) viaServer(); else finish(index, err.message);
+        });
       });
     },
 
