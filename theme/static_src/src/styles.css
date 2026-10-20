@@ -1162,6 +1162,13 @@ dialog {
   max-height: 85vh;
 }
 
+/* Tailwind preflight zeroes margins, which un-centers native modal dialogs. */
+dialog:modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+}
+
 dialog[open] {
   opacity: 1;
   scale: 1;
