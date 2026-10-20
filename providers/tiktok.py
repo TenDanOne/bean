@@ -56,10 +56,10 @@ PERMANENT_PUBLISH_ERROR_CODES = frozenset(
 )
 
 UNAUDITED_CLIENT_HINT = (
-    "The TikTok app has not passed TikTok's content-posting audit yet. "
-    "Until TikTok approves the audit (developer portal → Content Posting API "
-    "→ apply for an audit), videos can only be published as private "
-    "(SELF_ONLY). Set this post's TikTok privacy to 'Only you' to publish now."
+    "La app de TikTok aún no pasa la auditoría de publicación. Hasta que TikTok "
+    "la apruebe (portal de desarrolladores → Content Posting API → solicitar auditoría), "
+    "solo se puede publicar en privado. Elige «Solo yo» en la privacidad de TikTok "
+    "de esta publicación para publicarla ahora."
 )
 
 # Optional post_info fields the composer may set via platform_extra.
@@ -458,11 +458,11 @@ class TikTokProvider(SocialProvider):
         code = ((exc.raw_response or {}).get("error") or {}).get("code", "")
         if code not in PERMANENT_PUBLISH_ERROR_CODES:
             raise exc
-        message = f"TikTok rejected the post ({code}): {exc}"
+        message = f"TikTok rechazó la publicación ({code}): {exc}"
         if code == "url_ownership_unverified":
             message = "Verifica en el portal de TikTok el dominio de tus medios (S3_CUSTOM_DOMAIN)."
         if code == "unaudited_client_can_only_post_to_private_accounts":
-            message = f"TikTok rejected the post: {UNAUDITED_CLIENT_HINT}"
+            message = f"TikTok rechazó la publicación: {UNAUDITED_CLIENT_HINT}"
         raise PublishError(
             message,
             platform=self.platform_name,
