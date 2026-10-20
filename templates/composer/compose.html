@@ -18,7 +18,7 @@
     }
     .panel-right.is-open { transform: translateX(0); }
     @media (min-width: 1024px) {
-        .panel-right { position: static; inset: auto; width: 340px; max-width: none; flex-shrink: 0; transform: none; transition: none; box-shadow: none; }
+        .panel-right { position: static; inset: auto; width: 290px; max-width: none; flex-shrink: 0; transform: none; transition: none; box-shadow: none; }
     }
     .panel-right-backdrop { position: fixed; inset: 0; background: rgba(15,42,48,0.4); z-index: 57; }
     @media (min-width: 1024px) { .panel-right-backdrop { display: none !important; } }
@@ -309,8 +309,8 @@
                         <p class="ib-hint">Sale cuando BEAN procesa los pendientes, unos minutos después de publicar.</p>
                     </div>
 
-                    <details class="cp-fold" {% if categories or initial_tags or form.internal_notes.value %}open{% endif %}>
-                        <summary>Categoría, etiquetas y notas internas</summary>
+                    <details class="cp-fold cp-fold-int" {% if categories or initial_tags or form.internal_notes.value %}open{% endif %}>
+                        <summary>Categoría, etiquetas y notas internas <span class="cp-int-tag">Solo el equipo · no se publica</span></summary>
                         <div class="space-y-4" style="padding-top:4px">
                                             <!-- Content Category -->
                 {% if categories %}
@@ -536,10 +536,10 @@
                                                           :aria-describedby="'kids-err-' + accId"
                                                           @focusout="if (!$el.contains($event.relatedTarget)) kidsTouched[accId] = true">
                                                     <legend class="cp-lb">Hecho para niños <span class="cp-req">Obligatorio</span></legend>
-                                                    <div class="cp-lbrow">{% include "partials/_help_btn.html" with key="ninos" title="Hecho para niños" %}</div>
                                                     <div class="cp-opts" style="margin-top:5px">
                                                         <label class="ib-chip cp-opt"><input type="radio" :name="'yt_made_for_kids_' + accId" value="true" :checked="platformExtras[accId]?.made_for_kids === true" @change="setKids(accId, true)"> Sí, es para niños</label>
                                                         <label class="ib-chip cp-opt"><input type="radio" :name="'yt_made_for_kids_' + accId" value="false" :checked="platformExtras[accId]?.made_for_kids === false" @change="setKids(accId, false)"> No es para niños</label>
+                                                        {% include "partials/_help_btn.html" with key="ninos" title="Hecho para niños" %}
                                                     </div>
                                                     <p :id="'kids-err-' + accId" class="cp-err" role="alert" x-text="kidsShown(accId) ? 'Elige una opción para poder publicar.' : ''"></p>
                                                 </fieldset>
@@ -549,7 +549,7 @@
                                                     <label class="ib-chk"><input type="checkbox" :name="'yt_synthetic_media_' + accId" value="true" :checked="!!platformExtras[accId]?.contains_synthetic_media"> Contiene contenido alterado o generado con IA</label>
                                                 </div>
 
-                                                <div class="cp-two">
+                                                <div class="cp-two cp-two-sub">
                                                     <div class="cp-f">
                                                         <label :for="'yt-tags-' + accId">Etiquetas (tags)</label>
                                                         <input type="text" :id="'yt-tags-' + accId" :name="'yt_tags_' + accId" :value="(platformExtras[accId]?.tags || []).join(', ')" placeholder="vlog, viajes, diario">
