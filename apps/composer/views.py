@@ -263,6 +263,7 @@ _PLACEHOLDER_RE = re.compile(r"\{\{[^{}]*\}\}")
 _C2_EXTRA_KEYS = {
     "category_id", "playlist_id", "made_for_kids", "contains_synthetic_media", "chapters", "solo_organico",
     "ig_cover_asset_id", "thumb_offset", "collaborators", "share_to_feed", "link", "import_source", "photo_cover_index",
+    "tiktok_mode", "manual_publish", "musica",
 }  # fmt: skip
 _IG_USERNAME_RE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
 _YT_PLAYLIST_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -335,7 +336,28 @@ def _apply_c2_extras(request, workspace, acc_id, platform, extra, prev=None):
         if f"fb_link_{acc_id}" in post:
             link = post[f"fb_link_{acc_id}"].strip()
             put("link", link if re.match(r"^https?://\S{1,2040}$", link) else None)
+    if platform == "tiktok" and post.get(f"tiktok_mode_{acc_id}") in ("direct", "draft"):
+        out["tiktok_mode"] = post[f"tiktok_mode_{acc_id}"]
+    if platform in ("youtube", "instagram", "instagram_login", "facebook") and (
+        (manual := flag(f"manual_publish_{acc_id}")) is not None
+    ):
+        put("manual_publish", manual)  # «Música desde la app»: BEAN no publica esta red
     return out
+
+
+def _is_manual(request, post_id, acc_id) -> bool:
+    """«Música desde la app» marcada en este envío (o ya guardada): BEAN no publica esa red, no se le exige nada."""
+    sent = request.POST.get(f"manual_publish_{acc_id}", "").strip()
+    if sent in ("true", "false"):
+        return sent == "true"
+    if post_id and _is_valid_uuid(str(post_id)):
+        known = (
+            PlatformPost.objects.filter(post_id=post_id, social_account_id=acc_id)
+            .values_list("platform_extra", flat=True)
+            .first()
+        )
+        return bool((known or {}).get("manual_publish"))
+    return False
 
 
 def _youtube_guard(request, workspace, post_id, account_ids):
@@ -353,6 +375,8 @@ def _youtube_guard(request, workspace, post_id, account_ids):
         )
     ]
     for acc_id in youtube_ids:
+        if _is_manual(request, post_id, acc_id):
+            continue
         # «Hecho para niños» es obligatorio: nunca se asume un valor por omisión.
         kids = request.POST.get(f"yt_made_for_kids_{acc_id}", "").strip()
         if kids not in ("true", "false") and post_id and _is_valid_uuid(str(post_id)):
@@ -436,6 +460,7 @@ def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_appro
         for acc_id, platform in SocialAccount.objects.filter(id__in=account_ids, workspace=workspace).values_list(
             "id", "platform"
         )
+        if not _is_manual(request, post_id, acc_id)
     }
     if queue_id and _is_valid_uuid(queue_id):
         from apps.calendar.models import Queue
@@ -1028,8 +1053,15 @@ def compose(request, workspace_id, post_id=None):
         "selected_account_ids": [str(aid) for aid in selected_account_ids],
         "platform_extras": platform_extras,
         "published_targets": [
-            pp for pp in platform_post_list if pp.status == PlatformPost.Status.PUBLISHED and pp.platform_post_id
+            pp
+            for pp in platform_post_list
+            if pp.status == PlatformPost.Status.PUBLISHED and (pp.platform_post_id or pp.outcome_label)
         ],
+        # Si todo lo «publicado» es A mano, la tarjeta dice «A mano» y no «Publicado».
+        "post_outcome": "A mano"
+        if (done := [pp for pp in platform_post_list if pp.status == PlatformPost.Status.PUBLISHED])
+        and all(pp.outcome_label == "A mano" for pp in done)
+        else "",
         "platform_overrides": platform_overrides,
         "media_attachments": media_attachments,
         "media_items": media_items,
@@ -1143,10 +1175,10 @@ def _platform_status_map(post):
 
 
 def _publish_state(pp):
-    """Estado de una red para el modal «Publicando»: wait | run | proc | ok | fail."""
+    """Estado de una red para el modal «Publicando»: wait | run | proc | ok | draft | manual | fail."""
     st = PlatformPost.Status
     if pp.status == st.PUBLISHED:
-        return "ok"
+        return {"Borrador en TikTok": "draft", "A mano": "manual"}.get(pp.outcome_label, "ok")
     if pp.status == st.FAILED:
         return "fail"
     if pp.status == st.PUBLISHING:

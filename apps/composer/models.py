@@ -544,6 +544,30 @@ class PlatformPost(models.Model):
         )
 
     @property
+    def outcome_label(self):
+        """Etiqueta del final propio de un PUBLISHED que no salió por la API: borrador de TikTok o «A mano»."""
+        if self.status != self.Status.PUBLISHED:
+            return ""
+        extra = self.platform_extra or {}
+        if extra.get("tiktok_draft") and extra.get("tiktok_mode") == "draft":
+            return "Borrador en TikTok"
+        return "A mano" if extra.get("manual_publish") else ""
+
+    @property
+    def outcome_note(self):
+        """Nota bajo la etiqueta: qué falta hacer en la app (y la canción sugerida si el paquete la trajo)."""
+        label = self.outcome_label
+        if not label:
+            return ""
+        note = "Termínalo en la app de TikTok." if label.startswith("Borrador") else "Publícalo tú desde la app."
+        m = (self.platform_extra or {}).get("musica") or {}
+        if m.get("sugerencia"):
+            note += f" Canción sugerida: {m['sugerencia']}" + (
+                f", golpe en {str(m['golpe_seg']).replace('.', ',')} s" if m.get("golpe_seg") else ""
+            )
+        return note
+
+    @property
     def effective_caption(self):
         """Return platform-specific caption or fall back to base post caption."""
         if self.platform_specific_caption is not None:

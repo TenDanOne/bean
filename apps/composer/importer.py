@@ -38,9 +38,11 @@ NET_PLATFORMS = {
     "facebook": ("facebook",),
     "tiktok": ("tiktok",),
 }
+MUSICA_MODOS = ("en_app", "libre_en_mp4")
 TIPOS = ("video_vertical", "video_horizontal", "imagen", "carrusel")
 #: Red cuyo texto es la descripción común del post; las demás solo guardan override si difiere.
 CAPTION_ORDER = ("instagram", "facebook", "tiktok", "youtube")
+_YT_SHORT_TIPOS = ("video_vertical", "carrusel")
 _ID_RE = re.compile(r"^[\w.\-]{1,100}$")
 _IG_USER_RE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
 _EXT_KIND = {".mp4": "video", ".mov": "video", ".webm": "video", ".avi": "video",
@@ -193,7 +195,16 @@ def _validate_piece(p, idx: int) -> dict:
     for red, lst in mpr.items():
         if red not in NETS or not isinstance(lst, list) or not lst or not all(isinstance(x, str) for x in lst):
             raise _bad(f"{path}.medios_por_red.{red}", "red desconocida o lista de rutas vacía")
-    _typed(p, path, {"solo_organico": "bool", "motivo_organico": "str", "portada_texto": "str", "titulo_alt": "str"})
+    _typed(p, path, {"solo_organico": "bool", "motivo_organico": "str", "portada_texto": "str", "titulo_alt": "str",
+                     "portada_ruta": "str", "portada_seg": "num"})  # fmt: skip
+    mus = p.get("musica")
+    if mus is not None:
+        if not isinstance(mus, dict):
+            raise _bad(f"{path}.musica", "debe ser un objeto")
+        _typed(mus, f"{path}.musica", {"sugerencia": "str", "golpe_seg": "num", "nota": "str"})
+        for red in NETS:
+            if mus.get(red) is not None and mus[red] not in MUSICA_MODOS:
+                raise _bad(f"{path}.musica.{red}", f"debe ser {' o '.join(MUSICA_MODOS)}")
     redes = p.get("redes")
     if not isinstance(redes, dict) or not redes:
         raise _bad(f"{path}.redes", "debe traer al menos una red")
@@ -337,8 +348,7 @@ def plan_import(zf, piece: dict, accounts) -> Plan:
             plan.skipped.append(f"{name}: no hay cuentas conectadas en este espacio.")
             continue
         plan.targets[net] = {"accounts": accs, "media": media}
-        extra_media = [piece["redes"][net].get("miniatura"), piece["redes"][net].get("portada_ruta")]
-        for r in filter(None, extra_media):
+        for r in _cover_paths(piece, net):
             kinds.setdefault(r, _kind(zf, r))
         if net == "tiktok" and piece["redes"][net].get("tipo") == "fotos" and any(kinds[r] != "image" for r in media):
             raise PackageError(
@@ -354,6 +364,21 @@ def plan_import(zf, piece: dict, accounts) -> Plan:
     return plan
 
 
+def _cover_paths(piece: dict, net: str) -> list[str]:
+    """Imágenes de portada/miniatura que usa esta red; la portada_ruta de la pieza sirve a IG y a YouTube largo."""
+    d = piece["redes"][net]
+    paths = [d.get("miniatura"), d.get("portada_ruta")]
+    if net == "instagram" or (net == "youtube" and piece["tipo"] not in _YT_SHORT_TIPOS):
+        paths.append(piece.get("portada_ruta"))
+    return [r for r in paths if r]
+
+
+def _musica_en_app(piece: dict, net: str) -> bool:
+    """En la app de la red: así lo pide el paquete, o es «libre en mp4» pero esta red no trae medio propio."""
+    mode = (piece.get("musica") or {}).get(net)
+    return mode == "en_app" or (mode == "libre_en_mp4" and not (piece.get("medios_por_red") or {}).get(net))
+
+
 def _text(d: dict) -> str:
     desc = (d.get("descripcion") or "").strip()
     tags = [t if t.startswith("#") else f"#{t}" for t in (d.get("hashtags") or []) if t.strip()]
@@ -367,7 +392,7 @@ def _extra(net: str, piece: dict, d: dict, assets: dict, source: dict) -> dict:
         extra["solo_organico"] = True
     ms = lambda s: int(float(s) * 1000)  # noqa: E731
     if net == "youtube":
-        short = piece["tipo"] in ("video_vertical", "carrusel")
+        short = piece["tipo"] in _YT_SHORT_TIPOS
         extra |= {"made_for_kids": d["hecho_para_ninos"], "self_declared_made_for_kids": d["hecho_para_ninos"]}
         if tags := parse_and_truncate_youtube_tag_string(",".join(d.get("tags") or [])):
             extra["tags"] = tags
@@ -380,16 +405,18 @@ def _extra(net: str, piece: dict, d: dict, assets: dict, source: dict) -> dict:
         else:
             if d.get("capitulos"):
                 extra["chapters"] = [{"t": c["t"], "title": c["titulo"][:100]} for c in d["capitulos"]][:50]
-            if d.get("miniatura"):
-                extra["thumbnail_asset_id"] = str(assets[d["miniatura"]].id)
+            if thumb := d.get("miniatura") or piece.get("portada_ruta"):
+                extra["thumbnail_asset_id"] = str(assets[thumb].id)
     elif net == "instagram":
         pt = {"reel": "reel", "story": "story", "carrusel": "carousel"}.get(d.get("tipo") or "")
         if pt:
             extra["post_type"] = pt
-        if d.get("portada_seg") is not None and pt == "reel":
-            extra["thumb_offset"] = ms(d["portada_seg"])
-        if d.get("portada_ruta"):
-            extra["ig_cover_asset_id"] = str(assets[d["portada_ruta"]].id)
+        cover = d.get("portada_ruta") or piece.get("portada_ruta")
+        seg = d.get("portada_seg", piece.get("portada_seg"))
+        if cover:
+            extra["ig_cover_asset_id"] = str(assets[cover].id)
+        elif seg is not None and pt == "reel":
+            extra["thumb_offset"] = ms(seg)  # la imagen manda; el fotograma solo sin portada_ruta
         names = [n.lstrip("@") for n in d.get("colaboradores") or []]
         if collab := [n for n in dict.fromkeys(names) if _IG_USER_RE.match(n)][:3]:
             extra["collaborators"] = collab
@@ -413,8 +440,16 @@ def _extra(net: str, piece: dict, d: dict, assets: dict, source: dict) -> dict:
                 "disable_duet": not d.get("permitir_duo", False),
                 "disable_stitch": not d.get("permitir_stitch", False),
             }
-            if d.get("portada_seg") is not None:
-                extra["video_cover_timestamp_ms"] = ms(d["portada_seg"])
+            if (seg := d.get("portada_seg", piece.get("portada_seg"))) is not None:
+                extra["video_cover_timestamp_ms"] = ms(seg)
+    # Música «en la app»: TikTok llega como borrador (el usuario puede cambiarlo); las demás redes se publican a mano.
+    if _musica_en_app(piece, net):
+        m = piece["musica"]
+        extra["musica"] = {k: m[k] for k in ("sugerencia", "golpe_seg", "nota") if m.get(k) is not None}
+        if net == "tiktok":
+            extra["tiktok_mode"] = "draft"
+        else:
+            extra["manual_publish"] = True
     return extra
 
 
@@ -480,7 +515,7 @@ def create_draft(*, workspace, user, zf, plan: Plan, project: str, update: Post 
     for t in plan.targets.values():
         paths += t["media"]
     for net in plan.targets:
-        paths += [piece["redes"][net].get(k) for k in ("miniatura", "portada_ruta") if piece["redes"][net].get(k)]
+        paths += _cover_paths(piece, net)
     paths = list(dict.fromkeys(paths))
     tt = plan.targets.get("tiktok")
     photos = bool(tt) and piece["redes"]["tiktok"].get("tipo") == "fotos"
@@ -488,7 +523,7 @@ def create_draft(*, workspace, user, zf, plan: Plan, project: str, update: Post 
     shared = {r for n, t in plan.targets.items() if n != "tiktok" for r in t["media"]} | set(piece["_medios"]) - set(
         conv
     )
-    shared |= {r for n in plan.targets for k in ("miniatura", "portada_ruta") if (r := piece["redes"][n].get(k))}
+    shared |= {r for n in plan.targets for r in _cover_paths(piece, n)}
     paths = [p for p in paths if p not in conv or p in shared]
 
     def akey(net, r):  # clave del asset de este medio para esta red (JPEG convertido en TikTok fotos)

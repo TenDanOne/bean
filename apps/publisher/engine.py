@@ -225,7 +225,7 @@ class PublishEngine:
         # Schedule first comments for successful publishes (non-blocking)
         for pp in platform_posts:
             pp.refresh_from_db()
-            if pp.status != PlatformPost.Status.PUBLISHED:
+            if pp.status != PlatformPost.Status.PUBLISHED or (pp.platform_extra or {}).get("manual_publish"):
                 continue
             if not pp.social_account.supports_first_comment():
                 continue
@@ -240,6 +240,16 @@ class PublishEngine:
         """
         start_time = time.monotonic()
         account = platform_post.social_account
+
+        # «Música desde la app»: BEAN no publica esa red (tampoco en reintentos); queda «A mano», sin tocar a las demás.
+        if (platform_post.platform_extra or {}).get("manual_publish"):
+            try:
+                self._mark_published(platform_post)
+            except Exception as e:
+                logger.exception("Could not mark manual PlatformPost %s", platform_post.id)
+                self._schedule_retry(platform_post, str(e))
+                return {"success": False, "error": str(e)}
+            return {"success": True, "platform_post_id": "", "manual": True}
 
         # Check rate limits
         rate_state = RateLimitState.objects.filter(
@@ -414,6 +424,8 @@ class PublishEngine:
                 if st.state == "published":
                     if st.platform_post_id:
                         pp.platform_post_id = st.platform_post_id
+                    if st.extra:
+                        pp.platform_extra = {**(pp.platform_extra or {}), **st.extra}
                     self._mark_published(pp)
                     self._sync_parent_published_at(pp.post)
                 elif st.state == "failed":

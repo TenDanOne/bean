@@ -79,6 +79,7 @@ class PublishStatus:
     state: str
     platform_post_id: str | None = None
     error: str = ""
+    extra: dict = field(default_factory=dict)  # se fusiona en platform_extra (p. ej. tiktok_draft)
 
 
 @dataclass(frozen=True)

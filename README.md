@@ -498,7 +498,7 @@ If you set only the Path B (Company) credentials, Brightbean Studio automaticall
    ```
    {APP_URL}/social-accounts/callback/social1/
    ```
-5. Required scopes: `user.info.basic`, `video.publish`. Add
+5. Required scopes: `user.info.basic`, `video.publish`, `video.upload` (drafts to the TikTok inbox). Add
     `video.list` when TikTok analytics is enabled for the installation.
 6. Note: TikTok uses **Client Key** (not Client ID). Copy the **Client Key** and **Client Secret** from this app's dashboard.
 7. Set the environment variables:

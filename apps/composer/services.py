@@ -283,6 +283,12 @@ def transition_platform_post(
     return platform_post
 
 
+#: platform_extra keys que son resultado de una publicación (no ajustes): una copia no los hereda.
+_RESULT_EXTRA_KEYS = {
+    "tiktok_draft", "thumbnail_error", "deleted_on_platform_at", "upload_error", "publish_id", "upload_url", "id",
+}  # fmt: skip
+
+
 def clone_post(post, *, author=None):
     """Create a fresh DRAFT duplicate of *post* (Clone / Repost).
 
@@ -319,7 +325,11 @@ def clone_post(post, *, author=None):
                         platform_specific_caption=pp.platform_specific_caption,
                         platform_specific_first_comment=pp.platform_specific_first_comment,
                         platform_specific_media=copy.deepcopy(pp.platform_specific_media),
-                        platform_extra=copy.deepcopy(pp.platform_extra) if pp.platform_extra else {},
+                        platform_extra={
+                            k: copy.deepcopy(v)
+                            for k, v in (pp.platform_extra or {}).items()
+                            if k not in _RESULT_EXTRA_KEYS
+                        },
                     )
                     for pp in children
                 ]

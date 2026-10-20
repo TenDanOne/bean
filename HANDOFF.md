@@ -233,3 +233,23 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
   - portada_seg → cover de TikTok y thumb_offset de IG;
   - FB Reels: miniatura si la API lo admite.
 - Los zips nuevos de posts usan *_con_portada.mp4 (la portada es el último cuadro).
+
+## RETOMAR AQUÍ — 2026-10-20 (publicación blindada, importador, TikTok borrador)
+- En main desde el último RETOMAR:
+  - **Importar publicación (.zip):** un paquete de la sesión de posts por publicación llena el composer.
+  - **Modales:** dialog y popover centrados.
+  - **Fallidos:** «Eliminar fallidos» y papelera dentro del chip.
+  - **Calendario:** «+N más» expandible.
+- **Bugs críticos corregidos:**
+  - TikTok pending volvía a «Programado» por guardar un objeto viejo, y podía republicarse (e20bdcd, con migración composer 0022 que reparó las filas);
+  - guardas contra doble publicación: tareas posteriores aisladas, _already_published, may_have_published en el paso final y publish_id conservado.
+- **Modal «Publicando»:** avance por red, botón bloqueado.
+- **Estado agregado:** published + scheduled = partially_published (editable); «Publicando» en petróleo con pulso.
+- **TikTok:**
+  - «Publicar directo» o «Enviar como borrador» (inbox, scope video.upload) por publicación;
+  - SEND_TO_USER_INBOX es final → «Borrador en TikTok»;
+  - mientras la app no esté auditada, la CUENTA debe ser privada + «Solo yo».
+- **«A mano»:** IG/YT/FB con música de la app; manual_publish, sin API y sin validaciones de YouTube.
+- **Importador:** lee musica y portadas.
+- pytest 1893 passed / 1 skipped (test de zips reales: requiere BEAN_TEST_PACKAGES_DIR).
+- **Pendiente del usuario:** grabar el demo de TikTok con la cuenta privada (escena extra de borrador; ver docs/APP-REVIEW.md) y enviar a revisión; reconectar FB/IG; CORS de R2; verificar el dominio ithos.mx en TikTok (para fotos y PULL_FROM_URL); S3_CUSTOM_DOMAIN para media.

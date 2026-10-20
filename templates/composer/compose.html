@@ -132,7 +132,7 @@
                 <div class="border border-app bg-app-1 rounded-xl p-3 flex items-start justify-between gap-3">
                     <div class="flex items-start gap-2">
                         {% icon "lock" css_class="w-4 h-4 text-app-ghost flex-shrink-0 mt-0.5" %}
-                        <p class="text-xs text-app-secondary">Esta publicación está <span class="font-semibold">{{ post.get_status_display|default:post.status }}</span> y es de solo lectura. Usa <span class="font-semibold">Clonar</span> para republicar una copia editable.</p>
+                        <p class="text-xs text-app-secondary">Esta publicación está <span class="font-semibold">{{ post_outcome|default:post.get_status_display|default:post.status }}</span> y es de solo lectura. Usa <span class="font-semibold">Clonar</span> para republicar una copia editable.</p>
                     </div>
                     <button type="button"
                             class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-stone-800 text-app-inverse hover:bg-stone-900 flex-shrink-0 cursor-pointer"
@@ -143,7 +143,7 @@
                 </div>
                 {% if published_targets %}
                 <div class="border border-app bg-app-1 rounded-xl p-3 space-y-2" aria-label="Publicaciones en las plataformas">
-                    <p class="text-[11px] font-semibold text-app-ghost uppercase tracking-wider">Publicado en</p>
+                    <p class="text-[11px] font-semibold text-app-ghost uppercase tracking-wider">{% if post_outcome %}A mano en{% else %}Publicado en{% endif %}</p>
                     {% for pp in published_targets %}{% include "composer/partials/_published_target.html" %}{% endfor %}
                 </div>
                 {% endif %}
@@ -522,6 +522,20 @@
                                             <span x-text="tabLabel(accId) + ' · ' + accName(accId)"></span>
                                         </div>
 
+                                        <template x-if="platformExtras[accId]?.musica?.sugerencia">
+                                            <div class="ib-alert ib-al-info" style="margin-top:0">{% icon "circle-info" css_class="w-4 h-4" %}<div>
+                                                <b>Canción sugerida:</b> <span x-text="platformExtras[accId].musica.sugerencia"></span><span x-show="platformExtras[accId].musica.golpe_seg != null" x-text="', golpe en ' + String(platformExtras[accId].musica.golpe_seg).replace('.', ',') + ' s'"></span>
+                                                <span x-show="platformExtras[accId].musica.nota" x-text="' ' + (platformExtras[accId].musica.nota || '')"></span>
+                                            </div></div>
+                                        </template>
+                                        <template x-if="['youtube', 'instagram', 'instagram_login', 'facebook'].includes(plat(accId))">
+                                            <div class="cp-chks">
+                                                <input type="hidden" :name="'manual_publish_' + accId" value="false">
+                                                <label class="ib-chk"><input type="checkbox" :name="'manual_publish_' + accId" value="true" :checked="platformExtras[accId]?.manual_publish === true"> Música desde la app: publicar a mano</label>
+                                                <span class="ib-hint">Con esta casilla BEAN no publica esta red: queda como «A mano» y la subes tú desde la app con la música.</span>
+                                            </div>
+                                        </template>
+
                                         <template x-if="plat(accId) === 'youtube'">
                                             <div x-data="{ pl: { loaded: false, items: [], error: '' } }"
                                                  x-init="fetch('{% url 'composer:youtube_playlists' workspace_id=workspace.id account_id='00000000-0000-0000-0000-000000000000' %}'.replace('00000000-0000-0000-0000-000000000000', accId))
@@ -713,6 +727,8 @@
                              ttBrandOrganic: !!platformExtras[accId]?.brand_organic_toggle,
                              ttBrandContent: !!platformExtras[accId]?.brand_content_toggle,
                              ttAigc: !!platformExtras[accId]?.is_aigc,
+                             ttMode: platformExtras[accId]?.tiktok_mode === 'draft' ? 'draft' : 'direct',
+                             get ttDraft() { return this.ttMode === 'draft'; },
                              get ttOptions() {
                                  const fromApi = this.tt?.privacy_level_options || [];
                                  return fromApi.length ? fromApi : ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY'];
@@ -767,6 +783,16 @@
                          }"
                          class="relief p-4 space-y-3">
                                                 <p class="ib-hint" x-show="tt?.creator_nickname" x-text="'Publicando en @' + (tt?.creator_nickname || '')"></p>
+
+                        <fieldset class="cp-f cp-set" role="radiogroup">
+                            <legend class="cp-lb">¿Cómo lo mandas a TikTok?</legend>
+                            <div class="cp-opts" style="margin-top:5px">
+                                <label class="ib-chip cp-opt"><input type="radio" :name="'tiktok_mode_' + accId" value="direct" x-model="ttMode" @change="platformExtras[accId] = { ...(platformExtras[accId] || {}), tiktok_mode: ttMode }"> Publicar directo <small>(sale en tu perfil)</small></label>
+                                <label class="ib-chip cp-opt"><input type="radio" :name="'tiktok_mode_' + accId" value="draft" x-model="ttMode" @change="platformExtras[accId] = { ...(platformExtras[accId] || {}), tiktok_mode: ttMode }"> Enviar como borrador a TikTok <small>(llega a tu bandeja de la app para ponerle música y publicar desde ahí)</small></label>
+                            </div>
+                            <p class="ib-hint" x-show="ttDraft">TikTok te pedirá la privacidad, las interacciones y la música en su app. BEAN solo envía el borrador; termínalo en la app de TikTok.</p>
+                        </fieldset>
+                        <div x-show="!ttDraft" class="space-y-3">
                         <!-- Privacy: TikTok requires an explicit choice from the creator's allowed options -->
                         <div>
                             <label class="block text-[11px] font-semibold text-app-ghost uppercase tracking-wider mb-1">
@@ -844,7 +870,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                      required gate now that the native <select> is gone (same
                                      sr-only pattern as the disclosure gate further below). -->
                                 <input type="text" :name="'tiktok_privacy_level_' + accId" :value="ttPrivacy"
-                                       :required="charLimits[accId]?.platform === 'tiktok' && selectedAccounts.includes(accId)"
+                                       :required="charLimits[accId]?.platform === 'tiktok' && selectedAccounts.includes(accId) && !ttDraft"
                                        tabindex="-1" aria-hidden="true" class="sr-only">
                             </div>
                             <p x-show="ttLoading" class="text-[11px] text-app-ghost mt-1">Cargando configuración de la cuenta…</p>
@@ -964,7 +990,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                     <p class="text-[11px] text-red-500">Debes indicar si tu contenido promociona a ti, a un tercero o ambos.</p>
                                 </template>
                                 <input type="text" tabindex="-1" aria-hidden="true" class="sr-only"
-                                       :required="ttDisclose"
+                                       :required="ttDisclose && !ttDraft"
                                        :value="(ttBrandOrganic || ttBrandContent) ? '1' : ''">
                             </div>
                         </div>
@@ -994,6 +1020,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                         <p class="text-[11px] text-app-ghost">
                             Después de publicar, tu video puede tardar unos minutos en procesarse y aparecer en tu perfil de TikTok.
                         </p>
+                        </div>
                                             </div>
                                         </template>
 
@@ -2023,7 +2050,7 @@ function composerApp() {
         },
         get primaryLabel() {
             const a = this.primaryAction;
-            if (a === 'publish_now') return 'Publicar ahora';
+            if (a === 'publish_now') return this.selectedAccounts.length && this.selectedAccounts.every(id => this.plat(id) === 'tiktok' && this.platformExtras[id]?.tiktok_mode === 'draft') ? 'Enviar borrador a TikTok' : 'Publicar ahora';
             if (a === 'add_to_queue') return 'Agregar a la cola';
             if (a === 'add_to_queue_priority') return 'Poner al inicio de la cola';
             if (a === 'schedule') return this.scheduledDate && this.scheduledTime ? 'Programar para ' + this.fmtDate(this.scheduledDate) + ', ' + this.scheduledTime : 'Programar';

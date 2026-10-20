@@ -52,6 +52,8 @@ PERMANENT_PUBLISH_ERROR_CODES = frozenset(
         "scope_not_authorized",
         "scope_permission_missed",
         "url_ownership_unverified",
+        "spam_risk_too_many_pending_share",  # máx. 5 borradores pendientes por 24 h
+        "app_version_check_failed",  # MEDIA_UPLOAD pide la app de TikTok 31.8 o posterior
     }
 )
 
@@ -130,6 +132,7 @@ class TikTokProvider(SocialProvider):
         scopes = [
             "user.info.basic",
             "video.publish",
+            "video.upload",  # borradores a la bandeja de TikTok (tiktok_mode=draft)
         ]
         if self.include_analytics_scopes:
             scopes.extend(self.analytics_only_scopes)
@@ -270,6 +273,10 @@ class TikTokProvider(SocialProvider):
                 platform=self.platform_name,
             )
 
+        if content.extra.get("tiktok_mode") == "draft":
+            # Bandeja de TikTok: privacidad, interacciones y música se eligen en la app, así que no hay creator_info.
+            return self._publish_inbox_video(access_token, content)
+
         privacy_level_is_explicit = "privacy_level" in content.extra
         privacy_level = content.extra.get("privacy_level", DEFAULT_PRIVACY_LEVEL)
         if privacy_level not in VALID_PRIVACY_LEVELS:
@@ -315,27 +322,28 @@ class TikTokProvider(SocialProvider):
                 platform=self.platform_name,
                 retryable=False,
             )
-        privacy_explicit = "privacy_level" in content.extra
-        privacy = content.extra.get("privacy_level", DEFAULT_PRIVACY_LEVEL)
-        if privacy not in VALID_PRIVACY_LEVELS:
-            raise PublishError(
-                f"Invalid privacy_level '{privacy}'. Must be one of {sorted(VALID_PRIVACY_LEVELS)}",
-                platform=self.platform_name,
-                retryable=False,
-            )
-        privacy = self._check_creator_constraints(
-            access_token, privacy, content, privacy_level_is_explicit=privacy_explicit
-        )
-
+        draft = content.extra.get("tiktok_mode") == "draft"
         post_info: dict[str, str | bool] = {
             "title": (content.title or "")[:90],
             "description": (content.text or "")[:4000],
-            "privacy_level": privacy,
         }
-        # Solo los campos que admite post_info de fotos (sin duo/stitch); is_aigc va en la raíz del cuerpo.
-        for field in PHOTO_POST_INFO_FIELDS:
-            if field in content.extra:
-                post_info[field] = bool(content.extra[field])
+        if not draft:
+            privacy_explicit = "privacy_level" in content.extra
+            privacy = content.extra.get("privacy_level", DEFAULT_PRIVACY_LEVEL)
+            if privacy not in VALID_PRIVACY_LEVELS:
+                raise PublishError(
+                    f"Invalid privacy_level '{privacy}'. Must be one of {sorted(VALID_PRIVACY_LEVELS)}",
+                    platform=self.platform_name,
+                    retryable=False,
+                )
+            privacy = self._check_creator_constraints(
+                access_token, privacy, content, privacy_level_is_explicit=privacy_explicit
+            )
+            post_info["privacy_level"] = privacy
+            # Solo los campos que admite post_info de fotos (sin duo/stitch); is_aigc va en la raíz del cuerpo.
+            for field in PHOTO_POST_INFO_FIELDS:
+                if field in content.extra:
+                    post_info[field] = bool(content.extra[field])
         payload: dict = {
             "post_info": post_info,
             "source_info": {
@@ -343,10 +351,10 @@ class TikTokProvider(SocialProvider):
                 "photo_cover_index": min(max(int(content.extra.get("photo_cover_index") or 0), 0), len(urls) - 1),
                 "photo_images": urls,
             },
-            "post_mode": "DIRECT_POST",
+            "post_mode": "MEDIA_UPLOAD" if draft else "DIRECT_POST",
             "media_type": "PHOTO",
         }
-        if "is_aigc" in content.extra:
+        if "is_aigc" in content.extra and not draft:
             payload["is_aigc"] = bool(content.extra["is_aigc"])
         try:
             resp = self._request(
@@ -422,8 +430,23 @@ class TikTokProvider(SocialProvider):
             )
         return privacy_level
 
-    def _init_video_publish(self, access_token: str, payload: dict) -> dict:
-        """POST to /post/publish/video/init/ and return the parsed body.
+    def _publish_inbox_video(self, access_token: str, content: PublishContent) -> PublishResult:
+        """Borrador: /post/publish/inbox/video/init/ (scope video.upload); el usuario lo termina en la app.
+
+        https://developers.tiktok.com/doc/content-posting-api-reference-upload-video
+        """
+        if content.media_files:
+            return self._publish_file_upload(access_token, content, "", inbox=True)
+        if content.media_urls:
+            return self._publish_pull_from_url(access_token, content, "", inbox=True)
+        raise PublishError(
+            "No video source provided (media_files or media_urls required)",
+            platform=self.platform_name,
+            retryable=False,
+        )
+
+    def _init_video_publish(self, access_token: str, payload: dict, *, inbox: bool = False) -> dict:
+        """POST to /post/publish/video/init/ (o inbox/video/init/) and return the parsed body.
 
         Permanent TikTok error codes are re-raised as non-retryable
         PublishErrors via :meth:`_raise_classified_publish_error`.
@@ -431,7 +454,7 @@ class TikTokProvider(SocialProvider):
         try:
             resp = self._request(
                 "POST",
-                f"{API_BASE}/post/publish/video/init/",
+                f"{API_BASE}/post/publish/{'inbox/' if inbox else ''}video/init/",
                 access_token=access_token,
                 json=payload,
                 # FILE_UPLOAD init only reserves an upload slot: nothing is published until the last chunk.
@@ -480,16 +503,19 @@ class TikTokProvider(SocialProvider):
         access_token: str,
         content: PublishContent,
         privacy_level: str,
+        *,
+        inbox: bool = False,
     ) -> PublishResult:
         """Publish using PULL_FROM_URL source."""
-        payload = {
-            "post_info": self._build_post_info(content, privacy_level),
+        payload: dict = {
             "source_info": {
                 "source": "PULL_FROM_URL",
                 "video_url": content.media_urls[0],
             },
         }
-        body = self._init_video_publish(access_token, payload)
+        if not inbox:  # la bandeja no lleva post_info
+            payload["post_info"] = self._build_post_info(content, privacy_level)
+        body = self._init_video_publish(access_token, payload, inbox=inbox)
         publish_id = body.get("data", {}).get("publish_id", "")
         return PublishResult(
             platform_post_id=publish_id,
@@ -502,6 +528,8 @@ class TikTokProvider(SocialProvider):
         access_token: str,
         content: PublishContent,
         privacy_level: str,
+        *,
+        inbox: bool = False,
     ) -> PublishResult:
         """Publish using FILE_UPLOAD source (two-step)."""
         video_path = content.media_files[0]
@@ -515,8 +543,7 @@ class TikTokProvider(SocialProvider):
         content_type = CONTENT_TYPE_BY_EXT.get(ext, "video/mp4")
 
         # Step 1: initialize upload with size metadata TikTok requires
-        payload = {
-            "post_info": self._build_post_info(content, privacy_level),
+        payload: dict = {
             "source_info": {
                 "source": "FILE_UPLOAD",
                 "video_size": video_size,
@@ -524,7 +551,9 @@ class TikTokProvider(SocialProvider):
                 "total_chunk_count": chunk_count,
             },
         }
-        init_body = self._init_video_publish(access_token, payload)
+        if not inbox:
+            payload["post_info"] = self._build_post_info(content, privacy_level)
+        init_body = self._init_video_publish(access_token, payload, inbox=inbox)
         upload_url = init_body.get("data", {}).get("upload_url")
         publish_id = init_body.get("data", {}).get("publish_id", "")
 
@@ -599,7 +628,10 @@ class TikTokProvider(SocialProvider):
             return PublishStatus(
                 "failed", error=f"TikTok no pudo publicar el video: {data.get('fail_reason') or status}"
             )
-        # PROCESSING_UPLOAD / PROCESSING_DOWNLOAD / SEND_TO_USER_INBOX: still in flight
+        if status == "SEND_TO_USER_INBOX":
+            # Borrador entregado a la bandeja de TikTok: estado final; el usuario lo termina en la app.
+            return PublishStatus("published", extra={"tiktok_draft": True})
+        # PROCESSING_UPLOAD / PROCESSING_DOWNLOAD: still in flight
         return PublishStatus("pending")
 
     def _resolve_video_id(self, access_token: str, post_id: str) -> str | None:

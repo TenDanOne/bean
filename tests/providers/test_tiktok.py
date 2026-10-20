@@ -36,7 +36,7 @@ class TestGetAuthUrl:
         assert query["client_key"] == ["k"]
         assert query["response_type"] == ["code"]
         assert query["redirect_uri"] == ["https://app.example/cb"]
-        assert query["scope"] == ["user.info.basic,video.publish,video.list"]
+        assert query["scope"] == ["user.info.basic,video.publish,video.upload,video.list"]
 
     def test_web_authorization_does_not_include_pkce(self):
         provider = TikTokProvider({"client_key": "k", "client_secret": "s"})

@@ -5,11 +5,11 @@
   const ZERO = '00000000-0000-0000-0000-000000000000'; // marcador de la URL; se cambia por el id del post
   const POLL_MS = 2000;
   const MAX_POLLS = 90; // ~3 min; después se invita a revisar en Enviadas
-  const WORD = { wait: 'Esperando', run: 'Publicando', ok: 'Listo', proc: 'Procesando', fail: 'Falló' };
-  const CLS = { wait: 'st-draft', run: 'st-publishing', ok: 'st-published', proc: 'st-review', fail: 'st-failed' };
+  const WORD = { wait: 'Esperando', run: 'Publicando', ok: 'Listo', proc: 'Procesando', draft: 'Enviado como borrador', manual: 'A mano', fail: 'Falló' };
+  const CLS = { wait: 'st-draft', run: 'st-publishing', ok: 'st-published', proc: 'st-review', draft: 'st-published', manual: 'st-published', fail: 'st-failed' };
   const PLAT = { youtube: 'YouTube', instagram: 'Instagram', instagram_login: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok' };
   const BUSY = { publish_now: 'Publicando…', schedule: 'Programando…', save_draft: 'Guardando…' };
-  const isFinal = (s) => s === 'ok' || s === 'fail' || s === 'proc';
+  const isFinal = (s) => s === 'ok' || s === 'fail' || s === 'proc' || s === 'draft' || s === 'manual';
 
   let sending = false, locked = [], dlg = null, live = null, body = null;
   let rows = [], kind = null, postId = null, requestDone = false, timer = null, polls = 0, finished = false, kinds = {};
@@ -87,7 +87,7 @@
     const allFinal = rows.length > 0 && rows.every((r) => isFinal(r.state));
     const stalled = requestDone && !allFinal && polls >= MAX_POLLS;
     const done = (allFinal && requestDone) || stalled;
-    const ok = rows.filter((r) => r.state === 'ok' || r.state === 'proc').length;
+    const ok = rows.filter((r) => r.state === 'ok' || r.state === 'proc' || r.state === 'draft' || r.state === 'manual').length;
     const bad = rows.filter((r) => r.state === 'fail').length;
     const proc = rows.filter((r) => r.state === 'proc').length;
     const fin = rows.filter((r) => isFinal(r.state)).length;
@@ -124,6 +124,8 @@
       li.append(av, who, pill(r.state));
       if (r.state === 'fail') li.append(el('div', 'pm-more pm-why', r.error || 'No se pudo publicar.'));
       else if (r.state === 'proc') li.append(el('div', 'pm-more', `${r.platform} confirma al terminar de procesar el contenido.`));
+      else if (r.state === 'draft') li.append(el('div', 'pm-more', 'Termínalo en la app de TikTok.'));
+      else if (r.state === 'manual') li.append(el('div', 'pm-more', 'Publícalo tú desde la app.'));
       ul.append(li);
     });
     bd.append(prog, ul);

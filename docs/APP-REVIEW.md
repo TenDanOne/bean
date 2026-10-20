@@ -140,12 +140,13 @@ Credenciales: `PLATFORM_TIKTOK_CLIENT_KEY`, `PLATFORM_TIKTOK_CLIENT_SECRET`. Aut
 
 ### 2.1 Productos y scopes
 
-Productos en el portal: **Login Kit** y **Content Posting API** (Direct Post activado). Scopes que BEAN pide (`providers/tiktok.py::required_scopes`): `user.info.basic`, `video.publish`; y `video.list` solo si Analytics está activo para TikTok. Para la revisión pedir solo los dos primeros.
+Productos en el portal: **Login Kit** y **Content Posting API** (Direct Post activado). Scopes que BEAN pide (`providers/tiktok.py::required_scopes`): `user.info.basic`, `video.publish`, `video.upload`; y `video.list` solo si Analytics está activo para TikTok. Para la revisión pedir los tres primeros.
 
 | Scope | Justificación (texto para pegar) |
 |---|---|
 | `user.info.basic` | "BEAN uses Login Kit so that an authorized member of our company can connect their own TikTok account. We read the creator's open_id, display name and avatar to show which account is connected and to display 'Posting to @nickname' on the post screen." |
 | `video.publish` | "BEAN uses the Content Posting API (Direct Post) to publish videos that the connected creator composed in BEAN. Before every post BEAN queries creator_info, shows the creator's nickname, lets the user pick the privacy level (no default), toggle comment/duet/stitch (all off by default), declare commercial content, and read TikTok's consent declaration. The video is sent to TikTok only after the user explicitly confirms the upload. BEAN adds no watermark or promotional text." |
+| `video.upload` | "BEAN lets the creator choose, per post, to send the video (or photos) to their TikTok inbox as a draft instead of posting directly. BEAN calls POST /v2/post/publish/inbox/video/init/ (or content/init/ with post_mode MEDIA_UPLOAD for photos) only when the creator picks 'Send as draft to TikTok' and confirms. The creator then opens the draft in the TikTok app, adds music, sets privacy and interactions there, and publishes from TikTok. BEAN shows the status 'Draft in TikTok' and does not publish it." |
 | `video.list` (opcional) | "BEAN reads view, like, comment and share counts of the videos it published for the connected account and shows them in an Analytics screen." |
 
 Descripción del producto Content Posting API: "Internal company tool. Our team composes a video, chooses TikTok privacy and interaction settings and publishes it to our own TikTok accounts. Not offered to third parties."
@@ -196,7 +197,7 @@ Pantalla completa del navegador con la URL visible, UI real de BEAN, flujo compl
 
 1. Open `https://bean.ithos.mx/`: show the landing page and the links to Privacy Policy and Terms. (0:15)
 2. Log in. Go to Social accounts -> Connect -> TikTok. (0:15)
-3. TikTok authorization page: show the app name and **every scope requested** (user.info.basic, video.publish). Press Authorize. (0:30)
+3. TikTok authorization page: show the app name and **every scope requested** (user.info.basic, video.publish, video.upload). Press Authorize. (0:30)
 4. Back in BEAN: show the connected account with the creator's name and avatar. (0:10)
 5. Compose -> select the TikTok account -> attach an MP4. Show the page displays **"Posting to @nickname"** fetched from TikTok. (0:30)
 6. Show the title field and edit it. Open the privacy dropdown: **no option is preselected**; show the options come from TikTok; select one ("Only you" if unaudited). (0:30)
@@ -205,6 +206,7 @@ Pantalla completa del navegador con la URL visible, UI real de BEAN, flujo compl
 9. Show the **preview** of the video with the title. Press Publish now (explicit consent). Show the "it may take a few minutes to process" notice and the status move from processing to published. (0:40)
 10. If scheduling is demonstrated: schedule for later, then Organization settings -> **Process pending** and show the post goes out. (0:30)
 11. Open TikTok and show the video on the profile with the chosen settings. (0:30)
+11b. **Draft scene (video.upload):** Compose again, select the TikTok account and, in "How do you send it to TikTok?", choose **"Send as draft to TikTok"**. Show that the privacy and interaction fields disappear (TikTok asks for them in its app) and the main button reads "Send draft to TikTok". Press it, show the status "Sent as draft" / "Draft in TikTok" with the note "Finish it in the TikTok app". Open the TikTok app, show the draft in the inbox notification, add music and publish from there. (0:60)
 12. If `video.list` is requested: open Analytics for the TikTok account and show the video metrics. (0:20)
 13. Disconnect the account in BEAN, then open `/en/data-deletion/` and explain how to request deletion. (0:30)
 

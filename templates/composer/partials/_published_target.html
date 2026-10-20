@@ -8,7 +8,10 @@ Context: workspace, pp. La vista de borrado devuelve este mismo parcial para ree
         {% include "social_accounts/partials/_platform_icon.html" with platform=pp.social_account.platform size="3" %}
     </span>
     <span class="text-xs text-app-secondary"><span class="font-semibold">{{ pp.social_account.account_name }}</span> · {{ pp.social_account.get_platform_display }}</span>
-    {% if pp.platform_extra.deleted_on_platform_at %}
+    {% if pp.outcome_label %}
+    <span class="st-pill st-published inline-flex items-center rounded-full font-semibold text-[11px] px-2">{{ pp.outcome_label }}</span>
+    <span class="basis-full text-[11px] text-app-ghost">{{ pp.outcome_note }}</span>
+    {% elif pp.platform_extra.deleted_on_platform_at %}
     <span class="st-pill st-failed inline-flex items-center rounded-full font-semibold text-[11px] px-2">Borrada en la plataforma</span>
     {% elif pp.social_account.platform == "tiktok" %}
     <span class="text-[11px] text-app-ghost">TikTok no permite borrar por API. Bórrala desde la app de TikTok.</span>
