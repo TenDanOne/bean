@@ -210,7 +210,7 @@ class ProposedPublishAtSaveTests(TestCase):
         self.assertFalse(resp.context["post_is_scheduled"])
         body = resp.content.decode("utf-8")
         self.assertIn('value="2027-09-01"', body)
-        self.assertIn("prefillIsProposed = true", body)
+        self.assertIn("prefillIsProposed: true", body)
 
     def test_drafts_list_renders_proposed_badge(self):
         post = create_post(

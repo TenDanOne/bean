@@ -196,3 +196,29 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - Crear la app en TikTok for Developers y pedir la auditoría (sin ella, los posts salen privados).
 - Verificación de Google OAuth (Producción + permisos sensibles de YouTube) para que los tokens no caduquen cada 7 días.
 - Cron: cron-job.org → POST /cron/run cada 5 min. HECHO: Test run 200 OK (5,7 s).
+
+## RETOMAR AQUÍ — 2026-10-20 (Fase 6 lote C: publicar)
+- En main:
+  - 8a6b96d (C1, arreglos de publicar):
+    - miniatura de YouTube con error visible, ≤2 MB y 1280×720, acotada al workspace;
+    - vista previa al día;
+    - miniatura elegida en las listas;
+    - tags internos que no se filtran;
+    - videos de IG por urlparse;
+    - plantillas completas y bloqueo de {{…}};
+    - subida directa a R2 (falta poner el CORS: docs/r2-cors-subida-directa.md);
+    - duración Short/Reel.
+  - Este commit (C2, composer nuevo según mockups/mockup-publicar.html):
+    - 3 pasos (formato → contenido → cuándo), con pestañas por red para la vista previa y los campos;
+    - YouTube: categoría, playlist, capítulos, «Hecho para niños» obligatorio en UI, cola y aprobación, IA;
+    - IG: portada del Reel, colaboradores, share_to_feed;
+    - FB: enlace y Reels;
+    - revisor de calidad (apps/composer/quality.py) con frases prohibidas por workspace;
+    - 6 plantillas por formato (ids 162-167);
+    - /ayuda/ con glosario;
+    - un solo «Nuevo» y subida con orden.
+- Juez PASA; pytest 1799 passed y 0 fallos (también se arregló el preexistente test_preview).
+- Pendientes:
+  - **Probar contra APIs reales:** FB Reels (video_reels), playlistItems, subida directa a R2 (con CORS), selector de fotogramas y playlists con token real.
+  - **API/MCP:** crean posts de YouTube con made_for_kids=False sin preguntar; documentarlo o agregar un campo.
+  - **Menores:** pestaña Preferencias, /settings/, menú de Ajustes por permisos.

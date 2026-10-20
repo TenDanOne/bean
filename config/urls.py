@@ -11,6 +11,7 @@ from apps.oauth_server import views as oauth_views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", health_check, name="health_check"),
+    path("ayuda/", common_views.ayuda, name="ayuda"),
     path("tasks/process/", common_views.process_pending, name="process_pending"),
     path("cron/run", common_views.cron_run, name="cron_run"),
     path("accounts/", include("apps.accounts.urls")),

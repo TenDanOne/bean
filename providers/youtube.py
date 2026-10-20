@@ -49,6 +49,67 @@ _ANALYTICS_VIDEO_FILTER_CHUNK = 500
 _SINCE_GRACE_PAGES = 2
 
 
+#: Categorías de video asignables (videoCategories, región MX). Catálogo estático: no se llama a la API en cada render.
+YOUTUBE_CATEGORIES = [
+    ("1", "Cine y animación"),
+    ("2", "Autos y vehículos"),
+    ("10", "Música"),
+    ("15", "Mascotas y animales"),
+    ("17", "Deportes"),
+    ("19", "Viajes y eventos"),
+    ("20", "Videojuegos"),
+    ("22", "Gente y blogs"),
+    ("23", "Comedia"),
+    ("24", "Entretenimiento"),
+    ("25", "Noticias y política"),
+    ("26", "Consejos y estilo"),
+    ("27", "Educación"),
+    ("28", "Ciencia y tecnología"),
+    ("29", "ONG y activismo"),
+]
+YOUTUBE_CATEGORY_IDS = {cid for cid, _ in YOUTUBE_CATEGORIES}
+_PLAYLISTS_CACHE_SECONDS = 300
+PLAYLIST_ERROR_PREFIX = "No se agregó a la lista de reproducción:"
+
+
+def _chapter_seconds(raw: str) -> int:
+    """``mm:ss`` or ``h:mm:ss`` -> seconds (ValueError when malformed)."""
+    parts = [int(p) for p in str(raw).strip().split(":")]
+    if not 2 <= len(parts) <= 3 or any(p < 0 for p in parts) or any(p > 59 for p in parts[1:]):
+        raise ValueError(raw)
+    secs = 0
+    for p in parts:
+        secs = secs * 60 + p
+    return secs
+
+
+def chapters_error(chapters) -> str | None:
+    """Spanish reason a ``[{t, title}]`` list is not valid YouTube chapters, else ``None``."""
+    if not chapters:
+        return None
+    if len(chapters) < 3:
+        return "YouTube necesita al menos 3 capítulos."
+    try:
+        secs = [_chapter_seconds(c.get("t", "")) for c in chapters]
+    except (ValueError, AttributeError):
+        return "Los tiempos de los capítulos deben ser mm:ss (por ejemplo 01:30)."
+    if secs[0] != 0:
+        return "El primer capítulo debe empezar en 00:00."
+    if any(not str(c.get("title", "")).strip() for c in chapters):
+        return "Cada capítulo necesita un título."
+    if any(b - a < 10 for a, b in zip(secs, secs[1:], strict=False)):
+        return "Cada capítulo debe durar al menos 10 segundos y estar en orden."
+    return None
+
+
+def build_chapters_block(chapters) -> str:
+    """Bloque de texto «00:00 Título» por línea para la descripción; ValueError si no es válido."""
+    err = chapters_error(chapters)
+    if err:
+        raise ValueError(err)
+    return "\n".join(f"{c['t'].strip()} {c['title'].strip()}" for c in chapters or [])
+
+
 def _parse_yt_timestamp(value: str) -> datetime:
     """Parse a YouTube RFC-3339 timestamp (``…Z``) into an aware datetime."""
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -229,9 +290,17 @@ class YouTubeProvider(SocialProvider):
             title = f"{title} #Shorts".strip()
 
         privacy_status = content.extra.get("privacy_status", "public")
-        made_for_kids = content.extra.get("self_declared_made_for_kids", False)
-        category_id = content.extra.get("category_id", "22")  # 22 = People & Blogs
+        made_for_kids = content.extra.get("made_for_kids", content.extra.get("self_declared_made_for_kids", False))
+        category_id = content.extra.get("category_id") or "22"  # 22 = People & Blogs
         tags = content.extra.get("tags", [])
+
+        chapters = content.extra.get("chapters")
+        if chapters:
+            try:
+                block = build_chapters_block(chapters)
+            except ValueError as exc:
+                raise PublishError(str(exc), platform=self.platform_name, retryable=False) from exc
+            description = f"{description}\n\n{block}" if description else block
 
         metadata = {
             "snippet": {
@@ -243,6 +312,7 @@ class YouTubeProvider(SocialProvider):
             "status": {
                 "privacyStatus": privacy_status,
                 "selfDeclaredMadeForKids": made_for_kids,
+                "containsSyntheticMedia": bool(content.extra.get("contains_synthetic_media", False)),
             },
         }
 
@@ -299,6 +369,28 @@ class YouTubeProvider(SocialProvider):
                         logger.exception("Custom thumbnail upload failed for video %s", video_id)
                         upload_body["thumbnail_error"] = str(exc)[:300] or exc.__class__.__name__
 
+            # Step 4 (optional, best-effort): add to a playlist. Same rule as the thumbnail.
+            playlist_id = content.extra.get("playlist_id")
+            if video_id and playlist_id:
+                try:
+                    self._request(
+                        "POST",
+                        f"{API_BASE}/playlistItems",
+                        access_token=access_token,
+                        params={"part": "snippet"},
+                        json={
+                            "snippet": {
+                                "playlistId": playlist_id,
+                                "resourceId": {"kind": "youtube#video", "videoId": video_id},
+                            }
+                        },
+                    )
+                except Exception as exc:
+                    logger.exception("Adding video %s to playlist %s failed", video_id, playlist_id)
+                    reason = f"{PLAYLIST_ERROR_PREFIX} {str(exc)[:200] or exc.__class__.__name__}"
+                    prev = upload_body.get("thumbnail_error")
+                    upload_body["thumbnail_error"] = f"{prev} | {reason}" if prev else reason
+
             return PublishResult(
                 platform_post_id=video_id,
                 url=f"https://www.youtube.com/watch?v={video_id}" if video_id else None,
@@ -309,6 +401,31 @@ class YouTubeProvider(SocialProvider):
             "No video file provided (media_files required)",
             platform=self.platform_name,
         )
+
+    def list_playlists(self, access_token: str, cache_id: str = "") -> list[dict]:
+        """Playlists del canal como ``[{id, title}]``; caché corta para no gastar cuota en cada render."""
+        from django.core.cache import cache
+
+        key = (
+            f"yt_playlists:{cache_id}" if cache_id else None
+        )  # por cuenta; sin id no hay caché (evita mezclar canales)
+        cached = cache.get(key) if key else None
+        if cached is not None:
+            return cached
+        playlists: list[dict] = []
+        page_token = None
+        for _ in range(4):  # shortcut: 200 listas máx., suficiente para un canal personal
+            params = {"part": "snippet", "mine": "true", "maxResults": 50}
+            if page_token:
+                params["pageToken"] = page_token
+            data = self._request("GET", f"{API_BASE}/playlists", access_token=access_token, params=params).json()
+            playlists += [{"id": i["id"], "title": i["snippet"]["title"]} for i in data.get("items", [])]
+            page_token = data.get("nextPageToken")
+            if not page_token:
+                break
+        if key:
+            cache.set(key, playlists, _PLAYLISTS_CACHE_SECONDS)
+        return playlists
 
     def _upload_resumable(self, upload_uri: str, video_path: str) -> dict:
         """PUT the file to a resumable session in chunks (308 = keep going, 200/201 = done)."""

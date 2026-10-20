@@ -22,18 +22,28 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.common.background import drain_pending_tasks
+from apps.common.help_content import help_entries
 from apps.common.validators import (
     parse_and_truncate_tag_string,
     parse_and_truncate_youtube_tag_string,
+)
+from apps.composer.builtin_templates import FORMAT_TEMPLATES
+from apps.composer.quality import (
+    BANNED_PHRASES_KEY,
+    THUMBNAIL_MAX_BYTES,
+    quality_warnings,
+    visible_counter,
 )
 from apps.composer.services import media_duration_notice, media_error_for_platform
 from apps.members.channels import visible_accounts
 from apps.members.decorators import require_permission
 from apps.members.models import WorkspaceMembership
 from apps.publisher.engine import PublishEngine
+from apps.settings_manager.helpers import get_setting
 from apps.social_accounts.models import SocialAccount
 from apps.workspaces.models import Workspace
 from providers.tiktok import VALID_PRIVACY_LEVELS as TIKTOK_PRIVACY_LEVELS
+from providers.youtube import YOUTUBE_CATEGORIES, YOUTUBE_CATEGORY_IDS, chapters_error
 
 from .forms import ContentCategoryForm, PostForm
 from .models import (
@@ -114,17 +124,22 @@ def _preview_thumbnail_url(request, workspace, account):
     tolerant of a malformed id because this is a live-preview path that must never
     500 on half-typed input.
     """
+    asset = _preview_thumbnail_asset(request, workspace, account)
+    return asset.file.url if asset and asset.file else ""
+
+
+def _preview_thumbnail_asset(request, workspace, account):
+    """The workspace-scoped thumbnail asset posted for ``account``, or ``None`` (never raises)."""
     asset_id = request.POST.get(f"yt_thumbnail_asset_id_{account.id}", "").strip()
     if not asset_id:
-        return ""
+        return None
 
     from apps.media_library.models import MediaAsset
 
     try:
-        asset = MediaAsset.objects.filter(id=asset_id, workspace=workspace).first()
+        return MediaAsset.objects.filter(id=asset_id, workspace=workspace).first()
     except (ValueError, ValidationError):
-        return ""
-    return asset.file.url if asset and asset.file else ""
+        return None
 
 
 def _workspace_asset_id(workspace, raw):
@@ -217,12 +232,22 @@ def _is_read_only_published(post):
     return statuses == {PlatformPost.Status.PUBLISHED}
 
 
+#: Nombre para personas (nunca el id interno tipo «instagram_login»).
+PLATFORM_LABELS = {
+    "youtube": "YouTube",
+    "instagram": "Instagram",
+    "instagram_login": "Instagram",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+}
+
 #: Tipo elegido en el composer -> valor de ``platform_extra["post_type"]`` (los que entiende el motor).
 #: «Video»/«Feed» no guardan nada: el motor lo deduce de los medios.
 _POST_TYPE_FIELDS = {
     "youtube": ("yt_post_type_", {"short"}),
     "instagram": ("ig_post_type_", {"reel", "story", "carousel"}),
     "instagram_login": ("ig_post_type_", {"reel", "story", "carousel"}),
+    "facebook": ("fb_post_type_", {"reel"}),
 }
 
 
@@ -233,6 +258,129 @@ def _post_type_from_form(post_data, acc_id, platform) -> str | None:
 
 
 _PLACEHOLDER_RE = re.compile(r"\{\{[^{}]*\}\}")
+
+#: platform_extra keys de C2 (YouTube/Instagram/Facebook/«solo orgánico») que sobreviven a un guardado parcial.
+_C2_EXTRA_KEYS = {
+    "category_id", "playlist_id", "made_for_kids", "contains_synthetic_media", "chapters", "solo_organico",
+    "ig_cover_asset_id", "thumb_offset", "collaborators", "share_to_feed", "link",
+}  # fmt: skip
+_IG_USERNAME_RE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
+_YT_PLAYLIST_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+_CHAPTER_LINE_RE = re.compile(r"^\s*((?:\d{1,2}:)?\d{1,2}:\d{2})\s+(.+?)\s*$")
+
+
+def parse_chapters(raw):
+    """Texto «mm:ss Título» por línea (o JSON ``[{t, title}]``) -> ``[{t, title}]``; líneas inválidas se omiten."""
+    raw = (raw or "").strip()
+    if raw.startswith("["):
+        try:
+            data = json.loads(raw)
+            return [{"t": str(c.get("t", "")).strip(), "title": str(c.get("title", "")).strip()} for c in data][:50]
+        except (ValueError, AttributeError, TypeError):
+            return []
+    rows = (_CHAPTER_LINE_RE.match(line) for line in raw.splitlines())
+    return [{"t": m.group(1), "title": m.group(2)[:100]} for m in rows if m][:50]
+
+
+def _apply_c2_extras(request, workspace, acc_id, platform, extra, prev=None):
+    """Campos nuevos del composer por cuenta, validados y acotados al workspace.
+
+    Solo se toca un campo si vino en el POST (un guardado parcial no borra lo anterior);
+    un valor vacío lo quita. ``prev`` restaura claves C2 cuando otro bloque reemplazó el dict.
+    """
+    post = request.POST
+    out = {**{k: v for k, v in (prev or {}).items() if k in _C2_EXTRA_KEYS}, **(extra or {})}
+
+    def put(key, value):
+        if value in (None, "", [], False):
+            out.pop(key, None)
+        else:
+            out[key] = value
+
+    def flag(name):
+        return {"true": True, "false": False}.get(post.get(name, "").strip())
+
+    if f"solo_organico_{acc_id}" in post:
+        put("solo_organico", flag(f"solo_organico_{acc_id}"))
+
+    if platform == "youtube":
+        if f"yt_category_id_{acc_id}" in post:
+            cat = post[f"yt_category_id_{acc_id}"].strip()
+            put("category_id", cat if cat in YOUTUBE_CATEGORY_IDS else None)
+        if f"yt_playlist_id_{acc_id}" in post:
+            pl = post[f"yt_playlist_id_{acc_id}"].strip()
+            put("playlist_id", pl if _YT_PLAYLIST_RE.match(pl) else None)
+        if (kids := flag(f"yt_made_for_kids_{acc_id}")) is not None:
+            out["made_for_kids"] = kids  # True y False son respuestas válidas; ausente = sin elegir
+        if "made_for_kids" in out:
+            out["self_declared_made_for_kids"] = out["made_for_kids"]
+        if f"yt_synthetic_media_{acc_id}" in post:
+            put("contains_synthetic_media", flag(f"yt_synthetic_media_{acc_id}"))
+        if f"yt_chapters_{acc_id}" in post:
+            put("chapters", parse_chapters(post[f"yt_chapters_{acc_id}"]))
+    elif platform in ("instagram", "instagram_login"):
+        if f"ig_cover_asset_id_{acc_id}" in post:
+            put("ig_cover_asset_id", _workspace_asset_id(workspace, post[f"ig_cover_asset_id_{acc_id}"]))
+        if f"ig_thumb_offset_{acc_id}" in post:
+            raw = post[f"ig_thumb_offset_{acc_id}"].strip()
+            put("thumb_offset", int(raw) if raw.isascii() and raw.isdigit() else None)
+        if f"ig_collaborators_{acc_id}" in post:
+            names = [n.strip().lstrip("@") for n in re.split(r"[,\s]+", post[f"ig_collaborators_{acc_id}"])]
+            put("collaborators", list(dict.fromkeys(n for n in names if _IG_USERNAME_RE.match(n)))[:3])
+        if (feed := flag(f"ig_share_to_feed_{acc_id}")) is not None:
+            out["share_to_feed"] = feed
+    elif platform == "facebook":
+        if f"fb_post_type_{acc_id}" in post:
+            put("post_type", _post_type_from_form(post, acc_id, platform))
+        if f"fb_link_{acc_id}" in post:
+            link = post[f"fb_link_{acc_id}"].strip()
+            put("link", link if re.match(r"^https?://\S{1,2040}$", link) else None)
+    return out
+
+
+def _youtube_guard(request, workspace, post_id, account_ids):
+    """400 JSON si un destino de YouTube no puede salir: «Hecho para niños» sin elegir, capítulos o miniatura inválidos.
+
+    Lo usan programar/publicar/cola (``_scheduling_guard``) y el envío a aprobación, para que nada llegue a un
+    aprobador con un dato que el servidor luego rechazaría.
+    """
+    from apps.media_library.models import MediaAsset
+
+    youtube_ids = [
+        str(i)
+        for i in SocialAccount.objects.filter(id__in=account_ids, workspace=workspace, platform="youtube").values_list(
+            "id", flat=True
+        )
+    ]
+    for acc_id in youtube_ids:
+        # «Hecho para niños» es obligatorio: nunca se asume un valor por omisión.
+        kids = request.POST.get(f"yt_made_for_kids_{acc_id}", "").strip()
+        if kids not in ("true", "false") and post_id and _is_valid_uuid(str(post_id)):
+            known = (
+                PlatformPost.objects.filter(post_id=post_id, social_account_id=acc_id)
+                .values_list("platform_extra", flat=True)
+                .first()
+            )
+            if (known or {}).get("made_for_kids") is not None:
+                kids = "true"  # ya elegido en un guardado anterior
+        if kids not in ("true", "false"):
+            return JsonResponse(
+                {"errors": {"made_for_kids": "YouTube exige indicar si el video es «Hecho para niños» (Sí o No)."}},
+                status=400,
+            )
+        chapters_msg = chapters_error(parse_chapters(request.POST.get(f"yt_chapters_{acc_id}", "")))
+        if chapters_msg:
+            return JsonResponse({"errors": {"chapters": chapters_msg}}, status=400)
+        # Misma regla que el revisor de calidad (aviso «block»): la miniatura no pasa de 2 MB.
+        thumb_id = _workspace_asset_id(workspace, request.POST.get(f"yt_thumbnail_asset_id_{acc_id}", ""))
+        if thumb_id:
+            thumb = MediaAsset.objects.filter(id=thumb_id).first()
+            if thumb and thumb.file_size and thumb.file_size > THUMBNAIL_MAX_BYTES:
+                return JsonResponse(
+                    {"errors": {"thumbnail": "La miniatura pesa más de 2 MB; YouTube la rechazará. Elige otra."}},
+                    status=400,
+                )
+    return None
 
 
 def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_approval=True):
@@ -280,6 +428,9 @@ def _scheduling_guard(request, workspace, post_id, queue_id=None, *, check_appro
     media_types = [t for t, _ in media_rows]
     video_durations = [d for t, d in media_rows if t == "video"]
     account_ids = set(_parse_selected_account_ids(request.POST.get("selected_accounts", "")))
+    blocked = _youtube_guard(request, workspace, post_id, account_ids)
+    if blocked is not None:
+        return blocked
     targets = {
         (platform, _post_type_from_form(request.POST, str(acc_id), platform))
         for acc_id, platform in SocialAccount.objects.filter(id__in=account_ids, workspace=workspace).values_list(
@@ -350,6 +501,7 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
                 setattr(pp, attr, request.POST[key].strip() or None)
 
         # Per-platform extras
+        prev_extra = dict(pp.platform_extra or {})
         post_type = _post_type_from_form(request.POST, acc_id, account.platform)
         if account.platform == "youtube":
             tags_list = parse_and_truncate_youtube_tag_string(request.POST.get(f"yt_tags_{acc_id}", ""))
@@ -422,6 +574,9 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
                     extra["video_cover_timestamp_ms"] = cover_ms_val
             pp.platform_extra = extra
 
+        pp.platform_extra = _apply_c2_extras(
+            request, workspace, acc_id, account.platform, pp.platform_extra, prev_extra
+        )
         pp.save()
 
 
@@ -545,6 +700,7 @@ def _resolve_template_data(template_id, workspace):
                 return {
                     "caption": tpl.get("body", ""),
                     "tags": list(tpl.get("tags", [])),
+                    "formato": tpl.get("formato"),
                 }
         return None
     # Fall back to PostTemplate UUID lookup.
@@ -553,6 +709,42 @@ def _resolve_template_data(template_id, workspace):
     except (PostTemplate.DoesNotExist, ValidationError):
         return None
     return tpl.template_data
+
+
+def _default_mode(request, post, prefill_is_proposed, initial_has_schedule, can_publish):
+    """Modo del paso 3 al abrir el composer: ``now`` | ``schedule`` | ``draft`` (nunca uno que el rol no pueda usar)."""
+    if request.GET.get("action") == "publish_now" and can_publish:
+        return "now"
+    if post is not None:
+        return "schedule" if post.scheduled_at and not prefill_is_proposed else "draft"
+    return "schedule" if initial_has_schedule else "draft"
+
+
+def _infer_formato(template_data, platform_extras, char_limits):
+    """Slug del formato (paso 1) que corresponde a la plantilla usada o a los tipos ya guardados; ``""`` si ninguno."""
+    slug = ((template_data or {}).get("formato") or {}).get("slug")
+    if slug:
+        return slug
+    types = {(char_limits.get(a, {}).get("platform"), (e or {}).get("post_type")) for a, e in platform_extras.items()}
+    kinds = {t for _, t in types}
+    if kinds & {"short", "reel"}:
+        return "reel_short"
+    if "carousel" in kinds:
+        return "carrusel"
+    if types and {p for p, _ in types} == {"youtube"}:
+        return "youtube_largo"
+    return ""
+
+
+def _upload_limits():
+    """Tope por tipo (bytes) y tipos aceptados, para validar al soltar el archivo antes de subirlo."""
+    from apps.media_library.validators import ALL_ALLOWED_MIMES, MAX_FILE_SIZES
+
+    return {
+        "image": int(MAX_FILE_SIZES["image"]),
+        "video": int(MAX_FILE_SIZES["video"]),
+        "mimes": sorted(ALL_ALLOWED_MIMES),
+    }
 
 
 @login_required
@@ -573,6 +765,7 @@ def compose(request, workspace_id, post_id=None):
     # time rather than a committed schedule — the composer uses this to keep the
     # primary action as "Save Draft" instead of arming "schedule for real".
     schedule_prefill_is_proposed = False
+    initial_has_schedule = False  # nuevo post abierto desde el «+» del calendario con fecha y hora
 
     # Load existing post or prepare a blank one
     if post_id:
@@ -637,6 +830,7 @@ def compose(request, workspace_id, post_id=None):
             initial["first_comment"] = template_data["first_comment"]
         if template_data and template_data.get("title"):
             initial["title"] = template_data["title"]
+        initial_has_schedule = bool(initial.get("scheduled_date") and initial.get("scheduled_time"))
         form = PostForm(initial=initial)
         platform_post_list = []
         selected_account_ids = []
@@ -693,10 +887,12 @@ def compose(request, workspace_id, post_id=None):
     # Platform character limits for JS
     char_limits = {}
     for acc in social_accounts:
+        acc.platform_label = PLATFORM_LABELS.get(acc.platform) or acc.get_platform_display()
         cfg = dict(acc.field_config)
         cfg["supports_first_comment"] = acc.supports_first_comment()
         char_limits[str(acc.id)] = {
             "platform": acc.platform,
+            "platform_label": PLATFORM_LABELS.get(acc.platform) or acc.get_platform_display(),
             "limit": acc.char_limit,
             "name": acc.account_name or acc.account_handle,
             **cfg,
@@ -860,6 +1056,15 @@ def compose(request, workspace_id, post_id=None):
         "account_scope": account_filter if (post_id and account_filter) else "",
         "failed_platform_posts": failed_platform_posts,
         "unsplash_enabled": bool(settings.UNSPLASH_ACCESS_KEY),
+        "youtube_categories": YOUTUBE_CATEGORIES,
+        "format_templates": [
+            {k: t[k] for k in ("id", "title", "description", "body", "tags", "formato")} for t in FORMAT_TEMPLATES
+        ],
+        "workspace_timezone": workspace.effective_timezone or "UTC",
+        "initial_formato": _infer_formato(template_data, platform_extras, char_limits),
+        "default_mode": _default_mode(request, post, schedule_prefill_is_proposed, initial_has_schedule, can_publish),
+        "upload_limits": _upload_limits(),
+        "help_entries": help_entries(),
     }
     return render(request, "composer/compose.html", context)
 
@@ -1017,6 +1222,13 @@ def save_post(request, workspace_id, post_id=None):
     # which is why we sync those before/after running it.
     pending_target = None  # what to transition existing children to after sync
     initial_status = "draft"  # default status for newly created PlatformPosts
+
+    if action in ("submit_for_approval", "resubmit_for_approval"):
+        blocked = _youtube_guard(
+            request, workspace, post_id, set(_parse_selected_account_ids(request.POST.get("selected_accounts", "")))
+        )
+        if blocked is not None:
+            return blocked
 
     if action in ("schedule", "publish_now", "add_to_queue", "add_to_queue_priority"):
         blocked = _scheduling_guard(
@@ -1469,12 +1681,20 @@ def autosave(request, workspace_id, post_id=None):
     allowed_ids = _publishable_account_ids(request, workspace)
     keep_ids = list(dict.fromkeys(selected_ids + [i for i in _existing_target_ids(post) if i not in allowed_ids]))
     _remove_deselected_platform_posts(request, post, keep_ids)
+    platforms = {
+        str(i): p
+        for i, p in SocialAccount.objects.filter(id__in=selected_ids, workspace=workspace).values_list("id", "platform")
+    }
     for acc_id in selected_ids:
         if acc_id in allowed_ids:
-            PlatformPost.objects.get_or_create(
+            pp, _ = PlatformPost.objects.get_or_create(
                 post=post,
                 social_account_id=acc_id,
             )
+            new_extra = _apply_c2_extras(request, workspace, acc_id, platforms.get(acc_id, ""), pp.platform_extra)
+            if new_extra != (pp.platform_extra or {}):
+                pp.platform_extra = new_extra
+                pp.save(update_fields=["platform_extra"])
 
     # Option A: an autosave that changed an approved post's content reverts it to
     # pending_review so edited content can't publish without a fresh review.
@@ -1482,9 +1702,39 @@ def autosave(request, workspace_id, post_id=None):
         _revert_approved_to_review(post)
 
     return HttpResponse(
-        f'<span class="text-xs text-gray-400">Saved {timezone.now().strftime("%H:%M")}</span>',
+        f'<span class="text-xs text-gray-400">Guardado {timezone.now().strftime("%H:%M")}</span>',
         headers={"HX-Trigger": json.dumps({"autosaved": {"postId": str(post.id), "isNew": is_new}})},
     )
+
+
+def _asset_url(workspace, raw):
+    """URL del asset del workspace (o ``""``): para mostrar la portada elegida en la vista previa."""
+    raw = (raw or "").strip()
+    if not raw or not _is_valid_uuid(raw):
+        return ""
+    from apps.media_library.models import MediaAsset
+
+    asset = MediaAsset.objects.filter(id=raw, workspace=workspace).first()
+    return asset.file.url if asset and asset.file else ""
+
+
+def _kind_label(platform, post_type, media_items, link=""):
+    """Nombre del tipo para personas («Short», «Reel», «Foto»…), el mismo que usa la pestaña de la red."""
+    if platform == "youtube":
+        return "Short" if post_type == "short" else "Video"
+    if platform in ("instagram", "instagram_login"):
+        return {"reel": "Reel", "story": "Story", "carousel": "Carrusel"}.get(post_type, "Feed")
+    if platform == "facebook":
+        if post_type == "reel":
+            return "Reel"
+        if link:
+            return "Enlace"
+        if not media_items:
+            return "Texto"
+        if any(m["is_video"] for m in media_items):
+            return "Video"
+        return "Fotos" if len(media_items) > 1 else "Foto"
+    return ""
 
 
 @login_required
@@ -1534,6 +1784,10 @@ def preview(request, workspace_id):
                     # appeared anywhere except its own uploader box.
                     "thumbnail_url": _preview_thumbnail_url(request, workspace, account),
                     "post_type": _post_type_from_form(request.POST, account.id, account.platform) or "",
+                    "platform_label": PLATFORM_LABELS.get(account.platform) or account.get_platform_display(),
+                    "cover_text": request.POST.get("cover_text", "").strip(),
+                    "link": request.POST.get(f"fb_link_{account.id}", "").strip(),
+                    "ig_cover_url": _asset_url(workspace, request.POST.get(f"ig_cover_asset_id_{account.id}", "")),
                 }
             )
 
@@ -1554,6 +1808,8 @@ def preview(request, workspace_id):
                         "is_video": asset.is_video,
                         "filename": asset.filename,
                         "duration": asset.duration,
+                        "width": asset.width,
+                        "height": asset.height,
                     }
                 )
         except Post.DoesNotExist:
@@ -1573,6 +1829,8 @@ def preview(request, workspace_id):
                         "is_video": asset.is_video,
                         "filename": asset.filename,
                         "duration": asset.duration,
+                        "width": asset.width,
+                        "height": asset.height,
                     }
                 )
 
@@ -1585,6 +1843,41 @@ def preview(request, workspace_id):
                 p["account"].platform, ["video"], p["post_type"], durations
             ) or media_duration_notice(p["post_type"], durations)
 
+    # Revisor de calidad + contador de caracteres visibles, por plataforma.
+    banned = get_setting(workspace.id, BANNED_PHRASES_KEY, workspace.organization_id) or []
+    first_video = videos[0] if videos else {}
+    for p in previews:
+        acc = p["account"]
+        ptype = p["post_type"] or ("video" if acc.platform == "youtube" and videos else "")
+        thumb = _preview_thumbnail_asset(request, workspace, acc)
+        p["quality"] = quality_warnings(
+            platform=acc.platform,
+            post_type=ptype,
+            title=p["title"],
+            caption=p["caption"],
+            first_comment=p["first_comment"],
+            cover_text=request.POST.get("cover_text", ""),
+            duration=first_video.get("duration"),
+            width=first_video.get("width"),
+            height=first_video.get("height"),
+            thumbnail_bytes=thumb.file_size if thumb else None,
+            banned_phrases=banned,
+        )
+        p["visible"] = visible_counter(acc.platform, ptype, p["title"], p["caption"])
+        p["kind"] = _kind_label(acc.platform, p["post_type"], media_items, p["link"])
+
+    blocks = [
+        {"message_es": w["message_es"], "who": f"{p['platform_label']} · {p['account'].account_name}"}
+        for p in previews
+        for w in p["quality"]
+        if w["level"] == "block"
+    ]
+    warns = [
+        {"message_es": w["message_es"], "who": f"{p['platform_label']} · {p['account'].account_name}"}
+        for p in previews
+        for w in p["quality"]
+        if w["level"] != "block"
+    ]
     return render(
         request,
         "composer/partials/preview_panel.html",
@@ -1592,6 +1885,10 @@ def preview(request, workspace_id):
             "previews": previews,
             "workspace": workspace,
             "media_items": media_items,
+            "oob_review": True,
+            "review_blocks": blocks,
+            "review_warns": warns,
+            "review_blocks_json": json.dumps([b["message_es"] for b in blocks]),
         },
     )
 
@@ -2173,6 +2470,63 @@ def pinterest_boards(request, workspace_id, account_id):
         return JsonResponse({"error": "No se pudieron obtener los tableros"}, status=502)
 
     return JsonResponse({"boards": [{"id": b.get("id"), "name": b.get("name")} for b in boards]})
+
+
+@login_required
+@require_GET
+@require_permission("create_posts")
+def youtube_playlists(request, workspace_id, account_id):
+    """Listas de reproducción del canal para el selector del composer.
+
+    Acotado a la cuenta de YouTube de este workspace y a quien puede publicar en ese canal.
+    """
+    workspace = _get_workspace(request, workspace_id)
+    account = get_object_or_404(SocialAccount, id=account_id, workspace=workspace, platform="youtube")
+    if str(account.id) not in _publishable_account_ids(request, workspace):
+        raise PermissionDenied("No puedes publicar en este canal.")
+
+    from apps.credentials.models import resolve_platform_credentials
+    from providers import get_provider
+
+    try:
+        provider = get_provider("youtube", resolve_platform_credentials("youtube", workspace.organization_id))
+        access_token = account.oauth_access_token
+        if account.token_expires_at and account.is_token_expiring_soon:
+            access_token = account.refresh_oauth_token(provider)
+        playlists = provider.list_playlists(access_token, cache_id=str(account.id))
+    except Exception:
+        logger.warning("No se pudieron listar las playlists de %s", account.id, exc_info=True)
+        return JsonResponse({"error": "No se pudieron obtener las listas de reproducción"}, status=502)
+    return JsonResponse({"playlists": [{"id": p["id"], "title": p["title"]} for p in playlists]})
+
+
+@login_required
+@require_POST
+@require_permission("upload_media")
+def reorder_media(request, workspace_id, post_id=None):
+    """Guarda el orden de los medios (``order`` = ids de asset separados por coma): manda el primero como portada."""
+    workspace = _get_workspace(request, workspace_id)
+    order = [i for i in request.POST.get("order", "").split(",") if _is_valid_uuid(i)]
+    if post_id:
+        post = get_object_or_404(Post, id=post_id, workspace=workspace)
+        _require_may_edit(request, post)
+        attachments = {str(pm.media_asset_id): pm for pm in post.media_attachments.all()}
+        ordered = [attachments[i] for i in dict.fromkeys(order) if i in attachments]
+        ordered += [pm for pm in attachments.values() if pm not in ordered]
+        changed = False
+        for position, pm in enumerate(ordered):
+            if pm.position != position:
+                pm.position = position
+                pm.save(update_fields=["position"])
+                changed = True
+        if changed:
+            _revert_approved_to_review(post)
+    else:
+        key = f"pending_media_{workspace.id}"
+        pending = request.session.get(key, [])
+        ordered_ids = [i for i in dict.fromkeys(order) if i in pending]
+        request.session[key] = ordered_ids + [i for i in pending if i not in ordered_ids]
+    return HttpResponse(status=204, headers={"HX-Trigger": "previewUpdate"})
 
 
 @login_required
@@ -3401,7 +3755,8 @@ _TEMPLATE_EXTRA_KEYS = {
     "privacy_status", "self_declared_made_for_kids", "tags", "thumbnail_asset_id", "post_type", "board_id",
     "link_url", "alt_text", "tag_products", "allow_comments", "show_similar_products", "cover_image_asset_id",
     "disable_comment", "disable_duet", "disable_stitch", "brand_organic_toggle", "brand_content_toggle",
-    "is_aigc", "privacy_level", "video_cover_timestamp_ms",
+    "is_aigc", "privacy_level", "video_cover_timestamp_ms", "category_id", "playlist_id",
+    "contains_synthetic_media", "solo_organico", "collaborators", "share_to_feed",
 }  # fmt: skip
 
 

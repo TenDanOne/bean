@@ -313,6 +313,13 @@ class InstagramProvider(SocialProvider):
             # sent as image_url ("The image format is not supported").
             payload["media_type"] = "REELS"
             payload["video_url"] = content.media_urls[0]
+            # Portada: imagen propia (cover_url) o un fotograma (thumb_offset, ms). La imagen manda.
+            if content.extra.get("cover_url"):
+                payload["cover_url"] = content.extra["cover_url"]
+            elif content.extra.get("thumb_offset") is not None:
+                payload["thumb_offset"] = int(content.extra["thumb_offset"])
+            if content.extra.get("share_to_feed") is not None:
+                payload["share_to_feed"] = bool(content.extra["share_to_feed"])
         elif content.post_type == PostType.STORY:
             if content.media_urls and is_video_url(content.media_urls[0]):
                 payload["media_type"] = "STORIES"
@@ -323,6 +330,9 @@ class InstagramProvider(SocialProvider):
         else:
             # Default IMAGE
             payload["image_url"] = content.media_urls[0]
+
+        if content.post_type != PostType.STORY:
+            self._add_collaborators(payload, content)
 
         # Step 1: create container
         container_id = self._create_container(access_token, ig_user_id, payload)
@@ -359,11 +369,20 @@ class InstagramProvider(SocialProvider):
         }
         if content.text:
             carousel_payload["caption"] = content.text
+        self._add_collaborators(carousel_payload, content)
 
         carousel_id = self._create_container(access_token, ig_user_id, carousel_payload)
         self._wait_for_container(access_token, carousel_id)
 
         return self._publish_container(access_token, ig_user_id, carousel_id)
+
+    @staticmethod
+    def _add_collaborators(payload: dict, content: PublishContent) -> None:
+        """Invita hasta 3 colaboradores (usernames sin @); el resto se descarta."""
+        names = [str(c).strip().lstrip("@") for c in content.extra.get("collaborators") or []]
+        names = [n for n in names if n][:3]
+        if names:
+            payload["collaborators"] = names
 
     def _create_container(self, access_token: str, ig_user_id: str, payload: dict) -> str:
         resp = self._request(

@@ -1,0 +1,25 @@
+{% comment %}
+Una fila de la lista de medios (orden, miniatura, nombre, subir/bajar/quitar). Contexto: asset, remove_url, workspace.
+El número y «portada» salen de CSS (contador de #media-list), así sobreviven a reordenar sin repintar.
+{% endcomment %}
+<li class="cp-up" data-asset-id="{{ asset.id }}">
+    <span class="cp-up-no" aria-hidden="true"></span>
+    <span class="cp-up-th">
+        {% if asset.is_video %}
+        <video src="{{ asset.file.url }}#t=0.5" data-asset-id="{{ asset.id }}" muted preload="metadata"></video>
+        {% elif asset.thumbnail %}
+        <img src="{{ asset.thumbnail.url }}" alt="">
+        {% elif asset.file %}
+        <img src="{{ asset.file.url }}" alt="">
+        {% else %}
+        {% icon "image" css_class="w-5 h-5" %}
+        {% endif %}
+    </span>
+    <span class="cp-up-nm"><b title="{{ asset.filename }}">{{ asset.filename }}</b><small>{% if asset.is_video %}Video{% else %}Imagen{% endif %} · {{ asset.file_size_display }}</small></span>
+    <span class="cp-up-act">
+        <button type="button" class="cp-ib" data-mv="-1" aria-label="Subir {{ asset.filename }} en el orden">{% icon "chevron-up" css_class="w-4 h-4" %}</button>
+        <button type="button" class="cp-ib" data-mv="1" aria-label="Bajar {{ asset.filename }} en el orden">{% icon "chevron-down" css_class="w-4 h-4" %}</button>
+        <button type="button" class="cp-ib" aria-label="Quitar {{ asset.filename }}"
+                hx-post="{{ remove_url }}" hx-target="#media-list" hx-swap="innerHTML">{% icon "trash" css_class="w-4 h-4" %}</button>
+    </span>
+</li>

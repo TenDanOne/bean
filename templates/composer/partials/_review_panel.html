@@ -1,0 +1,24 @@
+{% comment %}
+Resumen de la revisión (avisos de calidad por cuenta). Contexto: previews, review_blocks, review_warns, review_blocks_json.
+El servidor entrega lo que ve del texto y los medios; las comprobaciones de la pantalla (cuentas, «Hecho para niños»,
+fecha) las suma Alpine en la columna. ``#review-data`` lleva los bloqueos para que el botón Publicar los lea.
+{% endcomment %}
+<div id="review-data" data-blocks="{{ review_blocks_json|default:'[]' }}" data-warns="{{ review_warns|length }}" hidden></div>
+{% if previews %}
+<ul class="cp-rv">
+    {% for b in review_blocks %}
+    <li class="cp-rvi block">{% icon "circle-xmark" size="" %}<div class="cp-rvt"><b>{{ b.message_es }}</b><span>{{ b.who }}</span></div><span class="st-pill ib-k st-failed">Bloquea</span></li>
+    {% endfor %}
+    {% for w in review_warns %}
+    <li class="cp-rvi warn">{% icon "triangle-exclamation" size="" %}<div class="cp-rvt"><b>{{ w.message_es }}</b><span>{{ w.who }}</span></div><span class="st-pill ib-k st-review">Aviso</span></li>
+    {% endfor %}
+    {% if not review_blocks and not review_warns %}
+    <li class="cp-rvi ok">{% icon "circle-check" size="" %}<div class="cp-rvt"><b>Sin problemas en el texto y los medios</b><span>Marcadores, mayúsculas, hashtags, duración y miniatura en orden.</span></div><span class="st-pill ib-k st-published">Bien</span></li>
+    {% endif %}
+</ul>
+<ul class="cp-vis" aria-label="Caracteres visibles por cuenta">
+    {% for p in previews %}{% if p.visible %}
+    <li><b>{{ p.platform_label }}{% if p.kind %} · {{ p.kind }}{% endif %}</b> <span{% if p.visible.over %} class="over"{% endif %}>{{ p.visible.what }}: {{ p.visible.used }} / {{ p.visible.limit }} visibles</span></li>
+    {% endif %}{% endfor %}
+</ul>
+{% endif %}

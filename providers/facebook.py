@@ -94,7 +94,7 @@ class FacebookProvider(SocialProvider):
 
     @property
     def supported_post_types(self) -> list[PostType]:
-        return [PostType.TEXT, PostType.IMAGE, PostType.VIDEO, PostType.LINK]
+        return [PostType.TEXT, PostType.IMAGE, PostType.VIDEO, PostType.LINK, PostType.REEL]
 
     @property
     def supported_media_types(self) -> list[MediaType]:
@@ -289,6 +289,8 @@ class FacebookProvider(SocialProvider):
                 platform=self.platform_name,
             )
 
+        if content.post_type == PostType.REEL and content.media_urls:
+            return self._publish_reel(access_token, page_id, content)
         if content.post_type == PostType.IMAGE and content.media_urls:
             return self._publish_photo(access_token, page_id, content)
         if content.post_type == PostType.VIDEO and content.media_urls:
@@ -297,8 +299,9 @@ class FacebookProvider(SocialProvider):
 
     def _publish_text_or_link(self, access_token: str, page_id: str, content: PublishContent) -> PublishResult:
         payload: dict = {"message": content.text}
-        if content.link_url:
-            payload["link"] = content.link_url
+        link = content.link_url or content.extra.get("link")
+        if link:
+            payload["link"] = link
         resp = self._request(
             "POST",
             f"{BASE_URL}/{page_id}/feed",
@@ -458,6 +461,42 @@ class FacebookProvider(SocialProvider):
             platform_post_id=post_id,
             url=url,
             extra={**data, **video_fields, "video_id": video_id},
+        )
+
+    def _publish_reel(self, access_token: str, page_id: str, content: PublishContent) -> PublishResult:
+        """Reel de página: video_reels start -> subir por URL -> finish (publicado)."""
+        start = self._request(
+            "POST",
+            f"{BASE_URL}/{page_id}/video_reels",
+            access_token=access_token,
+            json={"upload_phase": "start"},
+        ).json()
+        video_id = start.get("video_id")
+        if not video_id:
+            raise PublishError(
+                "Facebook no devolvió video_id para el Reel", platform=self.platform_name, raw_response=start
+            )
+        upload_url = start.get("upload_url") or f"https://rupload.facebook.com/video-upload/v25.0/{video_id}"
+        self._request(
+            "POST",
+            upload_url,
+            headers={"Authorization": f"OAuth {access_token}", "file_url": content.media_urls[0]},
+        )
+        finish = self._request(
+            "POST",
+            f"{BASE_URL}/{page_id}/video_reels",
+            access_token=access_token,
+            json={
+                "upload_phase": "finish",
+                "video_id": video_id,
+                "video_state": "PUBLISHED",
+                "description": content.text or "",
+            },
+        ).json()
+        return PublishResult(
+            platform_post_id=video_id,
+            url=f"https://www.facebook.com/reel/{video_id}",
+            extra={**finish, "video_id": video_id},
         )
 
     # ------------------------------------------------------------------

@@ -28,6 +28,20 @@
         </div>
     </form>
 
+    <!-- Frases prohibidas (revisor de calidad del composer) -->
+    <form method="POST" class="mb-10">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="banned_phrases">
+        <label for="banned_phrases" class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Frases prohibidas de la marca</label>
+        <p class="text-xs mb-2" style="color: var(--text-tertiary);">Una por línea. El revisor del composer avisa cuando una publicación las contiene (por ejemplo, «puntaje garantizado»).</p>
+        <textarea id="banned_phrases" name="banned_phrases" rows="5" maxlength="6000" {% if not can_manage %}disabled{% endif %}
+                  class="input-focus w-full px-3 py-2 text-sm outline-none"
+                  style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">{{ banned_phrases_text }}</textarea>
+        {% if can_manage %}
+        <button type="submit" class="btn-neutral mt-2 px-5 py-2 text-sm font-medium rounded-full cursor-pointer" style="background: var(--neutral-100); color: var(--text-primary);">Guardar frases</button>
+        {% endif %}
+    </form>
+
     <!-- Logo section -->
     <form method="POST" enctype="multipart/form-data" x-data="{
         preview: '{% if workspace.icon %}{{ workspace.icon.url }}{% endif %}',

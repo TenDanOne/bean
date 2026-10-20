@@ -1,242 +1,165 @@
 {% comment %}
-Preview Panel - platform-specific post previews.
-Context: previews (list of dicts with account, title, caption, first_comment, char_count, char_limit, is_over_limit, truncated_caption, needs_title), media_items, workspace.
+Vista previa fiel, una por cuenta (el composer muestra solo la de la pestaña activa: [data-pv-acc]).
+Contexto: previews (account, title, caption, first_comment, char_count, char_limit, is_over_limit,
+truncated_caption, thumbnail_url, post_type, kind, cover_text, link, ig_cover_url, quality, visible),
+media_items, workspace. Proporciones del mockup aprobado: YT 16:9 con miniatura / Short 9:16, Reel/Story/TikTok 9:16
+con zonas seguras, IG feed 4:5 y carrusel con puntos, FB foto 4:5, cuadrícula, video vertical sin recorte,
+tarjeta de enlace 1.91:1 y texto. Con ``oob_review`` también refresca el panel de revisión (fuera de banda).
 {% endcomment %}
 
 {% if previews %}
     {% for p in previews %}
-    <div class="preview-card" style="animation: slideUp 200ms {{ forloop.counter0|add:0 }}50ms cubic-bezier(0.16,1,0.3,1) both">
+    <figure class="cp-pvw" data-pv-acc="{{ p.account.id }}" data-pv-kind="{{ p.kind }}">
 
-        <!-- Platform label + char badge -->
-        <div class="px-3.5 py-2 border-b flex items-center gap-2" style="border-color: #E7E5E4;">
+        <figcaption>
             {% include "partials/_platform_icon.html" with platform=p.account.platform size="sm" %}
-            <span class="text-[11px] font-semibold text-app-tertiary flex-1">Vista previa de {{ p.account.platform|title }}{% if p.post_type %} · {{ p.post_type|capfirst }}{% endif %}</span>
-            <span class="text-[10px] font-semibold tabular-nums px-2 py-0.5 rounded-full
-                         {% if p.is_over_limit %}bg-red-50 text-red-600{% else %}bg-app-2 text-app-tertiary{% endif %}">
-                {{ p.char_count }}/{{ p.char_limit }}
-            </span>
-        </div>
+            <span>{{ p.platform_label }}{% if p.kind %} · {{ p.kind }}{% endif %}</span>
+            <small>{{ p.account.account_name|default:p.account.account_handle }}</small>
+            <span class="st-pill ib-k {% if p.is_over_limit %}st-failed{% else %}st-draft{% endif %}" style="margin-left:auto;min-width:0" title="Caracteres usados / límite de la plataforma">{{ p.char_count }}/{{ p.char_limit }}</span>
+        </figcaption>
 
         {% if p.format_notice %}
-        <p class="px-3.5 py-1.5 text-[11px] text-app-ghost" role="status">{{ p.format_notice }}</p>
+        <p class="cp-pvmeta" role="status" style="margin:0 0 8px">{{ p.format_notice }}</p>
         {% endif %}
 
         {% if p.account.platform == "youtube" %}
-        {# ─── YouTube ─── video-first layout like a YouTube upload preview #}
-        <div class="bg-app">
-            {% comment %}
-            A custom thumbnail is what viewers actually see in the feed, so it wins
-            over the video's own frame — matching what YouTube will show once the
-            upload finishes. Falls back to the video when none was chosen.
-            {% endcomment %}
-            {% if p.thumbnail_url %}
-            <div class="relative bg-black" style="aspect-ratio: 16/9;">
-                <img src="{{ p.thumbnail_url }}" class="w-full h-full object-cover" alt="Vista previa de la miniatura personalizada">
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="w-12 h-12 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg">
-                        {% icon "play" css_class="w-5 h-5 text-app-inverse ml-0.5" %}
-                    </div>
-                </div>
-                <span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium text-app-inverse" style="background: rgba(0,0,0,0.65);">Miniatura personalizada</span>
-            </div>
-            {% if p.post_type == "short" %}
-            <p class="px-3.5 py-1.5 text-[11px] text-app-ghost">YouTube no aplica miniaturas personalizadas a los Shorts.</p>
-            {% endif %}
-            {% elif media_items %}
-            {% with m=media_items.0 %}
-            <div class="relative bg-black" style="aspect-ratio: 16/9;">
-                {% if m.is_video %}
-                <video src="{{ m.url }}#t=0.5" class="w-full h-full object-contain" muted preload="metadata"></video>
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="w-12 h-12 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg">
-                        {% icon "play" css_class="w-5 h-5 text-app-inverse ml-0.5" %}
-                    </div>
-                </div>
-                {% else %}
-                <img src="{{ m.url }}" class="w-full h-full object-cover" alt="">
-                {% endif %}
-            </div>
-            {% endwith %}
-            {% else %}
-            <div class="bg-stone-900 flex items-center justify-center" style="aspect-ratio: 16/9;">
-                <div class="text-center">
-                    {% icon "video" css_class="w-8 h-8 mx-auto text-app-secondary mb-1" %}
-                    <span class="text-[11px] text-app-tertiary">Miniatura del video</span>
-                </div>
-            </div>
-            {% endif %}
-            <div class="p-3">
-                <div class="text-[13px] font-semibold text-app leading-snug mb-1.5 line-clamp-2">{% if p.title %}{{ p.title|truncatechars:100 }}{% elif p.caption %}{{ p.caption|truncatechars:100 }}{% else %}<span class="text-app-faint italic font-normal">Título del video…</span>{% endif %}</div>
-                <div class="flex items-center gap-2 mb-2">
-                    {% if p.account.avatar_url %}
-                    <img src="{{ p.account.avatar_url }}" class="w-6 h-6 rounded-full object-cover">
-                    {% else %}
-                    <div class="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center text-[9px] font-bold text-app-inverse">{{ p.account.account_name|default:p.account.account_handle|make_list|first|upper }}</div>
-                    {% endif %}
-                    <div>
-                        <div class="text-[11px] font-medium text-app-secondary">{{ p.account.account_name|default:p.account.account_handle }}</div>
-                        <div class="text-[10px] text-app-ghost">0 vistas · Justo ahora</div>
-                    </div>
-                </div>
-                {% if p.caption %}<div class="text-[11px] text-app-tertiary leading-relaxed line-clamp-3 whitespace-pre-wrap break-words">{{ p.truncated_caption|truncatechars:200 }}</div>{% endif %}
+        {# ─── YouTube ─── Short 9:16 con #Shorts · Video 16:9 con la miniatura elegida como portada #}
+        {% if p.post_type == "short" %}
+        <div class="cp-dev dk">
+            <div class="cp-media ar-916">
+                {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Sube un video vertical" %}
+                {% if p.cover_text %}<span class="cp-cover"><b>{{ p.cover_text }}</b></span>{% endif %}
+                <div class="cp-ov"><b>{{ p.account.account_name|default:p.account.account_handle }}</b>{% if p.title %}{{ p.title|truncatechars:40 }}{% else %}{{ p.caption|truncatechars:40 }}{% endif %} #Shorts</div>
+                <div class="cp-rc"><span>{% icon "heart" size="" %}<br>12 mil</span><span>{% icon "comment" size="" %}<br>240</span><span>{% icon "share-nodes" size="" %}</span></div>
+                <span class="cp-sz"><i>zona segura</i></span>
             </div>
         </div>
+        {% if p.thumbnail_url %}
+        <p class="cp-pvmeta">YouTube no aplica miniaturas personalizadas a los Shorts.</p>
+        {% endif %}
+        {% else %}
+        <div class="cp-dev w">
+            <div class="cp-media ar-169">
+                {% if p.thumbnail_url %}
+                <img src="{{ p.thumbnail_url }}" alt="Vista previa de la miniatura personalizada">
+                {% else %}
+                {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Miniatura del video" %}
+                {% endif %}
+                {% if p.cover_text %}<span class="cp-cover"><b>{{ p.cover_text }}</b></span>{% endif %}
+                {% if p.thumbnail_url %}<span class="cp-dur" style="left:6px;right:auto">Miniatura personalizada</span>{% endif %}
+            </div>
+            <div class="cp-yt-t">{% if p.title %}{{ p.title|truncatechars:70 }}{% elif p.caption %}{{ p.caption|truncatechars:70 }}{% else %}<em style="font-weight:400;color:var(--dev-mute)">Título del video…</em>{% endif %}</div>
+            <div class="cp-yt-m">
+                <span class="cp-av">{% if p.account.avatar_url %}<img src="{{ p.account.avatar_url }}" alt="">{% else %}{{ p.account.account_name|default:p.account.account_handle|make_list|first|upper }}{% endif %}</span>
+                <span>{{ p.account.account_name|default:p.account.account_handle }} · 0 vistas · Justo ahora</span>
+            </div>
+            {% if p.caption %}<div class="cp-cap" style="padding-top:0"><em>{{ p.truncated_caption|truncatechars:160 }}</em></div>{% endif %}
+        </div>
+        {% endif %}
 
         {% elif p.account.platform == "instagram" or p.account.platform == "instagram_login" %}
-        {# ─── Instagram ─── square media, account header, action icons #}
-        <div class="bg-app">
-            <div class="flex items-center gap-2.5 px-3 py-2.5">
-                {% if p.account.avatar_url %}
-                <img src="{{ p.account.avatar_url }}" class="w-8 h-8 rounded-full object-cover" style="border: 2px solid #E7E5E4;">
+        {# ─── Instagram ─── Feed 4:5 · Reel/Story 9:16 con zonas seguras · Carrusel con puntos #}
+        {% if p.post_type == "reel" or p.post_type == "story" %}
+        <div class="cp-dev dk">
+            <div class="cp-media ar-916">
+                {% if p.ig_cover_url and p.post_type == "reel" %}
+                <img src="{{ p.ig_cover_url }}" alt="Portada del Reel">
+                {% elif p.post_type == "story" %}
+                {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Sube una imagen o video vertical" %}
                 {% else %}
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-app-inverse" style="background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF);">{{ p.account.account_name|default:p.account.account_handle|make_list|first|upper }}</div>
+                {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Sube un video vertical" %}
                 {% endif %}
-                <span class="text-[13px] font-semibold text-app">{{ p.account.account_name|default:p.account.account_handle }}</span>
-                {% icon "ellipsis-vertical" css_class="w-4 h-4 text-app-ghost ml-auto" %}
-            </div>
-            {% if media_items %}
-            {% if media_items|length > 1 %}
-            {# ─── Carousel ─── #}
-            <div class="relative bg-app-2" style="aspect-ratio: 1/1;" x-data="{ slide: 0, count: {{ media_items|length }} }">
-                {% for m in media_items %}
-                <div x-show="slide === {{ forloop.counter0 }}" class="absolute inset-0">
-                    {% if m.is_video %}
-                    <video src="{{ m.url }}#t=0.5" class="w-full h-full object-cover" muted preload="metadata"></video>
-                    {% else %}
-                    <img src="{{ m.url }}" class="w-full h-full object-cover" alt="">
-                    {% endif %}
+                {% if p.cover_text and p.post_type == "reel" %}<span class="cp-cover"><b>{{ p.cover_text }}</b></span>{% endif %}
+                {% if p.post_type == "story" %}
+                <div class="cp-ov" style="justify-content:space-between;background:linear-gradient(var(--overlay),transparent 30%,transparent 80%,var(--overlay))">
+                    <div><div style="height:3px;background:var(--warm-300);border-radius:2px;margin-bottom:8px"><i style="display:block;height:100%;width:40%;background:var(--on-primary);border-radius:2px"></i></div><b>{{ p.account.account_name|default:p.account.account_handle }}</b></div>
+                    <div style="border:1px solid var(--on-primary);border-radius:99px;padding:6px 12px;font-size:12px;align-self:flex-start">Enviar mensaje</div>
                 </div>
-                {% endfor %}
-                <!-- Counter badge -->
-                <div class="absolute top-3 right-3 bg-black/60 text-app-inverse text-[11px] font-medium px-2 py-0.5 rounded-full" x-text="(slide + 1) + '/' + count"></div>
-                <!-- Left arrow -->
-                <button type="button" x-show="slide > 0" @click.stop="slide = Math.max(0, slide - 1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-app transition-colors">
-                    {% icon "chevron-left" css_class="w-3.5 h-3.5 text-app-body" %}
-                </button>
-                <!-- Right arrow -->
-                <button type="button" x-show="slide < count - 1" @click.stop="slide = Math.min(count - 1, slide + 1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-app transition-colors">
-                    {% icon "chevron-right" css_class="w-3.5 h-3.5 text-app-body" %}
-                </button>
-                <!-- Dot indicators -->
-                <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {% for m in media_items %}
-                    <button type="button" @click.stop="slide = {{ forloop.counter0 }}" class="w-1.5 h-1.5 rounded-full transition-colors" :class="slide === {{ forloop.counter0 }} ? 'bg-[#3897f0]' : 'bg-white/60'"></button>
-                    {% endfor %}
-                </div>
-            </div>
-            {% else %}
-            {# ─── Single media ─── #}
-            {% with m=media_items.0 %}
-            <div class="relative bg-app-2" style="aspect-ratio: 1/1;">
-                {% if m.is_video %}
-                <video src="{{ m.url }}#t=0.5" class="w-full h-full object-cover" muted preload="metadata"></video>
                 {% else %}
-                <img src="{{ m.url }}" class="w-full h-full object-cover" alt="">
+                <div class="cp-ov"><b>{{ p.account.account_name|default:p.account.account_handle }}</b>{{ p.truncated_caption|truncatechars:70 }}</div>
+                <div class="cp-rc"><span>{% icon "heart" size="" %}<br>12 mil</span><span>{% icon "comment" size="" %}<br>240</span><span>{% icon "share-nodes" size="" %}</span></div>
                 {% endif %}
-            </div>
-            {% endwith %}
-            {% endif %}
-            {% else %}
-            <div class="bg-app-1 flex items-center justify-center" style="aspect-ratio: 1/1;">
-                {% icon "image" css_class="w-10 h-10 text-stone-200" %}
-            </div>
-            {% endif %}
-            <!-- IG action icons -->
-            <div class="flex items-center gap-4 px-3 py-2.5">
-                {% icon "heart" css_class="w-6 h-6 text-app-strong" %}
-                {% icon "comment" css_class="w-6 h-6 text-app-strong" %}
-                {% icon "paper-plane" css_class="w-6 h-6 text-app-strong" %}
-                <svg class="w-5 h-5 text-app-strong ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/></svg>
-            </div>
-            <div class="px-3 pb-3">
-                {% if p.caption %}
-                <div class="text-[13px] text-app leading-relaxed"><span class="font-semibold">{{ p.account.account_name|default:p.account.account_handle }}</span> <span class="whitespace-pre-wrap break-words">{{ p.truncated_caption|truncatechars:150 }}</span></div>
-                {% else %}
-                <div class="text-[13px] text-app-faint italic">Escribe un texto…</div>
-                {% endif %}
-                {% if p.first_comment %}
-                <div class="text-[12px] text-app-ghost mt-1.5">Ver todos los comentarios</div>
-                {% endif %}
-                <div class="text-[10px] text-app-ghost uppercase tracking-wider mt-1.5">Justo ahora</div>
+                <span class="cp-sz"><i>zona segura</i></span>
             </div>
         </div>
+        {% else %}
+        <div class="cp-dev w">
+            <div class="hd">
+                <span class="cp-av">{% if p.account.avatar_url %}<img src="{{ p.account.avatar_url }}" alt="">{% else %}{{ p.account.account_name|default:p.account.account_handle|make_list|first|upper }}{% endif %}</span>
+                <div><b>{{ p.account.account_name|default:p.account.account_handle }}</b><small>Ciudad de México</small></div>
+            </div>
+            <div class="cp-media ar-45">
+                {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Sube una imagen" icon="image" %}
+                {% if p.cover_text and not media_items %}<span class="cp-cover"><b>{{ p.cover_text }}</b></span>{% endif %}
+                {% if p.post_type == "carousel" or media_items|length > 1 %}<span class="cp-cnr">1/{{ media_items|length|default:"2" }}</span>{% endif %}
+            </div>
+            {% if p.post_type == "carousel" or media_items|length > 1 %}
+            <div class="cp-dots" aria-hidden="true">{% for m in media_items %}<i></i>{% empty %}<i></i><i></i>{% endfor %}</div>
+            {% endif %}
+            <div class="act">{% icon "heart" size="" %}{% icon "comment" size="" %}{% icon "paper-plane" size="" %}{% icon "bookmark" size="" %}</div>
+            <div class="cp-cap">
+                {% if p.caption %}<b>{{ p.account.account_name|default:p.account.account_handle }}</b> {{ p.truncated_caption|truncatechars:125 }}{% if p.caption|length > 125 %} <em>más</em>{% endif %}{% else %}<em>Escribe un texto…</em>{% endif %}
+                {% if p.first_comment %}<div><em>Ver todos los comentarios</em></div>{% endif %}
+            </div>
+        </div>
+        {% endif %}
 
         {% elif p.account.platform == "facebook" %}
-        {# ─── Facebook ─── classic FB post card #}
-        <div class="bg-app">
-            <div class="flex items-center gap-2.5 px-3 py-3">
-                {% if p.account.avatar_url %}
-                <img src="{{ p.account.avatar_url }}" class="w-10 h-10 rounded-full object-cover">
-                {% else %}
-                <div class="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center text-xs font-bold text-app-inverse">{{ p.account.account_name|default:p.account.account_handle|make_list|first|upper }}</div>
-                {% endif %}
-                <div class="flex-1">
-                    <div class="text-[13px] font-semibold text-app">{{ p.account.account_name|default:p.account.account_handle }}</div>
-                    <div class="text-[11px] text-app-ghost flex items-center gap-1">Justo ahora · {% icon "circle-minus" css_class="w-3 h-3" %}</div>
-                </div>
-                {% icon "ellipsis-vertical" css_class="w-5 h-5 text-app-ghost" %}
+        {# ─── Facebook ─── Reel 9:16 · enlace 1.91:1 · foto 4:5 · cuadrícula · video vertical sin recortar · texto #}
+        {% if p.post_type == "reel" %}
+        <div class="cp-dev dk">
+            <div class="cp-media ar-916">
+                {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Sube un video vertical" %}
+                {% if p.cover_text %}<span class="cp-cover"><b>{{ p.cover_text }}</b></span>{% endif %}
+                <div class="cp-ov"><b>{{ p.account.account_name|default:p.account.account_handle }}</b>{{ p.truncated_caption|truncatechars:70 }}</div>
+                <div class="cp-rc"><span>{% icon "thumbs-up" size="" %}<br>12 mil</span><span>{% icon "comment" size="" %}<br>240</span><span>{% icon "share-nodes" size="" %}</span></div>
+                <span class="cp-sz"><i>zona segura</i></span>
             </div>
-            {% if p.caption %}
-            <div class="px-3 pb-3 text-[14px] text-app-strong leading-relaxed whitespace-pre-wrap break-words">{{ p.truncated_caption|truncatechars:250 }}</div>
-            {% endif %}
-            {% if media_items %}
-            {% if media_items|length > 1 %}
-            {# ─── Carousel ─── #}
-            <div class="relative bg-app-2 overflow-hidden" style="aspect-ratio: 16/9;" x-data="{ slide: 0, count: {{ media_items|length }} }">
-                {% for m in media_items %}
-                <div x-show="slide === {{ forloop.counter0 }}" class="absolute inset-0">
-                    {% if m.is_video %}
-                    <video src="{{ m.url }}#t=0.5" class="w-full h-full object-cover" muted preload="metadata"></video>
-                    <div class="absolute inset-0 flex items-center justify-center"><div class="w-14 h-14 rounded-full bg-black/40 flex items-center justify-center">{% icon "play" css_class="w-6 h-6 text-app-inverse ml-0.5" %}</div></div>
-                    {% else %}
-                    <img src="{{ m.url }}" class="w-full h-full object-cover" alt="">
-                    {% endif %}
+        </div>
+        {% else %}
+        <div class="cp-dev w">
+            <div class="hd">
+                <span class="cp-av">{% if p.account.avatar_url %}<img src="{{ p.account.avatar_url }}" alt="">{% else %}{{ p.account.account_name|default:p.account.account_handle|make_list|first|upper }}{% endif %}</span>
+                <div><b>{{ p.account.account_name|default:p.account.account_handle }}</b><small>Ahora · Público</small></div>
+            </div>
+            {% if p.caption %}<div class="cp-cap">{{ p.truncated_caption|truncatechars:250 }}</div>{% endif %}
+            {% if p.link and not media_items %}
+            <div class="cp-media ar-191"><div class="cp-ph">{% icon "link" size="" %}<span>Vista previa del enlace</span></div></div>
+            <div class="cp-lcard"><div><small>{{ p.link }}</small><b>Tarjeta del enlace</b></div></div>
+            {% elif media_items|length > 1 %}
+            <div class="cp-gridf">
+                {% for m in media_items|slice:":4" %}
+                <div class="cp-media{% if forloop.last and media_items|length > 4 %} more{% endif %}"{% if forloop.last and media_items|length > 4 %} data-more="+{{ media_items|length|add:"-4" }}"{% endif %}>
+                    {% include "composer/partials/_pv_inner.html" with m=m %}
                 </div>
                 {% endfor %}
-                <!-- Counter badge -->
-                <div class="absolute top-3 right-3 bg-black/60 text-app-inverse text-[11px] font-medium px-2 py-0.5 rounded-full z-10" x-text="(slide + 1) + '/' + count"></div>
-                <!-- Left arrow -->
-                <button type="button" x-show="slide > 0" @click.stop="slide = Math.max(0, slide - 1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-app transition-colors z-10 cursor-pointer">
-                    {% icon "chevron-left" css_class="w-3.5 h-3.5 text-app-body" %}
-                </button>
-                <!-- Right arrow -->
-                <button type="button" x-show="slide < count - 1" @click.stop="slide = Math.min(count - 1, slide + 1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-app transition-colors z-10">
-                    {% icon "chevron-right" css_class="w-3.5 h-3.5 text-app-body" %}
-                </button>
-                <!-- Dot indicators -->
-                <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                    {% for m in media_items %}
-                    <button type="button" @click.stop="slide = {{ forloop.counter0 }}" class="w-1.5 h-1.5 rounded-full transition-colors" :class="slide === {{ forloop.counter0 }} ? 'bg-[#1877F2]' : 'bg-white/60'"></button>
-                    {% endfor %}
-                </div>
             </div>
-            {% else %}
-            {# ─── Single media ─── #}
+            {% elif media_items %}
             {% with m=media_items.0 %}
-            <div class="relative bg-app-2">
-                {% if m.is_video %}
-                <div style="aspect-ratio: 16/9;"><video src="{{ m.url }}#t=0.5" class="w-full h-full object-cover" muted preload="metadata"></video>
-                <div class="absolute inset-0 flex items-center justify-center"><div class="w-14 h-14 rounded-full bg-black/40 flex items-center justify-center">{% icon "play" css_class="w-6 h-6 text-app-inverse ml-0.5" %}</div></div></div>
+            {% if m.is_video %}
+                {% if m.height > m.width %}
+                <div class="cp-letter"><div class="cp-media ar-916">{% include "composer/partials/_pv_inner.html" with m=m %}</div></div>
                 {% else %}
-                <img src="{{ m.url }}" class="w-full object-cover" alt="" style="max-height: 220px;">
+                <div class="cp-media ar-169">{% include "composer/partials/_pv_inner.html" with m=m %}</div>
                 {% endif %}
-            </div>
+            {% else %}
+            <div class="cp-media ar-45">{% include "composer/partials/_pv_inner.html" with m=m %}</div>
+            {% endif %}
             {% endwith %}
             {% endif %}
-            {% endif %}
-            <div class="px-3 py-2 border-t border-app-subtle flex items-center justify-around text-app-tertiary text-[12px] font-medium">
-                <span class="flex items-center gap-1.5 hover:bg-app-1 px-3 py-1.5 rounded-md">
-                    {% icon "thumbs-up" css_class="w-4 h-4" %}
-                   Me gusta
-                </span>
-                <span class="flex items-center gap-1.5 hover:bg-app-1 px-3 py-1.5 rounded-md">
-                    {% icon "comment" css_class="w-4 h-4" %}
-                   Comentar
-                </span>
-                <span class="flex items-center gap-1.5 hover:bg-app-1 px-3 py-1.5 rounded-md">
-                    {% icon "share-nodes" css_class="w-4 h-4" %}
-                   Compartir
-                </span>
+            <div class="cp-fbact">{% icon "thumbs-up" size="" %} Me gusta {% icon "comment" size="" %} Comentar {% icon "share-nodes" size="" %} Compartir</div>
+        </div>
+        {% endif %}
+
+        {% elif p.account.platform == "tiktok" %}
+        {# ─── TikTok ─── 9:16 con portada y zonas seguras #}
+        <div class="cp-dev dk">
+            <div class="cp-media ar-916">
+                {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Sube un video vertical" %}
+                {% if p.cover_text %}<span class="cp-cover"><b>{{ p.cover_text }}</b></span>{% endif %}
+                <div class="cp-ov"><b>@{{ p.account.account_name|default:p.account.account_handle }}</b>{{ p.truncated_caption|truncatechars:80 }}<span style="margin-top:4px">{% icon "music" css_class="w-3 h-3 inline" %} sonido original</span></div>
+                <div class="cp-rc"><span>{% icon "heart" size="" %}<br>12 mil</span><span>{% icon "comment" size="" %}<br>240</span><span>{% icon "share-nodes" size="" %}</span></div>
+                <span class="cp-sz"><i>zona segura</i></span>
             </div>
         </div>
 
@@ -310,77 +233,6 @@ Context: previews (list of dicts with account, title, caption, first_comment, ch
                 <span class="flex items-center gap-1">{% icon "video" css_class="w-4 h-4" %}Compartir</span>
                 <span class="flex items-center gap-1">{% icon "paper-plane" css_class="w-4 h-4" %}Enviar</span>
             </div>
-        </div>
-
-        {% elif p.account.platform == "tiktok" %}
-        {# ─── TikTok ─── vertical phone-style preview #}
-        <div class="bg-black">
-        <div class="bg-black text-app-inverse relative overflow-hidden mx-auto" style="aspect-ratio: 9/16; max-height: 480px;">
-            {% if media_items %}
-            {% with m=media_items.0 %}
-            {% if m.is_video %}
-            <video src="{{ m.url }}#t=0.5" class="absolute inset-0 w-full h-full object-cover" muted preload="metadata"></video>
-            {% else %}
-            <img src="{{ m.url }}" class="absolute inset-0 w-full h-full object-cover" alt="">
-            {% endif %}
-            {% endwith %}
-            {% else %}
-            <div class="absolute inset-0 flex flex-col items-center justify-center bg-stone-900">
-                {% icon "video" css_class="w-10 h-10 text-app-secondary mb-2" %}
-                <span class="text-[11px] text-app-tertiary">Sube un video</span>
-            </div>
-            {% endif %}
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-            <!-- Right sidebar: avatar + action icons -->
-            <div class="absolute right-2.5 bottom-16 flex flex-col items-center gap-3.5">
-                <!-- Avatar with follow badge -->
-                <div class="relative mb-1">
-                    {% if p.account.avatar_url %}
-                    <img src="{{ p.account.avatar_url }}" class="w-10 h-10 rounded-full object-cover border-2 border-white">
-                    {% else %}
-                    <div class="w-10 h-10 rounded-full bg-stone-700 flex items-center justify-center text-[11px] font-bold text-app-inverse border-2 border-white">{{ p.account.account_name|default:p.account.account_handle|make_list|first|upper }}</div>
-                    {% endif %}
-                    <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4.5 h-4.5 bg-[#FE2C55] rounded-full flex items-center justify-center">
-                        {% icon "plus" css_class="w-2.5 h-2.5 text-app-inverse" %}
-                    </div>
-                </div>
-                <!-- Heart -->
-                <div class="flex flex-col items-center gap-0.5">
-                    {% icon "heart" css_class="w-7 h-7 drop-shadow-sm" %}
-                    <span class="text-[10px] font-medium drop-shadow-sm">0</span>
-                </div>
-                <!-- Comment -->
-                <div class="flex flex-col items-center gap-0.5">
-                    {% icon "comment" css_class="w-7 h-7 drop-shadow-sm" %}
-                    <span class="text-[10px] font-medium drop-shadow-sm">0</span>
-                </div>
-                <!-- Bookmark -->
-                <div class="flex flex-col items-center gap-0.5">
-                    {% icon "bookmark" css_class="w-6 h-6 drop-shadow-sm" %}
-                    <span class="text-[10px] font-medium drop-shadow-sm">0</span>
-                </div>
-                <!-- Share -->
-                <div class="flex flex-col items-center gap-0.5">
-                    {% icon "reply" css_class="w-6 h-6 drop-shadow-sm" %}
-                </div>
-                <!-- Spinning music disc -->
-                <div class="w-8 h-8 rounded-full border-2 border-stone-500 bg-stone-800 flex items-center justify-center mt-0.5">
-                    <div class="w-3 h-3 rounded-full bg-stone-400"></div>
-                </div>
-            </div>
-            <!-- Bottom text overlay -->
-            <div class="absolute bottom-3 left-3 right-16">
-                <div class="text-[13px] font-bold mb-1 drop-shadow-sm">@{{ p.account.account_name|default:p.account.account_handle }}</div>
-                {% if p.caption %}
-                <div class="text-[12px] leading-relaxed line-clamp-2 whitespace-pre-wrap drop-shadow-sm">{{ p.truncated_caption|truncatechars:100 }}</div>
-                {% endif %}
-                <!-- Music ticker -->
-                <div class="flex items-center gap-1.5 mt-2">
-                    {% icon "music" css_class="w-3 h-3 flex-shrink-0" %}
-                    <span class="text-[11px] truncate drop-shadow-sm">Sonido original -  {{ p.account.account_name|default:p.account.account_handle }}</span>
-                </div>
-            </div>
-        </div>
         </div>
 
         {% elif p.account.platform == "threads" %}
@@ -570,25 +422,26 @@ Context: previews (list of dicts with account, title, caption, first_comment, ch
         </div>
         {% endif %}
 
+        {% if p.visible %}
+        <p class="cp-pvmeta{% if p.visible.over %} over{% endif %}">{{ p.visible.what|capfirst }} visible: {{ p.visible.used }} / {{ p.visible.limit }} caracteres{% if p.visible.over %} (se corta con «ver más»){% endif %}</p>
+        {% endif %}
         {% if p.is_over_limit %}
-        <div class="px-3 py-2 border-t border-red-100 bg-red-50/50 flex items-center gap-1.5 text-[11px] font-medium text-red-500">
+        <div class="ib-alert ib-al-err" role="alert" style="margin-top:8px">
             {% icon "triangle-exclamation" css_class="w-3.5 h-3.5 flex-shrink-0" %}
-            El texto excede el límite de {{ p.char_limit }} caracteres
+            <div>El texto excede el límite de {{ p.char_limit }} caracteres</div>
         </div>
         {% endif %}
-    </div>
+    </figure>
     {% endfor %}
 
 {% else %}
     <!-- Empty preview state -->
-    <div class="flex flex-col items-center justify-center h-full text-center px-6 py-12">
-        <div class="w-16 h-16 rounded-2xl bg-app-2 flex items-center justify-center mb-4"
-             style="animation: slideUp 400ms cubic-bezier(0.16,1,0.3,1) both">
-            {% icon "eye" css_class="w-7 h-7 text-app-faint" %}
+    <div class="flex flex-col items-center justify-center text-center px-6 py-8">
+        <div class="w-14 h-14 rounded-2xl bg-app-2 flex items-center justify-center mb-3">
+            {% icon "eye" css_class="w-6 h-6 text-app-ghost" %}
         </div>
-        <p class="text-sm font-medium text-app-tertiary mb-1"
-           style="animation: slideUp 400ms 80ms cubic-bezier(0.16,1,0.3,1) both">Aún no hay vista previa</p>
-        <p class="text-xs text-app-ghost max-w-[200px]"
-           style="animation: slideUp 400ms 140ms cubic-bezier(0.16,1,0.3,1) both">Selecciona una plataforma y empieza a escribir para ver cómo se verá tu publicación</p>
+        <p class="text-sm font-semibold text-app mb-1">Aún no hay vista previa</p>
+        <p class="text-xs text-app-tertiary max-w-[220px]">Elige una cuenta y empieza a escribir para ver cómo se verá tu publicación.</p>
     </div>
 {% endif %}
+{% if oob_review %}<div id="review-panel" hx-swap-oob="innerHTML">{% include "composer/partials/_review_panel.html" %}</div>{% endif %}

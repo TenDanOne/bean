@@ -1,0 +1,2 @@
+{% comment %}Contenido de un cuadro de vista previa: video/imagen real o un marcador. Contexto: m, empty_text, icon.{% endcomment %}
+{% if m %}{% if m.is_video %}<video src="{{ m.url }}#t=0.5" muted playsinline preload="metadata"></video>{% else %}<img src="{{ m.url }}" alt="">{% endif %}{% else %}<span class="cp-ph">{% icon icon|default:"video" size="" %}<span>{{ empty_text|default:"Sube un medio" }}</span></span>{% endif %}

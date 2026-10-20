@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Ayuda - BEAN{% endblock %}
+{% block content %}
+<div class="cp" style="max-width: 980px">
+    <div class="ib-h">
+        <h1>Ayuda</h1>
+        <span class="sp"></span>
+        <label class="sr-only" for="gq">Buscar en la ayuda</label>
+        <input class="ib-sel" id="gq" type="search" placeholder="Buscar: cola, Reel, bloquea…" style="min-width:240px">
+    </div>
+
+    <h2 class="cp-legend" style="margin-top:6px">Mapa de botones</h2>
+    <div class="cp-mapbar" role="img" aria-label="Pestañas de Publicar: Calendario, Cola, Borradores, Aprobaciones, Enviadas, y el botón Procesar pendientes">
+        <span class="t on">Calendario</span><span class="t">Cola</span><span class="t">Borradores</span><span class="t">Aprobaciones</span><span class="t">Enviadas</span>
+        <span style="flex:1"></span>
+        <span class="ib-btn ib-btn-primary" style="pointer-events:none">{% icon "bolt" css_class="w-3.5 h-3.5" %} Procesar pendientes</span>
+    </div>
+    <div class="ib-alert ib-al-info" style="margin:12px 0 4px">
+        {% icon "circle-info" css_class="w-4 h-4" %}
+        <div>Así se ve el «?» en una sección:
+            <span style="display:inline-flex;align-items:center;gap:8px"><b>Cola</b>{% include "partials/_help_btn.html" with key="cola" title="Cola" %}</span>
+            Tócalo y luego «Abrir en Ayuda».</div>
+    </div>
+
+    <div id="glist">
+        {% for group, entries in glossary %}
+        <section aria-labelledby="gh{{ forloop.counter }}">
+            <h2 id="gh{{ forloop.counter }}" class="cp-legend" style="margin-top:18px">{{ group }}</h2>
+            <dl class="cp-gl">
+                {% for e in entries %}
+                <div class="cp-ge" id="g-{{ e.key }}" data-q="{{ e.title|lower }} {{ e.text|lower }}">
+                    <dt>{{ e.title }}</dt>
+                    <dd>{% if e.pill %}<span class="st-pill ib-k {{ e.pill }}">{{ e.title }}</span>{% endif %}{{ e.text }}</dd>
+                </div>
+                {% endfor %}
+            </dl>
+        </section>
+        {% endfor %}
+    </div>
+    <p class="ib-hint" style="margin-top:14px"><b>Estados de una palabra.</b> {{ state_words }}</p>
+</div>
+{{ help_entries|json_script:"help-data" }}
+<script src="{% static 'js/help.js' %}" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

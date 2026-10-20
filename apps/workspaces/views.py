@@ -113,6 +113,19 @@ def workspace_settings(request, workspace_id):
             messages.success(request, f'El espacio de trabajo "{workspace_name}" se eliminó de forma permanente.')
             return redirect("organizations:workspaces")
 
+        if action == "banned_phrases":
+            from apps.composer.quality import BANNED_PHRASES_KEY
+            from apps.settings_manager.models import WorkspaceSetting
+
+            phrases = list(
+                dict.fromkeys(p.strip()[:120] for p in request.POST.get("banned_phrases", "").splitlines() if p.strip())
+            )[:100]
+            WorkspaceSetting.objects.update_or_create(
+                workspace=workspace, key=BANNED_PHRASES_KEY, defaults={"value": phrases}
+            )
+            messages.success(request, "Frases prohibidas actualizadas.")
+            return redirect("workspaces:settings", workspace_id=workspace.id)
+
         name = request.POST.get("name", "").strip()
 
         if name:
@@ -152,6 +165,11 @@ def workspace_settings(request, workspace_id):
     can_archive = is_owner_or_manager and not workspace.is_archived and not is_last_active
     can_delete = is_owner_or_manager and not is_last_active
 
+    from apps.composer.quality import BANNED_PHRASES_KEY
+    from apps.settings_manager.helpers import get_setting
+
+    banned_phrases = get_setting(workspace.id, BANNED_PHRASES_KEY, workspace.organization_id) or []
+
     return render(
         request,
         "workspaces/settings.html",
@@ -161,6 +179,7 @@ def workspace_settings(request, workspace_id):
             "is_owner_or_manager": is_owner_or_manager,
             "can_archive": can_archive,
             "can_delete": can_delete,
+            "banned_phrases_text": chr(10).join(banned_phrases),
         },
     )
 

@@ -2,6 +2,7 @@
 <div class="space-y-3">
     {% for tpl in templates %}
     <a href="{% url 'composer:use_template' workspace_id=workspace.id template_id=tpl.id %}"
+       @click="if (typeof caption !== 'undefined' && caption.trim() && !confirm('Ya escribiste texto. Usar esta plantilla abre un composer nuevo y se pierde lo que tienes ahora. ¿Continuar?')) $event.preventDefault()"
        class="block p-3 rounded-lg border border-app hover:border-app-hover hover:bg-app-1 transition-colors">
         <div class="flex items-center justify-between mb-1">
             <span class="text-sm font-semibold text-app-strong">{{ tpl.name }}</span>

@@ -42,6 +42,8 @@ APP_DEFAULTS = {
     "analytics.optimal_time_lookback_days": 90,
     "analytics.optimal_time_min_posts": 10,
     "analytics.high_frequency_collection_hours": 48,
+    # Frases prohibidas por marca para el revisor de calidad del composer (lista de textos).
+    "composer.banned_phrases": [],
     "notifications.quiet_hours_start": None,
     "notifications.quiet_hours_end": None,
     "notifications.digest_mode": False,

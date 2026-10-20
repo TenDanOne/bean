@@ -414,6 +414,14 @@
                                 <div class="text-xs text-app-tertiary">Guarda una idea de contenido</div>
                             </div>
                         </button>
+                        <div class="border-t border-app-subtle mt-1 pt-1">
+                            <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-app-1 text-sm text-app-secondary">
+                                {% icon "lightbulb" css_class="w-4 h-4" %} Ver mis ideas
+                            </a>
+                            <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}?tab=templates" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-app-1 text-sm text-app-secondary">
+                                {% icon "file-lines" css_class="w-4 h-4" %} Plantillas
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -641,10 +649,6 @@
                     {% icon "calendar-days" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Publicar</span>
                 </a>
-                <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'create_landing' or request.resolver_match.url_name == 'compose' %}active{% endif %}" {% if request.resolver_match.url_name == 'create_landing' or request.resolver_match.url_name == 'compose' %}aria-current="page"{% endif %}>
-                    {% icon "lightbulb" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-                    <span class="sidebar-nav-label">Crear idea</span>
-                </a>                
                 <a href="{% url 'inbox:feed' workspace_id=request.workspace.id %}" data-tour="bandeja" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'inbox' %}active{% endif %}" {% if request.resolver_match.app_name == 'inbox' %}aria-current="page"{% endif %}>
                     {% icon "comments" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Bandeja social</span>
@@ -665,6 +669,11 @@
                 </a>
                 {% endif %}
                 {% endif %}
+
+                <a href="{% url 'ayuda' %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'ayuda' %}active{% endif %}" {% if request.resolver_match.url_name == 'ayuda' %}aria-current="page"{% endif %}>
+                    {% icon "circle-question" css_class="w-[18px] h-[18px] flex-shrink-0" %}
+                    <span class="sidebar-nav-label">Ayuda</span>
+                </a>
 
                 {% if request.workspace %}
                 <div data-tour="canales">

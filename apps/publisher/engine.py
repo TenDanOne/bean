@@ -35,6 +35,7 @@ from apps.social_accounts.models import SocialAccount
 from providers import get_provider
 from providers.exceptions import PublishError
 from providers.types import PostType, PublishContent
+from providers.youtube import PLAYLIST_ERROR_PREFIX
 
 from .models import PublishLog, RateLimitState
 
@@ -316,11 +317,24 @@ class PublishEngine:
             return {"success": False, "error": error_msg}
 
     def _notify_thumbnail_error(self, platform_post):
-        """The video is PUBLISHED but the platform rejected the custom thumbnail: tell the author."""
+        """The video is PUBLISHED but a best-effort step (thumbnail, playlist) failed: tell the author."""
         reason = (platform_post.platform_extra or {}).get("thumbnail_error")
         author = platform_post.post.author
         if not reason or author is None:
             return
+        # El proveedor une los motivos con « | »; el de lista de reproducción lleva este prefijo.
+        parts = [r.strip() for r in str(reason).split(" | ") if r.strip()]
+        playlist = [r for r in parts if r.startswith(PLAYLIST_ERROR_PREFIX)]
+        thumb = [r for r in parts if not r.startswith(PLAYLIST_ERROR_PREFIX)]
+        if thumb and playlist:
+            title, body = "Video publicado con avisos", f"YouTube rechazó la miniatura ({thumb[0]}). {playlist[0]}"
+        elif playlist:
+            title, body = "Video publicado sin lista de reproducción", playlist[0]
+        else:
+            title, body = (
+                "Video publicado sin miniatura",
+                f"El video se publicó pero YouTube rechazó la miniatura: {reason}",
+            )
         try:
             from apps.notifications.engine import notify
             from apps.notifications.models import EventType
@@ -328,8 +342,8 @@ class PublishEngine:
             notify(
                 user=author,
                 event_type=EventType.POST_PUBLISHED,
-                title="Video publicado sin miniatura",
-                body=f"El video se publicó pero YouTube rechazó la miniatura: {reason}",
+                title=title,
+                body=body,
                 data={
                     "platform_post_id": str(platform_post.id),
                     "post_id": str(platform_post.post_id),
@@ -541,6 +555,22 @@ class PublishEngine:
                         extra["cover_image_file"] = tmp.name
                 except MediaAsset.DoesNotExist:
                     logger.warning("Cover image asset %s not found", cover_asset_id)
+
+            # Portada de Reel de Instagram: asset del workspace -> URL pública (la API la descarga).
+            ig_cover_id = extra.pop("ig_cover_asset_id", None)
+            if ig_cover_id:
+                from apps.media_library.models import MediaAsset
+
+                cover = (
+                    MediaAsset.objects.for_workspace_with_shared(
+                        platform_post.post.workspace_id, platform_post.post.workspace.organization_id
+                    )
+                    .filter(id=ig_cover_id)
+                    .first()
+                )
+                if cover and cover.file:
+                    cover_url = cover.file.url
+                    extra["cover_url"] = f"{app_url}{cover_url}" if cover_url.startswith("/") else cover_url
 
             post_type = self._resolve_post_type(
                 platform=platform,
