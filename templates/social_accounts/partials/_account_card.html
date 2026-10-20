@@ -72,7 +72,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
             deletion is a deliberate second step behind its own typed confirmation,
             because it also destroys the channel's posts and its inbox history.
             {% endcomment %}
-            <div popover id="archive-{{ account.id }}" class="relief-float p-4 w-72">
+            <div popover id="archive-{{ account.id }}" class="bean-confirm relief-float p-4 w-72" role="dialog" aria-label="Archivar {{ account.account_name|default:account.account_handle }}">
                 <p class="text-sm mb-1" style="color: var(--text-primary);">¿Archivar <strong>{{ account.account_name|default:account.account_handle }}</strong>?</p>
                 <p class="text-xs mb-3" style="color: var(--text-tertiary);">Deja de sincronizar y de publicar. Se conservan sus publicaciones, comentarios y métricas, y puedes reconectarla cuando quieras.</p>
                 <div class="flex gap-2 justify-end">

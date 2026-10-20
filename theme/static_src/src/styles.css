@@ -1142,6 +1142,19 @@ span.flatpickr-weekday {
     display var(--dur-fast) allow-discrete;
 }
 
+/* Confirmation popovers: centered card with a scrim. Preflight zeroes the UA margin:auto. */
+.bean-confirm:popover-open {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  height: fit-content;
+  max-width: min(22rem, calc(100vw - 32px));
+  background: var(--surface-0);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.bean-confirm::backdrop { background: var(--overlay); }
+
 /* The state an entering popover animates *from*. Without this it would
    simply appear: there is no previous state for the browser to interpolate. */
 @starting-style {
