@@ -717,7 +717,12 @@ def _default_mode(request, post, prefill_is_proposed, initial_has_schedule, can_
     if request.GET.get("action") == "publish_now" and can_publish:
         return "now"
     if post is not None:
-        return "schedule" if post.scheduled_at and not prefill_is_proposed else "draft"
+        if post.scheduled_at and not prefill_is_proposed:
+            # A clone of a failed post inherits a time that already passed: offer to send it now.
+            if post.scheduled_at <= timezone.now():
+                return "now" if can_publish else "draft"
+            return "schedule"
+        return "draft"
     return "schedule" if initial_has_schedule else "draft"
 
 
