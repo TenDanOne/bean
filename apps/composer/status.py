@@ -42,7 +42,7 @@ def derive_post_status(statuses):
       - any child failed + any non-terminal → "publishing" (still in flight)
       - otherwise → the "lowest" (earliest in _WORKFLOW_ORDER) child status.
         This means e.g. (draft, scheduled) → "draft", (scheduled, publishing) →
-        "scheduled", (pending_review, approved) → "pending_review".
+        "publishing", (pending_review, approved) → "pending_review".
     """
     values = [s for s in statuses if s]
     if not values:
@@ -69,6 +69,12 @@ def derive_post_status(statuses):
             return len(_WORKFLOW_ORDER)
 
     result = min(unique, key=_rank)
+    # A channel in flight next to a queued one is "publishing"; one already out next to a queued one is partial.
+    if result in {"scheduled", "publishing"}:
+        if "publishing" in unique:
+            return "publishing"
+        if "published" in unique:
+            return "partially_published"
     # A client hold ranks low so it surfaces over approved/scheduled siblings, but
     # it must not shadow a channel that has already published — report the partial
     # outcome instead of hiding "published" behind "on_hold".

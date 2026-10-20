@@ -307,6 +307,7 @@ class FacebookProvider(SocialProvider):
             f"{BASE_URL}/{page_id}/feed",
             access_token=access_token,
             json=payload,
+            may_have_published=True,
         )
         data = resp.json()
         post_id = self._stored_post_id(data["id"])
@@ -328,6 +329,7 @@ class FacebookProvider(SocialProvider):
             f"{BASE_URL}/{page_id}/photos",
             access_token=access_token,
             json=payload,
+            may_have_published=True,
         )
         data = resp.json()
         graph_post_id = data.get("post_id", data["id"])
@@ -383,6 +385,7 @@ class FacebookProvider(SocialProvider):
                 f"{BASE_URL}/{page_id}/feed",
                 access_token=access_token,
                 json=payload,
+                may_have_published=True,
             ).json()
             graph_post_id = data.get("id")
             if not graph_post_id:
@@ -391,11 +394,12 @@ class FacebookProvider(SocialProvider):
                     platform=self.platform_name,
                     raw_response=data,
                 )
-        except Exception:
+        except Exception as e:
             # Best-effort: remove any photos already staged as unpublished so a
             # partial failure (or a retry by the publisher) doesn't accumulate
-            # orphaned media on the page.
-            self._delete_staged_photos(access_token, photo_ids)
+            # orphaned media on the page. Not after an ambiguous /feed (the post may exist and use them).
+            if getattr(e, "retryable", True):
+                self._delete_staged_photos(access_token, photo_ids)
             raise
 
         return PublishResult(
@@ -433,6 +437,7 @@ class FacebookProvider(SocialProvider):
             f"{BASE_URL}/{page_id}/videos",
             access_token=access_token,
             json=payload,
+            may_have_published=True,
         )
         data = resp.json()
         video_id = data["id"]
@@ -492,6 +497,7 @@ class FacebookProvider(SocialProvider):
                 "video_state": "PUBLISHED",
                 "description": content.text or "",
             },
+            may_have_published=True,
         ).json()
         return PublishResult(
             platform_post_id=video_id,

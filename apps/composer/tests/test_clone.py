@@ -117,3 +117,75 @@ class ClonePostEndpointTest(TestCase):
 
         self.assertEqual(resp.status_code, 403)
         self.assertEqual(Post.objects.filter(workspace=self.workspace).count(), 1)
+
+
+class PublishStatusEndpointTest(TestCase):
+    """GET JSON con el estado de cada PlatformPost para el modal «Publicando»."""
+
+    def setUp(self):
+        self.org = Organization.objects.create(name="PS Org")
+        self.workspace = Workspace.objects.create(organization=self.org, name="PS WS")
+        self.owner = User.objects.create_user(email="ps@example.com", password="pw", tos_accepted_at=timezone.now())
+        OrgMembership.objects.create(user=self.owner, organization=self.org, org_role=OrgMembership.OrgRole.OWNER)
+        WorkspaceMembership.objects.create(
+            user=self.owner, workspace=self.workspace, workspace_role=WorkspaceMembership.WorkspaceRole.OWNER
+        )
+        self.post = Post.objects.create(workspace=self.workspace, author=self.owner, caption="x")
+        for name, status, extra in [
+            ("a", PlatformPost.Status.PUBLISHED, {}),
+            ("b", PlatformPost.Status.PUBLISHING, {"platform_post_id": "p"}),
+            ("c", PlatformPost.Status.FAILED, {"publish_error": "malo"}),
+            ("d", PlatformPost.Status.SCHEDULED, {}),
+        ]:
+            acc = SocialAccount.objects.create(
+                workspace=self.workspace,
+                platform="tiktok",
+                account_platform_id=name,
+                account_name=name,
+                connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+            )
+            PlatformPost.objects.create(post=self.post, social_account=acc, status=status, **extra)
+
+    def _url(self, ws=None):
+        return reverse(
+            "composer:publish_status", kwargs={"workspace_id": (ws or self.workspace).id, "post_id": self.post.id}
+        )
+
+    def test_returns_state_per_row(self):
+        self.client.force_login(self.owner)
+        data = self.client.get(self._url()).json()["rows"]
+        self.assertEqual({r["account"]: r["state"] for r in data}, {"a": "ok", "b": "proc", "c": "fail", "d": "wait"})
+        self.assertEqual(next(r for r in data if r["account"] == "c")["error"], "malo")
+
+    def test_other_workspace_cannot_read(self):
+        other = Workspace.objects.create(organization=self.org, name="Otro")
+        self.client.force_login(self.owner)
+        self.assertEqual(self.client.get(self._url(ws=other)).status_code, 403)
+
+    def test_viewer_is_denied(self):
+        viewer = User.objects.create_user(email="pv@example.com", password="pw", tos_accepted_at=timezone.now())
+        WorkspaceMembership.objects.create(
+            user=viewer, workspace=self.workspace, workspace_role=WorkspaceMembership.WorkspaceRole.VIEWER
+        )
+        self.client.force_login(viewer)
+        self.assertEqual(self.client.get(self._url()).status_code, 403)
+
+
+class PartiallyPublishedEditableTest(TestCase):
+    def test_published_plus_scheduled_stays_editable_but_published_plus_failed_does_not(self):
+        org = Organization.objects.create(name="PE Org")
+        ws = Workspace.objects.create(organization=org, name="PE WS")
+        post = Post.objects.create(workspace=ws, caption="x")
+        for i, status in enumerate([PlatformPost.Status.PUBLISHED, PlatformPost.Status.SCHEDULED]):
+            acc = SocialAccount.objects.create(
+                workspace=ws,
+                platform="tiktok",
+                account_platform_id=f"pe{i}",
+                account_name=f"pe{i}",
+                connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+            )
+            PlatformPost.objects.create(post=post, social_account=acc, status=status)
+        self.assertEqual(post.status, "partially_published")
+        self.assertTrue(post.is_editable)
+        post.platform_posts.filter(status=PlatformPost.Status.SCHEDULED).update(status=PlatformPost.Status.FAILED)
+        self.assertFalse(post.is_editable)

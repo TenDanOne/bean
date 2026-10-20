@@ -303,7 +303,11 @@ class Post(models.Model):
     @property
     def is_editable(self):
         """Whether the post can be edited in the composer."""
-        return self.status in (
+        status = self.status
+        if status == "partially_published":
+            # One network already out and another still queued: the queued part stays editable.
+            return self.platform_posts.filter(status=PlatformPost.Status.SCHEDULED).exists()
+        return status in (
             "draft",
             "changes_requested",
             "rejected",

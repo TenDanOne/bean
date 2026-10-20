@@ -1625,6 +1625,17 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
         </div>
     </div>
 
+    <!-- Modal «Publicando» / «Programada» (lo maneja static/js/publish-modal.js) -->
+    <dialog id="publish-dialog" class="pm-dlg" aria-labelledby="pm-title"
+            data-status-url="{% url 'composer:publish_status' workspace_id=workspace.id post_id='00000000-0000-0000-0000-000000000000' %}"
+            data-clone-url="{% url 'composer:clone_post' workspace_id=workspace.id post_id='00000000-0000-0000-0000-000000000000' %}"
+            data-sent-url="{% url 'calendar:publish_tab_sent' workspace_id=workspace.id %}"
+            data-calendar-url="{% url 'calendar:calendar' workspace_id=workspace.id %}"
+            data-new-url="{% url 'composer:compose' workspace_id=workspace.id %}">
+        <div class="pm-body"></div>
+        <div class="pm-live sr-only" role="status" aria-live="polite"></div>
+    </dialog>
+
     <!-- Save toast -->
     <div class="toast-saved" x-show="showSaveToast" x-cloak
          x-transition:enter="transition ease-out duration-300"
@@ -1736,6 +1747,7 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
 {{ upload_limits|json_script:"composer-upload-limits" }}
 {{ help_entries|json_script:"help-data" }}
 <script src="{% static 'js/direct-upload.js' %}" nonce="{{ request.csp_nonce }}"></script>
+<script src="{% static 'js/publish-modal.js' %}" nonce="{{ request.csp_nonce }}"></script>
 <script nonce="{{ request.csp_nonce }}">
 function composerApp() {
     const PH = (n) => '{' + '{' + n + '}}';  // marcador {{n}} sin que Django lo interprete
@@ -2685,8 +2697,10 @@ function composerApp() {
                 // The action actually submitted (Guardar borrador vs. the publish button), not the publish button's mode.
                 let action = event.detail.requestConfig?.parameters?.action;
                 if (Array.isArray(action)) action = action[action.length - 1];
-                if (action === 'schedule' || action === 'publish_now' || action === 'add_to_queue' || action === 'add_to_queue_priority') {
-                    // Redirect to calendar after scheduling/publishing/queuing
+                // Publicar ahora y Programar los resuelve el modal (static/js/publish-modal.js), sin redirigir.
+                if (action === 'schedule' || action === 'publish_now') return;
+                if (action === 'add_to_queue' || action === 'add_to_queue_priority') {
+                    // Redirect to calendar after queuing
                     window.location.href = '{% url "calendar:calendar" workspace_id=workspace.id %}';
                     return;
                 }

@@ -597,3 +597,81 @@ class StuckAndRetryTests(TestCase):
             with self.assertRaises(PublishError) as ctx:
                 PublishEngine()._dispatch_to_provider(pp)
         self.assertFalse(ctx.exception.retryable)
+
+
+class DoublePublishGuardsTest(TestCase):
+    """Published rows are never degraded and post-publish bookkeeping never triggers a retry."""
+
+    def setUp(self):
+        from apps.composer.models import PlatformPost, Post
+        from apps.organizations.models import Organization
+        from apps.social_accounts.models import SocialAccount
+        from apps.workspaces.models import Workspace
+
+        org = Organization.objects.create(name="Org G")
+        ws = Workspace.objects.create(organization=org, name="WS G")
+        account = SocialAccount.objects.create(
+            workspace=ws,
+            platform="tiktok",
+            account_platform_id="tt-g",
+            account_name="g",
+            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+        )
+        self.pp = PlatformPost.objects.create(
+            post=Post.objects.create(workspace=ws, caption="hi"),
+            social_account=account,
+            status=PlatformPost.Status.PUBLISHING,
+        )
+
+    def test_bookkeeping_failure_after_success_does_not_retry(self):
+        from apps.composer.models import PlatformPost
+
+        ok = {"success": True, "platform_post_id": "p1", "response": {}}
+        with (
+            patch.object(PublishEngine, "_dispatch_to_provider", return_value=ok),
+            patch.object(PublishLog.objects, "create", side_effect=RuntimeError("db")),
+            patch.object(PublishEngine, "_update_rate_limit", side_effect=RuntimeError("x")),
+        ):
+            result = PublishEngine()._publish_platform_post(self.pp)
+        self.assertTrue(result["success"])
+        self.pp.refresh_from_db()
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHED)
+        self.assertEqual(self.pp.retry_count, 0)
+
+    def test_retry_and_fail_never_degrade_a_published_row(self):
+        from apps.composer.models import PlatformPost
+
+        PlatformPost.objects.filter(pk=self.pp.pk).update(status=PlatformPost.Status.PUBLISHED, platform_post_id="p1")
+        stale = PlatformPost.objects.get(pk=self.pp.pk)
+        stale.status = PlatformPost.Status.PUBLISHING
+        engine = PublishEngine()
+        engine._schedule_retry(stale, "boom")
+        engine._fail_permanently(stale, "boom")
+        engine._fail_permanently(stale, "boom", resolved_by_poll=True)
+        self.pp.refresh_from_db()
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHED)
+
+    def test_row_with_platform_id_is_not_retried_but_the_poll_may_fail_it(self):
+        from apps.composer.models import PlatformPost
+
+        PlatformPost.objects.filter(pk=self.pp.pk).update(platform_post_id="pub1")
+        self.pp.refresh_from_db()
+        engine = PublishEngine()
+        engine._schedule_retry(self.pp, "boom")
+        engine._fail_permanently(self.pp, "boom")
+        self.pp.refresh_from_db()
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHING)
+        engine._fail_permanently(self.pp, "TikTok falló", resolved_by_poll=True)
+        self.pp.refresh_from_db()
+        self.assertEqual(self.pp.status, PlatformPost.Status.FAILED)
+
+    def test_stuck_recovery_warns_it_may_have_been_published(self):
+        from datetime import timedelta
+
+        from apps.composer.models import PlatformPost
+
+        PlatformPost.objects.filter(pk=self.pp.pk).update(updated_at=timezone.now() - timedelta(hours=2))
+        PublishEngine()._recover_stuck_publishing()
+        self.pp.refresh_from_db()
+        self.assertEqual(self.pp.status, PlatformPost.Status.FAILED)
+        self.assertIn("Puede que se haya publicado", self.pp.publish_error)

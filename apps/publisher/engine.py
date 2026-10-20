@@ -259,32 +259,36 @@ class PublishEngine:
             duration_ms = int((time.monotonic() - start_time) * 1000)
 
             if result["success"]:
-                platform_post.platform_post_id = result.get("platform_post_id", "")
-                response_extra = result.get("response")
-                if isinstance(response_extra, dict) and response_extra:
-                    platform_post.platform_extra = {
-                        **(platform_post.platform_extra or {}),
-                        **response_extra,
-                    }
-                if result.get("pending"):
-                    # Platform still processing: stay PUBLISHING; _check_pending_publishes resolves it.
-                    platform_post.status = PlatformPost.Status.PUBLISHING
-                    platform_post.save(update_fields=["status", "platform_post_id", "platform_extra", "updated_at"])
+                # Published: nothing after this may reach the outer except (it would schedule a retry and double-post).
+                try:
+                    platform_post.platform_post_id = result.get("platform_post_id", "")
+                    response_extra = result.get("response")
+                    if isinstance(response_extra, dict) and response_extra:
+                        platform_post.platform_extra = {
+                            **(platform_post.platform_extra or {}),
+                            **response_extra,
+                        }
+                    if result.get("pending"):
+                        # Platform still processing: stay PUBLISHING; _check_pending_publishes resolves it.
+                        platform_post.status = PlatformPost.Status.PUBLISHING
+                        platform_post.save(update_fields=["status", "platform_post_id", "platform_extra", "updated_at"])
+                    else:
+                        self._mark_published(platform_post)
+                except Exception:
+                    logger.exception("Post-publish bookkeeping failed for PlatformPost %s", platform_post.id)
                 else:
-                    self._mark_published(platform_post)
-                    self._notify_thumbnail_error(platform_post)
-
-                # Log success
-                PublishLog.objects.create(
-                    platform_post=platform_post,
-                    attempt_number=platform_post.retry_count + 1,
-                    status_code=result.get("status_code", 200),
-                    response_body=str(result.get("response", ""))[:1000],
-                    duration_ms=duration_ms,
-                )
-
-                # Update rate limit state
-                self._update_rate_limit(account, result)
+                    try:
+                        self._notify_thumbnail_error(platform_post)
+                        PublishLog.objects.create(
+                            platform_post=platform_post,
+                            attempt_number=platform_post.retry_count + 1,
+                            status_code=result.get("status_code", 200),
+                            response_body=str(result.get("response", ""))[:1000],
+                            duration_ms=duration_ms,
+                        )
+                        self._update_rate_limit(account, result)
+                    except Exception:
+                        logger.warning("Post-publish tasks failed for PlatformPost %s", platform_post.id, exc_info=True)
 
                 return result
             else:
@@ -307,12 +311,15 @@ class PublishEngine:
             duration_ms = int((time.monotonic() - start_time) * 1000)
             error_msg = str(e)
 
-            PublishLog.objects.create(
-                platform_post=platform_post,
-                attempt_number=platform_post.retry_count + 1,
-                error_message=error_msg,
-                duration_ms=duration_ms,
-            )
+            try:
+                PublishLog.objects.create(
+                    platform_post=platform_post,
+                    attempt_number=platform_post.retry_count + 1,
+                    error_message=error_msg,
+                    duration_ms=duration_ms,
+                )
+            except Exception:
+                logger.warning("Could not log failed attempt of PlatformPost %s", platform_post.id, exc_info=True)
 
             if getattr(e, "retryable", True):
                 self._schedule_retry(platform_post, error_msg)
@@ -390,7 +397,7 @@ class PublishEngine:
             updated_at__lt=timezone.now() - STUCK_PUBLISHING_TIMEOUT,
         ).update(
             status=PlatformPost.Status.FAILED,
-            publish_error="La publicación se interrumpió; puedes reintentarla.",
+            publish_error="Puede que se haya publicado; revisa la cuenta antes de reintentar.",
             updated_at=timezone.now(),
         )
 
@@ -410,10 +417,12 @@ class PublishEngine:
                     self._mark_published(pp)
                     self._sync_parent_published_at(pp.post)
                 elif st.state == "failed":
-                    self._fail_permanently(pp, st.error, reason="platform reported failure")
+                    self._fail_permanently(pp, st.error, reason="platform reported failure", resolved_by_poll=True)
                 # Timeout only after asking: with no 24/7 worker a drain may come days later.
                 elif timezone.now() - pp.updated_at > PENDING_PUBLISH_TIMEOUT:
-                    self._fail_permanently(pp, "La plataforma no confirmó la publicación", reason="pending timeout")
+                    self._fail_permanently(
+                        pp, "La plataforma no confirmó la publicación", reason="pending timeout", resolved_by_poll=True
+                    )
             except NotImplementedError:
                 continue  # provider has no async publish; nothing to poll
             except Exception:
@@ -666,8 +675,24 @@ class PublishEngine:
             return PostType.IMAGE
         return PostType.TEXT
 
-    def _fail_permanently(self, platform_post, error_msg, *, reason="non-retryable"):
+    @staticmethod
+    def _already_published(platform_post, *, allow_platform_id=False):
+        """True if the DB row is PUBLISHED or already holds a platform id: it must never be degraded."""
+        row = PlatformPost.objects.filter(id=platform_post.id).values("status", "platform_post_id").first()
+        if row is None:
+            return False
+        if row["status"] == PlatformPost.Status.PUBLISHED:
+            return True
+        return bool(row["platform_post_id"]) and not allow_platform_id
+
+    def _fail_permanently(self, platform_post, error_msg, *, reason="non-retryable", resolved_by_poll=False):
         """Mark a post FAILED with no further retries."""
+        # The status poll may fail a row that has a platform id (it asked the platform); no one else may.
+        if self._already_published(platform_post, allow_platform_id=resolved_by_poll):
+            logger.warning(
+                "PlatformPost %s not failed (%s): already published or has a platform id", platform_post.id, reason
+            )
+            return
         platform_post.status = PlatformPost.Status.FAILED
         platform_post.publish_error = error_msg
         platform_post.save()
@@ -680,6 +705,9 @@ class PublishEngine:
 
     def _schedule_retry(self, platform_post, error_msg):
         """Schedule a retry with exponential backoff."""
+        if self._already_published(platform_post):
+            logger.warning("PlatformPost %s not retried: already published or has a platform id", platform_post.id)
+            return
         if platform_post.retry_count >= MAX_RETRIES:
             self._fail_permanently(platform_post, error_msg, reason=f"after {MAX_RETRIES} retries")
             return

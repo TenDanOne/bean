@@ -8,7 +8,7 @@ from datetime import datetime
 
 import httpx
 
-from .exceptions import APIError, RateLimitError
+from .exceptions import APIError, PublishError, RateLimitError
 from .types import (
     AccountMetrics,
     AccountProfile,
@@ -30,6 +30,9 @@ from .types import (
 logger = logging.getLogger(__name__)
 
 REQUEST_TIMEOUT = 30.0
+MAYBE_PUBLISHED_MSG = "Puede que se haya publicado; revisa la cuenta antes de reintentar."
+# Errores de red en que la petición pudo llegar a la plataforma (no los de conexión, que no enviaron nada).
+_AMBIGUOUS_NET_ERRORS = (httpx.ReadTimeout, httpx.WriteTimeout, httpx.ReadError, httpx.RemoteProtocolError)
 
 
 class SocialProvider(ABC):
@@ -285,10 +288,12 @@ class SocialProvider(ABC):
         data: dict | bytes | None = None,
         files: dict | None = None,
         timeout: float = REQUEST_TIMEOUT,
+        may_have_published: bool = False,
     ) -> httpx.Response:
         """Make an HTTP request with standard error handling.
 
-        Raises APIError on 4xx/5xx, RateLimitError on 429.
+        Raises APIError on 4xx/5xx, RateLimitError on 429. With ``may_have_published`` (the call that
+        publishes), a timeout or 5xx is ambiguous: raises a non-retryable PublishError so it is not repeated.
         """
         req_headers = {}
         if access_token:
@@ -308,7 +313,15 @@ class SocialProvider(ABC):
                 request_kwargs["content"] = data
             else:
                 request_kwargs["data"] = data
-            response = client.request(method, url, **request_kwargs)
+            try:
+                response = client.request(method, url, **request_kwargs)
+            except _AMBIGUOUS_NET_ERRORS as e:
+                if may_have_published:
+                    raise PublishError(MAYBE_PUBLISHED_MSG, platform=self.platform_name, retryable=False) from e
+                raise
+
+        if may_have_published and response.status_code >= 500:
+            raise PublishError(MAYBE_PUBLISHED_MSG, platform=self.platform_name, retryable=False)
 
         if response.status_code == 429:
             retry_after = response.headers.get("Retry-After")

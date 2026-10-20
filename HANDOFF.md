@@ -222,3 +222,14 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
   - **Probar contra APIs reales:** FB Reels (video_reels), playlistItems, subida directa a R2 (con CORS), selector de fotogramas y playlists con token real.
   - **API/MCP:** crean posts de YouTube con made_for_kids=False sin preguntar; documentarlo o agregar un campo.
   - **Menores:** pestaña Preferencias, /settings/, menú de Ajustes por permisos.
+
+### Siguiente lote (después del blindaje de publicación y el modal «Publicando»), decidido 2026-10-20
+- **Música** (`bean.json` → `musica`: tiktok/instagram/youtube/facebook = en_app | libre_en_mp4, sugerencia, golpe_seg, nota):
+  - TikTok: OPCIÓN por publicación en la pestaña TikTok del composer, «Publicar directo» o «Enviar como borrador a TikTok (para poner la música en la app)». Con en_app viene preseleccionado «borrador», pero el usuario decide. Borrador = inbox con scope video.upload; mostrarlo en el demo de TikTok.
+  - IG/YouTube/FB en_app → «publicar a mano desde la app», con la sugerencia y el golpe.
+  - libre_en_mp4 sin mp4 → se trata como en_app.
+- **Portadas:**
+  - portada_ruta → cover de IG y miniatura de YouTube largo;
+  - portada_seg → cover de TikTok y thumb_offset de IG;
+  - FB Reels: miniatura si la API lo admite.
+- Los zips nuevos de posts usan *_con_portada.mp4 (la portada es el último cuadro).

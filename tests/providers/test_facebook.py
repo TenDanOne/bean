@@ -63,6 +63,7 @@ def test_publish_multi_photo_post_stages_photos_then_publishes_feed_post():
                     "attached_media": [{"media_fbid": "photo-1"}, {"media_fbid": "photo-2"}],
                     "message": "Caption for the album",
                 },
+                may_have_published=True,
             ),
         ]
     )
@@ -131,6 +132,7 @@ def test_publish_single_photo_uses_photos_edge_without_staging():
         "https://graph.facebook.com/v25.0/page-1/photos",
         access_token="page-token",
         json={"url": "https://cdn.example.com/one.jpg", "message": "Single image caption"},
+        may_have_published=True,
     )
     sent = provider._request.call_args.kwargs["json"]
     assert "published" not in sent
@@ -709,6 +711,7 @@ def test_publish_video_resolves_feed_post_id_for_analytics():
                 "https://graph.facebook.com/v25.0/page-1/videos",
                 access_token="page-token",
                 json={"file_url": "https://cdn.example.com/clip.mp4", "description": "Video caption"},
+                may_have_published=True,
             ),
             call(
                 "GET",

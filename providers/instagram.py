@@ -435,6 +435,7 @@ class InstagramProvider(SocialProvider):
             f"{BASE_URL}/{ig_user_id}/media_publish",
             access_token=access_token,
             json={"creation_id": container_id},
+            may_have_published=True,
         )
         data = resp.json()
         media_id = data.get("id", "")

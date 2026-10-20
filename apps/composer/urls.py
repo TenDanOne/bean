@@ -37,6 +37,7 @@ urlpatterns = [
         name="delete_published_post",
     ),
     # Auto-save
+    path("compose/<uuid:post_id>/publish-status/", views.publish_status, name="publish_status"),
     path("compose/autosave/", views.autosave, name="autosave"),
     path("compose/<uuid:post_id>/autosave/", views.autosave, name="autosave_edit"),
     # Live preview

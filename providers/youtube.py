@@ -447,6 +447,7 @@ class YouTubeProvider(SocialProvider):
                     },
                     data=chunk,
                     timeout=300.0,
+                    may_have_published=end >= total,
                 )
                 if resp.status_code != 308:
                     return resp.json()

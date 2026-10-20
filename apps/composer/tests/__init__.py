@@ -96,8 +96,10 @@ class DerivePostStatusTest(TestCase):
     def test_mixed_workflow_returns_lowest(self):
         # draft is the most conservative state — it wins over scheduled.
         self.assertEqual(derive_post_status(["draft", "scheduled"]), "draft")
-        # scheduled wins over publishing.
-        self.assertEqual(derive_post_status(["scheduled", "publishing"]), "scheduled")
+        # a channel in flight or out next to a queued one reads "publishing", not "scheduled".
+        self.assertEqual(derive_post_status(["scheduled", "publishing"]), "publishing")
+        self.assertEqual(derive_post_status(["scheduled", "published"]), "partially_published")
+        self.assertEqual(derive_post_status(["publishing", "published"]), "publishing")
         # pending_review wins over approved.
         self.assertEqual(derive_post_status(["pending_review", "approved"]), "pending_review")
 

@@ -350,7 +350,11 @@ class TikTokProvider(SocialProvider):
             payload["is_aigc"] = bool(content.extra["is_aigc"])
         try:
             resp = self._request(
-                "POST", f"{API_BASE}/post/publish/content/init/", access_token=access_token, json=payload
+                "POST",
+                f"{API_BASE}/post/publish/content/init/",
+                access_token=access_token,
+                json=payload,
+                may_have_published=True,
             )
         except APIError as exc:
             self._raise_classified_publish_error(exc)
@@ -430,6 +434,8 @@ class TikTokProvider(SocialProvider):
                 f"{API_BASE}/post/publish/video/init/",
                 access_token=access_token,
                 json=payload,
+                # FILE_UPLOAD init only reserves an upload slot: nothing is published until the last chunk.
+                may_have_published=payload.get("source_info", {}).get("source") == "PULL_FROM_URL",
             )
         except APIError as exc:
             self._raise_classified_publish_error(exc)
@@ -530,25 +536,35 @@ class TikTokProvider(SocialProvider):
             )
 
         # Step 2: send the binary to TikTok's presigned URL, one chunk at a time (never the whole file in memory)
+        extra = dict(init_body.get("data", {}))
         with open(video_path, "rb") as f:
             for i in range(chunk_count):
                 start = i * chunk_size
                 end = video_size if i == chunk_count - 1 else start + chunk_size
-                self._request(
-                    "PUT",
-                    upload_url,
-                    headers={
-                        "Content-Type": content_type,
-                        "Content-Length": str(end - start),
-                        "Content-Range": f"bytes {start}-{end - 1}/{video_size}",
-                    },
-                    data=f.read(end - start),
-                    timeout=120.0,
-                )
+                is_last = i == chunk_count - 1
+                try:
+                    self._request(
+                        "PUT",
+                        upload_url,
+                        headers={
+                            "Content-Type": content_type,
+                            "Content-Length": str(end - start),
+                            "Content-Range": f"bytes {start}-{end - 1}/{video_size}",
+                        },
+                        data=f.read(end - start),
+                        timeout=120.0,
+                    )
+                except Exception as exc:
+                    # A middle chunk failing published nothing: normal retryable error (retry re-inits).
+                    if not is_last:
+                        raise
+                    # The last chunk may have completed the post: keep the publish_id, stay pending for the poll.
+                    logger.warning("TikTok last chunk failed for %s: %s", publish_id, exc)
+                    extra["upload_error"] = str(exc)[:300]
 
         return PublishResult(
             platform_post_id=publish_id,
-            extra=init_body.get("data", {}),
+            extra=extra,
             pending=True,
         )
 

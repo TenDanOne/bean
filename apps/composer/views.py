@@ -1142,6 +1142,52 @@ def _platform_status_map(post):
     return {str(pp.id): pp.status for pp in post.platform_posts.all()}
 
 
+def _publish_state(pp):
+    """Estado de una red para el modal «Publicando»: wait | run | proc | ok | fail."""
+    st = PlatformPost.Status
+    if pp.status == st.PUBLISHED:
+        return "ok"
+    if pp.status == st.FAILED:
+        return "fail"
+    if pp.status == st.PUBLISHING:
+        return "proc" if pp.platform_post_id else "run"
+    # Un intento fallido vuelve a programado con su error: para el modal ya terminó.
+    if pp.status == st.SCHEDULED and pp.retry_count and pp.publish_error:
+        return "fail"
+    return "wait"
+
+
+@login_required
+@require_GET
+@require_permission("create_posts")
+def publish_status(request, workspace_id, post_id):
+    """Estado de cada PlatformPost del post (solo cuentas visibles) para el modal «Publicando»."""
+    workspace = _get_workspace(request, workspace_id)
+    post = get_object_or_404(Post, id=post_id, workspace=workspace)
+    pps = (
+        post.platform_posts.filter(social_account__in=visible_accounts(request.workspace_membership))
+        .select_related("social_account")
+        .order_by("created_at")
+    )
+    return JsonResponse(
+        {
+            "rows": [
+                {
+                    "id": str(pp.id),
+                    "account": pp.social_account.account_name,
+                    "platform": pp.social_account.get_platform_display(),
+                    "kind": pp.post_type_label,
+                    "state": _publish_state(pp),
+                    "error": pp.publish_error
+                    if pp.status in (PlatformPost.Status.FAILED, PlatformPost.Status.SCHEDULED)
+                    else "",
+                }
+                for pp in pps
+            ]
+        }
+    )
+
+
 def _combine_schedule_dt(workspace, sched_date, sched_time):
     """Combine the composer's date + time inputs into a workspace-tz-aware datetime.
 
