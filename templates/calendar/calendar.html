@@ -78,6 +78,17 @@
     }
     @media (prefers-reduced-motion: no-preference) { .post-chip:hover { transform: translateX(1px); } }
 
+    .cal-chip-row { display: flex; align-items: center; gap: 2px; }
+    .cal-chip-row .post-chip { flex: 1 1 auto; min-width: 0; }
+    .cal-chip-del, .cal-more {
+        min-height: 24px; min-width: 24px; border-radius: 6px; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--text-primary); background: var(--warm-200); border: 1px solid var(--border-subtle);
+        font-size: 11px; font-weight: 600;
+    }
+    .cal-chip-del { flex: none; margin-bottom: 2px; }
+    .cal-more { padding: 2px 8px; margin-top: 2px; }
+
     /* Status colors: ver .status-* / .post-chip en styles.css */
 
     /* View switcher */

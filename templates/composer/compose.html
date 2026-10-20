@@ -178,7 +178,7 @@
                                     {% if account.avatar_url %}<img src="{{ account.avatar_url }}" alt="">{% else %}{{ account.account_name|default:account.account_handle|make_list|first|upper }}{% endif %}
                                     <em>{% include "partials/_platform_icon.html" with platform=account.platform size="sm" %}</em>
                                 </span>
-                                <span class="cp-nm"><b>{{ account.account_name|default:account.account_handle }}</b><small>{{ account.platform_label }}</small></span>
+                                <span class="cp-nm"><b>{{ account.account_name|default:account.account_handle }}</b><small>{{ account.platform_label }}<span x-text="cardKind('{{ account.id }}') ? ' · ' + cardKind('{{ account.id }}') : ''"></span></small></span>
                                 <span class="st-pill ib-k st-scheduled" x-show="supports('{{ account.id }}') && selectedAccounts.includes('{{ account.id }}')" x-cloak x-text="kindLabel('{{ account.id }}')"></span>
                                 <span class="st-pill ib-k st-paused" x-show="!supports('{{ account.id }}')" x-cloak title="Este formato no existe en esta plataforma">No admite</span>
                             </label>
@@ -1893,8 +1893,16 @@ function composerApp() {
                 : '';
             this.$nextTick(() => this.triggerPreviewUpdate());
         },
-        kindLabel(id) {
-            const p = this.plat(id), t = this.postTypes[id];
+        // Tipo que muestra la tarjeta de cuenta: el real si está marcada; si no, el que tomaría con el formato elegido.
+        cardKind(id) {
+            if (!this.supports(id)) return '';
+            if (this.selectedAccounts.includes(id)) return this.kindLabel(id);
+            const f = this.formatTpl?.formato, p = this.basePlat(id);
+            if (!f || !(p in f.post_type)) return '';
+            return this.kindLabel(id, f.post_type[p] || this.defaultType(this.plat(id)));
+        },
+        kindLabel(id, type = this.postTypes[id]) {
+            const p = this.plat(id), t = type;
             if (p === 'youtube') return t === 'short' ? 'Short' : 'Video';
             if (p === 'instagram' || p === 'instagram_login') return ({ reel: 'Reel', story: 'Story', carousel: 'Carrusel' })[t] || 'Feed';
             if (p === 'facebook') {
@@ -1904,6 +1912,7 @@ function composerApp() {
                 if (this.hasVideoAttached) return 'Video';
                 return this.mediaCount > 1 ? 'Fotos' : 'Foto';
             }
+            if (p === 'tiktok') return t === 'image' ? 'Fotos' : 'Video';
             return '';
         },
         tabLabel(id) {

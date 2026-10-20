@@ -3,7 +3,47 @@ Sent tab partial for the Publish page.
 Shows all published/partially_published platform posts. Loaded via HTMX into #tab-content.
 {% endcomment %}
 
-<div x-data{% if is_htmx %} class="tab-slide-in"{% endif %}>
+<div x-data="{ showFailedModal: false, deleting: false }"{% if is_htmx %} class="tab-slide-in"{% endif %}>
+    {% if failed_count and request.workspace_membership.effective_permissions.create_posts %}
+    <div class="flex justify-end px-4 pt-3">
+        <button type="button" @click="showFailedModal = true"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[24px] text-xs font-semibold rounded-full border border-app text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
+            {% icon "trash" css_class="w-3.5 h-3.5" %}
+            Eliminar fallidos ({{ failed_count }})
+        </button>
+    </div>
+    <template x-teleport="body">
+        <div x-show="showFailedModal" class="fixed inset-0 z-[60] flex items-center justify-center"
+             @keydown.escape.window="showFailedModal = false" role="dialog" aria-modal="true" aria-labelledby="failed-modal-title"
+             style="display: none;">
+            <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="showFailedModal = false"></div>
+            <div class="relief-float relative rounded-2xl p-6 w-full max-w-sm mx-4">
+                <h3 id="failed-modal-title" class="text-base font-semibold text-app mb-1 text-center">¿Eliminar publicaciones fallidas?</h3>
+                <p class="text-sm text-app-tertiary mb-6 text-center">Se eliminarán {{ failed_count }} publicaciones fallidas. No se puede deshacer.</p>
+                <div class="flex gap-3">
+                    <button @click="showFailedModal = false"
+                            class="flex-1 px-4 py-2 text-sm font-semibold text-app-body bg-app-2 rounded-full hover:bg-app-3 transition-colors cursor-pointer">Cancelar</button>
+                    <button :disabled="deleting"
+                            @click="
+                                deleting = true;
+                                fetch('{% url 'calendar:publish_delete_failed' workspace_id=workspace.id %}', {
+                                    method: 'POST',
+                                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                                }).then(() => {
+                                    showFailedModal = false;
+                                    deleting = false;
+                                    window.dispatchEvent(new CustomEvent('post-deleted'));
+                                }).catch(() => { deleting = false; });
+                            "
+                            :class="deleting && 'opacity-50 cursor-not-allowed'"
+                            class="flex-1 px-4 py-2 text-sm font-semibold text-app-inverse bg-red-500 rounded-full hover:bg-red-600 transition-colors cursor-pointer">
+                        <span x-text="deleting ? 'Eliminando...' : 'Eliminar'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+    {% endif %}
     {% if platform_posts %}
     <table class="w-full">
         <thead>

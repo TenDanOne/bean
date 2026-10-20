@@ -37,6 +37,7 @@ urlpatterns = [
     path("publish/drafts/", views.publish_tab_drafts, name="publish_tab_drafts"),
     path("publish/approvals/", views.publish_tab_approvals, name="publish_tab_approvals"),
     path("publish/sent/", views.publish_tab_sent, name="publish_tab_sent"),
+    path("publish/sent/delete-failed/", views.publish_delete_failed, name="publish_delete_failed"),
     # Custom Calendar Events
     path("events/create/", views.event_create, name="event_create"),
     path("events/<uuid:event_id>/edit/", views.event_edit, name="event_edit"),

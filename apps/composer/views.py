@@ -2939,6 +2939,8 @@ def post_delete(request, workspace_id, post_id):
     account_id = request.GET.get("account") or request.POST.get("account")
     if account_id:
         pp = get_object_or_404(PlatformPost, post=post, social_account_id=account_id)
+        if pp.status in PlatformPost.PROTECTED_STATUSES:
+            return HttpResponse("No se puede quitar una publicación ya publicada o en proceso.", status=409)
         pp.delete()
         # If no platform posts remain, clean up the parent post too.
         if not post.platform_posts.exists():

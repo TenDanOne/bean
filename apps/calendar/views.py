@@ -7,7 +7,8 @@ from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.db.models import QuerySet
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -216,6 +217,7 @@ def _get_filtered_platform_posts(workspace, request, apply_status=True):
     qs = (
         PlatformPost.objects.filter(post__workspace_id=workspace.id)
         .select_related("post", "post__author", "post__category", "social_account")
+        .prefetch_related("post__media_attachments__media_asset", "post__recurrence_rule")
         .annotate(effective_at=Coalesce("scheduled_at", "post__scheduled_at"))
     )
 
@@ -519,7 +521,11 @@ def _get_tab_context(request, workspace, tab: str) -> dict:
             .order_by("-post__scheduled_at", "-post__created_at")
         )
         platform_posts = _apply_pp_publish_filters(platform_posts, request)
-        return {**base_ctx, "platform_posts": platform_posts[:200]}
+        return {
+            **base_ctx,
+            "platform_posts": platform_posts[:200],
+            "failed_count": len(_pure_failed_posts(request, workspace)),
+        }
 
     # approvals — one row per Post (bundled), matching the approval-action model
     # and the approved design. on_hold is included so client-held posts surface
@@ -749,6 +755,35 @@ def _render_calendar_partial(request, workspace, view_type, target_date, context
     return _month_view(request, workspace, target_date, context)
 
 
+def _preload_thumbnails(platform_posts):
+    """Resolve every custom thumbnail in one query instead of one per chip (fills the cached_property)."""
+    from apps.media_library.models import MediaAsset
+
+    wanted = {}
+    for pp in platform_posts:
+        aid = (pp.platform_extra or {}).get("thumbnail_asset_id")
+        if aid:
+            wanted[pp] = str(aid)
+    if not wanted:
+        return
+    try:
+        assets = {
+            str(a.id): a
+            for a in MediaAsset.objects.filter(
+                id__in=set(wanted.values()), workspace_id=platform_posts[0].post.workspace_id
+            )
+        }
+    except (ValueError, ValidationError):
+        return  # an id malformed: leave the per-chip property, which tolerates it
+    for pp, aid in wanted.items():
+        asset = assets.get(aid)
+        pp.display_thumbnail_url = (
+            ""
+            if asset is None
+            else (asset.thumbnail.url if asset.thumbnail else (asset.file.url if asset.file else ""))
+        )
+
+
 def _month_view_data(request, workspace, target_date, context):
     """Populate context with month view data (no rendering)."""
     import zoneinfo
@@ -785,6 +820,8 @@ def _month_view_data(request, workspace, target_date, context):
 
     # Group PlatformPosts by date in the display timezone
     posts_by_date = defaultdict(list)
+    platform_posts = list(platform_posts)
+    _preload_thumbnails(platform_posts)
     for pp in platform_posts:
         if pp.effective_at:
             posts_by_date[pp.effective_at.astimezone(display_tz).date()].append(pp)
@@ -818,7 +855,7 @@ def _month_view_data(request, workspace, target_date, context):
                     "is_current_month": day.month == month,
                     "is_today": day == today,
                     "is_past": day < today,
-                    "posts": day_posts[:3],
+                    "posts": day_posts,  # todas; la plantilla oculta las que pasan de 3 hasta «+N más»
                     "total_posts": len(day_posts),
                     "overflow": max(0, len(day_posts) - 3),
                     "holidays": day_holidays,
@@ -1062,6 +1099,42 @@ def publish_tab_sent(request, workspace_id):
     """HTMX partial: Sent tab content for the publish page."""
     workspace = _get_workspace(request, workspace_id)
     return _render_tab(request, workspace, "sent")
+
+
+def _pure_failed_posts(request, workspace):
+    """Posts whose every PlatformPost failed and none ever published, on channels the member sees."""
+    from django.db.models import Q
+
+    from apps.composer.views import may_edit_post
+    from apps.members.channels import visible_accounts
+
+    visible = visible_accounts(request.workspace_membership, SocialAccount.objects.for_workspace(workspace.id))
+    # Any child that is not failed, was published, or sits on a hidden channel disqualifies the whole post.
+    disqualifying = PlatformPost.objects.filter(
+        ~Q(status="failed") | Q(published_at__isnull=False) | ~Q(social_account__in=visible)
+    )
+    posts = (
+        Post.objects.for_workspace(workspace.id)
+        .filter(platform_posts__status="failed")
+        .exclude(platform_posts__in=disqualifying)
+        .distinct()
+    )
+    return [p for p in posts if may_edit_post(request, p)]
+
+
+@login_required
+@require_POST
+@require_permission("create_posts")
+def publish_delete_failed(request, workspace_id):
+    """Delete the posts of this workspace that only ever failed (Publish → Enviadas)."""
+    workspace = _get_workspace(request, workspace_id)
+    with transaction.atomic():
+        ids = [p.id for p in _pure_failed_posts(request, workspace)]
+        # Lock the children, then re-apply the rule: a post that went back to scheduled meanwhile survives.
+        list(PlatformPost.objects.select_for_update().filter(post_id__in=ids))
+        ids = [p.id for p in _pure_failed_posts(request, workspace)]
+        Post.objects.for_workspace(workspace.id).filter(id__in=ids).delete()
+    return HttpResponse(status=204, headers={"HX-Trigger": "postChanged"})
 
 
 @login_required

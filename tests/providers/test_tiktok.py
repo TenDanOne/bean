@@ -408,7 +408,8 @@ class TestPublishPost:
 
         assert excinfo.value.retryable is False
         assert "audit" in str(excinfo.value)
-        assert "SELF_ONLY" in str(excinfo.value)
+        assert "CUENTA de TikTok debe ser privada" in str(excinfo.value)
+        assert "«Solo yo»" in str(excinfo.value)
         urls = [call.args[1] for call in mock_request.call_args_list]
         assert VIDEO_INIT_URL not in urls
 

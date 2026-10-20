@@ -56,10 +56,9 @@ PERMANENT_PUBLISH_ERROR_CODES = frozenset(
 )
 
 UNAUDITED_CLIENT_HINT = (
-    "La app de TikTok aún no pasa la auditoría de publicación. Hasta que TikTok "
-    "la apruebe (portal de desarrolladores → Content Posting API → solicitar auditoría), "
-    "solo se puede publicar en privado. Elige «Solo yo» en la privacidad de TikTok "
-    "de esta publicación para publicarla ahora."
+    "TikTok rechazó la publicación: mientras la app no pase la auditoría, la CUENTA de TikTok "
+    "debe ser privada (app de TikTok → Perfil → Menú → Ajustes y privacidad → Privacidad → "
+    "Cuenta privada) y la publicación debe ir con «Solo yo»."
 )
 
 # Optional post_info fields the composer may set via platform_extra.
@@ -392,11 +391,11 @@ class TikTokProvider(SocialProvider):
                 privacy_level = "SELF_ONLY"
             else:
                 message = (
-                    f"TikTok does not allow privacy level '{privacy_level}' for this "
-                    f"account (allowed: {', '.join(options)})."
+                    UNAUDITED_CLIENT_HINT
+                    if options == ["SELF_ONLY"]
+                    else f"TikTok no permite el nivel de privacidad '{privacy_level}' en esta cuenta "
+                    f"(permitidos: {', '.join(options)})."
                 )
-                if options == ["SELF_ONLY"]:
-                    message = f"{message} {UNAUDITED_CLIENT_HINT}"
                 raise PublishError(
                     message,
                     platform=self.platform_name,
@@ -462,11 +461,7 @@ class TikTokProvider(SocialProvider):
         if code == "url_ownership_unverified":
             message = "Verifica en el portal de TikTok el dominio de tus medios (S3_CUSTOM_DOMAIN)."
         if code == "unaudited_client_can_only_post_to_private_accounts":
-            message = (
-                "TikTok rechazó la publicación: mientras la app no pase la auditoría, la CUENTA de TikTok "
-                "debe ser privada (app de TikTok → Perfil → Menú → Ajustes y privacidad → Privacidad → "
-                "Cuenta privada) y la publicación debe ir con «Solo yo»."
-            )
+            message = UNAUDITED_CLIENT_HINT
         raise PublishError(
             message,
             platform=self.platform_name,
