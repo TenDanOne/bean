@@ -455,6 +455,33 @@ class PendingPublishTest(TestCase):
         self.assertEqual(self.pp.platform_post_id, "v_pub_url~1")
         self.assertIsNone(self.pp.published_at)
 
+    def test_pending_via_publish_group_does_not_fall_back_to_scheduled(self):
+        # Regression: the group loaded rows as SCHEDULED, bulk-updated the DB to PUBLISHING,
+        # then a full save() of the stale object wrote SCHEDULED back -> re-published every cycle.
+        from apps.composer.models import PlatformPost
+
+        PlatformPost.objects.filter(pk=self.pp.pk).update(
+            status=PlatformPost.Status.SCHEDULED, scheduled_at=timezone.now() - timedelta(minutes=1)
+        )
+        seen = []
+        with patch.object(PublishEngine, "_publish_platform_post", side_effect=lambda pp: seen.append(pp.status)):
+            PublishEngine()._publish_post_group(self.pp.post, [PlatformPost.objects.get(pk=self.pp.pk)])
+        self.assertEqual(seen, [PlatformPost.Status.PUBLISHING])
+
+    def test_pending_save_writes_publishing_even_from_a_stale_object(self):
+        from apps.composer.models import PlatformPost
+
+        stale = PlatformPost.objects.get(pk=self.pp.pk)
+        stale.status = PlatformPost.Status.SCHEDULED  # what the group used to hand over
+        pending = {"success": True, "platform_post_id": "v_pub_url~2", "response": {}, "pending": True}
+        with patch.object(PublishEngine, "_dispatch_to_provider", return_value=pending):
+            engine = PublishEngine()
+            engine._publish_platform_post(stale)
+        self.pp.refresh_from_db()
+        self.assertEqual(self.pp.status, PlatformPost.Status.PUBLISHING)
+        self.assertEqual(self.pp.platform_post_id, "v_pub_url~2")
+        self.assertNotIn(self.pp.pk, [pp.pk for pp in engine._get_due_platform_posts()])
+
     def test_complete_marks_published_with_video_id(self):
         from apps.composer.models import PlatformPost
         from providers.types import PublishStatus

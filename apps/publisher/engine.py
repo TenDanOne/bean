@@ -203,6 +203,9 @@ class PublishEngine:
             PlatformPost.objects.filter(id__in=[pp.id for pp in platform_posts]).update(
                 status=PlatformPost.Status.PUBLISHING, updated_at=timezone.now()
             )
+            # Keep the in-memory rows in sync: a later full save() must not write "scheduled" back.
+            for pp in platform_posts:
+                pp.status = PlatformPost.Status.PUBLISHING
 
         # Publish in parallel
         results = {}
@@ -265,7 +268,8 @@ class PublishEngine:
                     }
                 if result.get("pending"):
                     # Platform still processing: stay PUBLISHING; _check_pending_publishes resolves it.
-                    platform_post.save()
+                    platform_post.status = PlatformPost.Status.PUBLISHING
+                    platform_post.save(update_fields=["status", "platform_post_id", "platform_extra", "updated_at"])
                 else:
                     self._mark_published(platform_post)
                     self._notify_thumbnail_error(platform_post)
