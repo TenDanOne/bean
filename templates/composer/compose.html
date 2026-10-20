@@ -19,6 +19,7 @@
     .panel-right.is-open { transform: translateX(0); }
     @media (min-width: 1024px) {
         .panel-right { position: static; inset: auto; width: 290px; max-width: none; flex-shrink: 0; transform: none; transition: none; box-shadow: none; }
+        .panel-right.is-collapsed { display: none; }
     }
     .panel-right-backdrop { position: fixed; inset: 0; background: rgba(15,42,48,0.4); z-index: 57; }
     @media (min-width: 1024px) { .panel-right-backdrop { display: none !important; } }
@@ -62,8 +63,10 @@
             {% icon "chevron-left" css_class="w-4 h-4" %}
         </button>
         <h1 class="text-base font-semibold text-app" style="letter-spacing: -0.01em;">{% if is_edit %}Editar publicación{% else %}Nueva publicación{% endif %}</h1>
-        <button type="button" @click="showPreviewPanel = true"
-                class="lg:hidden ml-auto ib-btn ib-btn-secondary">
+        <button type="button" @click="toggleReview()" aria-controls="cp-review"
+                :aria-expanded="isDesktop() ? String(!reviewCollapsed) : String(showPreviewPanel)"
+                :title="isDesktop() ? (reviewCollapsed ? 'Mostrar revisión' : 'Ocultar revisión') : 'Ver revisión'"
+                class="ml-auto ib-btn ib-btn-secondary">
             {% icon "eye" css_class="w-4 h-4" %}
             <span>Revisión</span>
             <span class="ib-n" :class="allBlocks.length ? '' : 'ib-n-z'" x-text="allBlocks.length + review.warns"></span>
@@ -159,12 +162,6 @@
                                 <span><b>{{ t.title }}</b><small>{{ t.description }}</small></span>
                             </label>
                             {% endfor %}
-                        </div>
-                        <div class="ib-alert ib-al-info cp-tplnote" x-show="formato" x-cloak>
-                            {% icon "file-lines" css_class="w-4 h-4" %}
-                            <div>Hay una plantilla para este formato: <b x-text="formatTitle"></b>.
-                                <button type="button" class="ib-btn ib-btn-secondary" style="margin-left:6px" @click="useFormatTemplate()">Usar plantilla</button>
-                                <span class="ib-hint">Solo llena lo que esté vacío; lo que ya escribiste no se toca.</span></div>
                         </div>
                     </fieldset>
 
@@ -278,16 +275,24 @@
                         {% endif %}
                     </ol>
 
-                    <div class="cp-two">
+                    <div class="cp-two cp-two-sub">
                         <div class="cp-f">
-                            <label for="cp-title">Título <small x-show="!anyPlatformNeedsTitle">(interno)</small></label>
-                            <span class="cp-cnt" style="margin:0" :class="titleVisibleLimit && title.length > titleVisibleLimit && 'over'" x-show="titleVisibleLimit" x-text="title.length + ' / ' + titleVisibleLimit + ' visibles en móvil'"></span>
+                            <div class="cp-lbrow">
+                                <label for="cp-title">Título <small x-show="!anyPlatformNeedsTitle">(interno)</small></label>
+                                <span class="cp-cnt" :class="titleVisibleLimit && title.length > titleVisibleLimit && 'over'" x-show="titleVisibleLimit" x-text="title.length + ' / ' + titleVisibleLimit + ' visibles en móvil'"></span>
+                            </div>
                             <input type="text" id="cp-title" name="title" x-model="title" maxlength="255"
                                    :placeholder="autoSuggestedTitle || 'Escribe un título…'" @input="debouncedPreviewUpdate()">
+                            <p class="ib-hint">Lo que se lee primero en YouTube; en otras redes es interno.</p>
                         </div>
                         <div class="cp-f">
-                            <label for="cp-cover">Texto de portada <small>máx. 3 palabras</small></label>
-                            <input type="text" id="cp-cover" name="cover_text" x-model="coverText" maxlength="60" @input="debouncedPreviewUpdate()">
+                            <div class="cp-lbrow">
+                                <label for="cp-cover">Texto de portada <small>opcional</small></label>
+                                <span class="cp-cnt">máx. 3 palabras</span>
+                            </div>
+                            <input type="text" id="cp-cover" name="cover_text" x-model="coverText" maxlength="60"
+                                   placeholder="Ej. «Camino a casa»" aria-describedby="cp-cover-hint" @input="debouncedPreviewUpdate()">
+                            <p class="ib-hint" id="cp-cover-hint">El texto grande que lleva tu portada o miniatura. No se publica: solo sirve para avisarte si repite el título.</p>
                         </div>
                     </div>
 
@@ -1361,7 +1366,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
 
     <!-- Columna de revisión -->
     <div x-show="showPreviewPanel" x-cloak @click="showPreviewPanel = false" class="panel-right-backdrop"></div>
-    <aside class="panel-right border-l border-app bg-app-1 flex flex-col" :class="{ 'is-open': showPreviewPanel }" aria-label="Revisión de la publicación">
+    <aside id="cp-review" class="panel-right border-l border-app bg-app-1 flex flex-col" :class="{ 'is-open': showPreviewPanel, 'is-collapsed': reviewCollapsed }" aria-label="Revisión de la publicación">
         <div class="px-4 py-3 border-b border-app-subtle flex items-center justify-between">
             <div class="flex items-center gap-2"><h2 class="cp-legend" style="margin:0">Revisión</h2>{% include "partials/_help_btn.html" with key="revisor" title="Revisión" %}</div>
             <button type="button" @click="showPreviewPanel = false" aria-label="Cerrar revisión"
@@ -1772,6 +1777,14 @@ function composerApp() {
         thumbnailPickerAccId: null,
         thumbnailUploading: {},
         showPreviewPanel: false,
+        // Per-viewer preference; storage can be unavailable (private mode), so it degrades to expanded.
+        reviewCollapsed: (() => { try { return localStorage.getItem('bean.composer.reviewCollapsed') === '1'; } catch (e) { return false; } })(),
+        isDesktop() { return window.matchMedia('(min-width: 1024px)').matches; },
+        toggleReview() {
+            if (!this.isDesktop()) { this.showPreviewPanel = true; return; }
+            this.reviewCollapsed = !this.reviewCollapsed;
+            try { localStorage.setItem('bean.composer.reviewCollapsed', this.reviewCollapsed ? '1' : '0'); } catch (e) {}
+        },
         showSaveToast: false,
         formError: '',
         lastSaved: null,
@@ -1876,7 +1889,7 @@ function composerApp() {
             if (!this.selectedAccounts.includes(this.activeTab)) this.activeTab = this.selectedAccounts[0] || '';
             this.notice = dropped.length
                 ? 'Formato «' + this.formatTitle + '». Se quitaron las cuentas que no lo admiten: ' + dropped.join(', ') + '.'
-                : 'Formato «' + this.formatTitle + '»: se eligió el tipo correcto en cada cuenta.';
+                : '';
             this.$nextTick(() => this.triggerPreviewUpdate());
         },
         kindLabel(id) {
@@ -1921,22 +1934,6 @@ function composerApp() {
                 anuncio: '¿Dudas? Pregúntanos aquí y te respondemos.',
                 texto_fb: 'Si quieres el enlace, te lo dejamos aquí.',
             })[this.formato] || '';
-        },
-        useFormatTemplate() {
-            const t = this.formatTpl;
-            if (!t) return;
-            const filled = [], kept = [];
-            const fill = (label, cur, set, val) => {
-                if (!val) return;
-                if (String(cur || '').trim()) kept.push(label); else { set(val); filled.push(label); }
-            };
-            fill('descripción', this.caption, v => { this.caption = v; }, t.body);
-            if (t.formato.campos.includes('titulo') && this.anyPlatformNeedsTitle) fill('título', this.title, v => { this.title = v; }, PH('titulo'));
-            if (t.formato.campos.includes('portada')) fill('texto de portada', this.coverText, v => { this.coverText = v; }, PH('portada'));
-            if (this.anyPlatformSupportsFirstComment) fill('primer comentario', this.firstComment, v => { this.firstComment = v; }, this.firstCommentSuggestion);
-            this.notice = 'Plantilla «' + t.title + '» aplicada. ' + (filled.length ? 'Se rellenó: ' + filled.join(', ') + ' (completa los marcadores {' + '{…}}). ' : 'No había campos vacíos que rellenar. ')
-                + (kept.length ? 'No se tocó lo que ya escribiste: ' + kept.join(', ') + '.' : '');
-            this.triggerPreviewUpdate();
         },
         get titleVisibleLimit() {
             const ls = this.selectedAccounts.filter(id => this.plat(id) === 'youtube').map(id => this.postTypes[id] === 'short' ? 40 : 70);
