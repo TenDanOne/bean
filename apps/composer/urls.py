@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import import_views, views
 
 app_name = "composer"
 
@@ -79,6 +79,8 @@ urlpatterns = [
     path("templates/<uuid:template_id>/use/", views.use_template, name="use_template"),
     path("templates/picker/", views.template_picker, name="template_picker"),
     path("compose/<uuid:post_id>/save-as-template/", views.save_as_template, name="save_as_template"),
+    # Importar publicación (.zip)
+    path("import/package/", import_views.import_package, name="import_package"),
     # CSV Import
     path("import/csv/", views.csv_upload, name="csv_upload"),
     path("import/csv/preview/", views.csv_preview, name="csv_preview"),

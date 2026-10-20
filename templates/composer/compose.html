@@ -193,6 +193,7 @@
                             {% endif %}
                             {% endfor %}
                         </div>
+                        {% if request|can:"create_posts" and request|can:"upload_media" %}<p class="ib-hint" style="margin-top:8px">¿Ya tienes la publicación escrita? <button type="button" class="btn-link" data-import-open>Importar publicación (.zip)</button></p>{% endif %}
                         <p class="ib-hint" style="margin-top:8px">Cada cuenta muestra a la derecha cómo se publicará (Short, Reel, Feed…). Las que no admiten el formato dicen «No admite».</p>
                     </fieldset>
                 </section>

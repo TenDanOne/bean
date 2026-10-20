@@ -406,7 +406,8 @@ def media_error_for_platform(
         return "Un Reel requiere un video."
     if post_type == "carousel" and len(types) < 2:
         return "Un carrusel requiere 2 o más medios."
-    if platform in _VIDEO_REQUIRED_PLATFORMS and "video" not in types:
+    tiktok_photos = platform == "tiktok" and post_type == "image"
+    if platform in _VIDEO_REQUIRED_PLATFORMS and "video" not in types and not tiktok_photos:
         name = _VIDEO_REQUIRED_PLATFORMS[platform]
         extra = " (las imágenes no se pueden publicar)" if types else ""
         return f"{name} requiere un video{extra}."

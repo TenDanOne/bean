@@ -442,6 +442,11 @@ class PublishEngine:
         media_urls = []
         temp_files = []
         attachments = list(platform_post.post.media_attachments.select_related("media_asset").order_by("position"))
+        # Medios propios de esta red (importador): subconjunto ordenado de los adjuntos del post.
+        own_media = platform_post.platform_specific_media
+        if isinstance(own_media, list) and own_media:
+            by_id = {str(pm.media_asset_id): pm for pm in attachments}
+            attachments = [by_id[str(i)] for i in own_media if str(i) in by_id]
 
         # Fail clearly (no retries) when the media can't work on this platform.
         media_error = media_error_for_platform(
@@ -455,7 +460,9 @@ class PublishEngine:
 
         # For video-only platforms (YouTube, TikTok), skip non-video attachments
         video_only = set(provider.supported_post_types) <= {PostType.VIDEO, PostType.SHORT}
-        if video_only:
+        # TikTok en modo fotos (post_type "image" en platform_extra) publica imágenes.
+        tiktok_photos = platform == "tiktok" and (platform_post.platform_extra or {}).get("post_type") == "image"
+        if video_only and not tiktok_photos:
             attachments = [pm for pm in attachments if pm.media_asset.media_type == "video"]
 
         first_media_type = None

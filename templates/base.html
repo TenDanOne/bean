@@ -414,6 +414,18 @@
                                 <div class="text-xs text-app-tertiary">Guarda una idea de contenido</div>
                             </div>
                         </button>
+                        {% if request|can:"create_posts" and request|can:"upload_media" %}
+                        <button type="button" data-import-open @click="newMenuOpen = false"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-app-1 transition-colors cursor-pointer">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                {% icon "upload" css_class="w-5 h-5 text-amber-600" %}
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-semibold text-app-strong">Importar publicación (.zip)</div>
+                                <div class="text-xs text-app-tertiary">Un paquete con la publicación ya escrita</div>
+                            </div>
+                        </button>
+                        {% endif %}
                         <div class="border-t border-app-subtle mt-1 pt-1">
                             <a href="{% url 'composer:create_landing' workspace_id=request.workspace.id %}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-app-1 text-sm text-app-secondary">
                                 {% icon "lightbulb" css_class="w-4 h-4" %} Ver mis ideas
@@ -894,6 +906,7 @@
                 <div class="flex-1 min-h-0 flex flex-col overflow-y-auto overflow-x-hidden">
                 {% block content %}{% endblock %}
                 </div>
+                {% if request.workspace and request|can:"create_posts" and request|can:"upload_media" %}{% include "composer/partials/import_dialog.html" %}{% endif %}
                 <footer class="mt-auto pt-6 text-center text-[0.6875rem]" style="color: var(--text-tertiary);">
                     BEAN by ITHOS &middot; basado en BrightBean Studio (AGPL-3.0) &middot;
                     <a href="https://github.com/TenDanOne/bean" class="underline" rel="noopener" target="_blank">C&oacute;digo fuente</a>

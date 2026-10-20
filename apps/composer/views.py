@@ -262,7 +262,7 @@ _PLACEHOLDER_RE = re.compile(r"\{\{[^{}]*\}\}")
 #: platform_extra keys de C2 (YouTube/Instagram/Facebook/«solo orgánico») que sobreviven a un guardado parcial.
 _C2_EXTRA_KEYS = {
     "category_id", "playlist_id", "made_for_kids", "contains_synthetic_media", "chapters", "solo_organico",
-    "ig_cover_asset_id", "thumb_offset", "collaborators", "share_to_feed", "link",
+    "ig_cover_asset_id", "thumb_offset", "collaborators", "share_to_feed", "link", "import_source", "photo_cover_index",
 }  # fmt: skip
 _IG_USERNAME_RE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
 _YT_PLAYLIST_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -550,6 +550,7 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
             # TikTok's UX guidelines require a separate toggle per interaction,
             # each greyed out on its own when the creator disabled it.
             extra = {
+                **({"post_type": "image"} if prev_extra.get("post_type") == "image" else {}),  # modo fotos (importador)
                 "disable_comment": request.POST.get(f"tiktok_allow_comment_{acc_id}") != "true",
                 "disable_duet": request.POST.get(f"tiktok_allow_duet_{acc_id}") != "true",
                 "disable_stitch": request.POST.get(f"tiktok_allow_stitch_{acc_id}") != "true",
@@ -2619,6 +2620,7 @@ def attach_media(request, workspace_id, post_id):
         media_asset=asset,
         defaults={"position": position},
     )
+    _sync_own_media(post, asset.id, add=True)
 
     # Option A: changing media on an approved post sends it back for re-approval.
     _revert_approved_to_review(post)
@@ -2673,6 +2675,17 @@ def attach_pending_media(request, workspace_id):
     return response
 
 
+def _sync_own_media(post, asset_id, *, add):
+    """Mantiene al día los medios propios por red (importador): suma o quita el asset en cada lista no nula."""
+    sid = str(asset_id)
+    for pp in post.platform_posts.all():
+        own = pp.platform_specific_media
+        if not isinstance(own, list) or (sid in own) == add:
+            continue
+        pp.platform_specific_media = [*own, sid] if add else [i for i in own if i != sid]
+        pp.save(update_fields=["platform_specific_media", "updated_at"])
+
+
 def _attach_asset_for_composer(request, workspace, asset, post=None):
     """Attach an asset to a post, or queue it in the pending-media session.
 
@@ -2703,7 +2716,9 @@ def _attach_asset_for_composer(request, workspace, asset, post=None):
 
         max_pos = post.media_attachments.aggregate(models.Max("position"))["position__max"]
         position = (max_pos or 0) + 1
-        return PostMedia.objects.create(post=post, media_asset=asset, position=position)
+        attachment = PostMedia.objects.create(post=post, media_asset=asset, position=position)
+        _sync_own_media(post, asset.id, add=True)
+        return attachment
 
     # No post yet - store pending media IDs in session so they can be
     # attached when the post is eventually saved.
@@ -2790,7 +2805,10 @@ def remove_media(request, workspace_id, post_id, media_id):
     """Remove a media attachment from a post."""
     workspace = _get_workspace(request, workspace_id)
     post = get_object_or_404(Post, id=post_id, workspace=workspace)
-    PostMedia.objects.filter(id=media_id, post=post).delete()
+    removed = PostMedia.objects.filter(id=media_id, post=post).first()
+    if removed:
+        _sync_own_media(post, removed.media_asset_id, add=False)
+        removed.delete()
 
     # Option A: changing media on an approved post sends it back for re-approval.
     _revert_approved_to_review(post)

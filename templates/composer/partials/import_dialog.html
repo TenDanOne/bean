@@ -1,0 +1,56 @@
+{% load static %}{% comment %}Diálogo «Importar publicación (.zip)». Se abre con cualquier [data-import-open]; lógica en static/js/import-package.js.{% endcomment %}
+<dialog id="imp-dialog" class="imp-dialog" aria-labelledby="imp-title" data-url="{% url 'composer:import_package' workspace_id=request.workspace.id %}">
+    <div class="imp-head">
+        <h2 id="imp-title">Importar publicación</h2>
+        <details class="imp-help">
+            <summary aria-label="Ayuda: qué es un paquete">?</summary>
+            <div class="imp-pop">
+                <h3>Qué es un paquete</h3>
+                <p>Un <code>.zip</code> con una publicación ya escrita y sus videos o imágenes. Trae un <code>bean.json</code> (versión 1) en la raíz y los medios junto a él.</p>
+                <h3>Qué hace BEAN</h3>
+                <ul>
+                    <li>Crea un borrador con las cuentas de YouTube, Instagram, Facebook y TikTok que encajen y llena cada pestaña.</li>
+                    <li>Si ya importaste esa publicación, te deja actualizar el borrador en vez de duplicarlo.</li>
+                </ul>
+                <h3>Qué no hace</h3>
+                <ul>
+                    <li>No publica ni programa nada: tú eliges cuándo.</li>
+                    <li>No elige la privacidad de TikTok ni fija comentarios.</li>
+                </ul>
+                <p>¿No tienes paquete? Crea una publicación con «Nuevo».</p>
+            </div>
+        </details>
+        <button type="button" class="imp-x" data-import-close aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="imp-body">
+        <div class="imp-drop" id="imp-drop">
+            <p><b>Arrastra aquí el paquete .zip</b></p>
+            <p class="imp-sub">Un .zip con tu publicación ya escrita y sus videos o imágenes.</p>
+            <button type="button" class="btn-brand imp-pick" id="imp-pick">Elegir archivo .zip</button>
+            <input type="file" id="imp-file" accept=".zip,application/zip" hidden>
+            <small class="imp-sub">Solo .zip · hasta 1 GB</small>
+        </div>
+        <div id="imp-progress" hidden>
+            <p class="imp-file"><b id="imp-name"></b> <span id="imp-pct" class="imp-sub"></span></p>
+            <div class="imp-bar" role="progressbar" aria-label="Subida del paquete" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="imp-fill"></i></div>
+        </div>
+        <div id="imp-pick-list" hidden>
+            <p id="imp-pick-h"><b>El paquete trae varias publicaciones. Elige una.</b></p>
+            <ul class="imp-list" aria-labelledby="imp-pick-h"></ul>
+        </div>
+        <div id="imp-exists" class="imp-alert imp-info" hidden>
+            <p id="imp-exists-t"></p>
+            <div class="imp-acts">
+                <button type="button" class="btn-brand" data-modo="actualizar">Actualizar el borrador existente</button>
+                <button type="button" class="btn-outline" data-modo="nuevo">Crear otro</button>
+            </div>
+        </div>
+        <div id="imp-error" class="imp-alert imp-err" role="alert" hidden>
+            <p><b id="imp-err-t"></b></p>
+            <p id="imp-err-m"></p>
+            <button type="button" class="btn-outline" id="imp-again">Elegir otro archivo</button>
+        </div>
+        <p class="imp-sub" id="imp-status" role="status" aria-live="polite"></p>
+    </div>
+</dialog>
+<script src="{% static 'js/import-package.js' %}" defer nonce="{{ request.csp_nonce }}"></script>

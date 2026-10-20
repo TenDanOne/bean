@@ -73,8 +73,13 @@ OPTIONAL_POST_INFO_FIELDS = (
     "is_aigc",
 )
 
+# post_info de fotos: https://developers.tiktok.com/doc/content-posting-api-reference-photo-post
+PHOTO_POST_INFO_FIELDS = ("disable_comment", "auto_add_music", "brand_content_toggle", "brand_organic_toggle")
+
 # TikTok FILE_UPLOAD's per-chunk limit is 64 MB decimal (not 64 MiB).
 # Anything larger requires multi-chunk upload, which we don't implement yet.
+# Modo fotos: tope de imágenes por publicación.
+MAX_PHOTOS = 35
 MAX_SINGLE_CHUNK_SIZE = 64_000_000
 # Larger videos go in chunks of this size (TikTok: 5-64 MB each; the last one absorbs the remainder).
 UPLOAD_CHUNK_SIZE = 32_000_000
@@ -258,6 +263,8 @@ class TikTokProvider(SocialProvider):
         return resp.json().get("data", {}) or {}
 
     def publish_post(self, access_token: str, content: PublishContent) -> PublishResult:
+        if content.post_type in (PostType.IMAGE, PostType.CAROUSEL):
+            return self._publish_photos(access_token, content)
         if content.post_type != PostType.VIDEO:
             raise PublishError(
                 "TikTok only supports VIDEO posts",
@@ -291,6 +298,65 @@ class TikTokProvider(SocialProvider):
             platform=self.platform_name,
             retryable=False,
         )
+
+    def _publish_photos(self, access_token: str, content: PublishContent) -> PublishResult:
+        """Modo fotos: /post/publish/content/init/ (DIRECT_POST, PULL_FROM_URL).
+
+        Las imágenes deben ser URLs públicas (R2) de un dominio verificado en TikTok.
+        https://developers.tiktok.com/doc/content-posting-api-reference-photo-post
+        """
+        urls = list(content.media_urls)
+        if not urls:
+            raise PublishError(
+                "Faltan imágenes para el modo fotos de TikTok.", platform=self.platform_name, retryable=False
+            )
+        if len(urls) > MAX_PHOTOS:
+            raise PublishError(
+                f"TikTok admite hasta {MAX_PHOTOS} fotos (llegaron {len(urls)}).",
+                platform=self.platform_name,
+                retryable=False,
+            )
+        privacy_explicit = "privacy_level" in content.extra
+        privacy = content.extra.get("privacy_level", DEFAULT_PRIVACY_LEVEL)
+        if privacy not in VALID_PRIVACY_LEVELS:
+            raise PublishError(
+                f"Invalid privacy_level '{privacy}'. Must be one of {sorted(VALID_PRIVACY_LEVELS)}",
+                platform=self.platform_name,
+                retryable=False,
+            )
+        privacy = self._check_creator_constraints(
+            access_token, privacy, content, privacy_level_is_explicit=privacy_explicit
+        )
+
+        post_info: dict[str, str | bool] = {
+            "title": (content.title or "")[:90],
+            "description": (content.text or "")[:4000],
+            "privacy_level": privacy,
+        }
+        # Solo los campos que admite post_info de fotos (sin duo/stitch); is_aigc va en la raíz del cuerpo.
+        for field in PHOTO_POST_INFO_FIELDS:
+            if field in content.extra:
+                post_info[field] = bool(content.extra[field])
+        payload: dict = {
+            "post_info": post_info,
+            "source_info": {
+                "source": "PULL_FROM_URL",
+                "photo_cover_index": min(max(int(content.extra.get("photo_cover_index") or 0), 0), len(urls) - 1),
+                "photo_images": urls,
+            },
+            "post_mode": "DIRECT_POST",
+            "media_type": "PHOTO",
+        }
+        if "is_aigc" in content.extra:
+            payload["is_aigc"] = bool(content.extra["is_aigc"])
+        try:
+            resp = self._request(
+                "POST", f"{API_BASE}/post/publish/content/init/", access_token=access_token, json=payload
+            )
+        except APIError as exc:
+            self._raise_classified_publish_error(exc)
+        data = resp.json().get("data", {}) or {}
+        return PublishResult(platform_post_id=data.get("publish_id", ""), extra=data, pending=True)
 
     def _check_creator_constraints(
         self,
@@ -393,6 +459,8 @@ class TikTokProvider(SocialProvider):
         if code not in PERMANENT_PUBLISH_ERROR_CODES:
             raise exc
         message = f"TikTok rejected the post ({code}): {exc}"
+        if code == "url_ownership_unverified":
+            message = "Verifica en el portal de TikTok el dominio de tus medios (S3_CUSTOM_DOMAIN)."
         if code == "unaudited_client_can_only_post_to_private_accounts":
             message = f"TikTok rejected the post: {UNAUDITED_CLIENT_HINT}"
         raise PublishError(
