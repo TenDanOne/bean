@@ -15,6 +15,7 @@ from apps.organizations.models import Organization
 from apps.publisher.engine import PublishEngine
 from apps.social_accounts.models import SocialAccount
 from apps.workspaces.models import Workspace
+from providers.types import PostType
 
 
 class HardeningTests(ImportBase):
@@ -47,9 +48,9 @@ class HardeningTests(ImportBase):
         resp = self.up(make_zip([p], {"a.png": png()}))
         self.assertEqual(resp.status_code, 200, resp.content)
         by = {pp.social_account.platform: pp for pp in PlatformPost.objects.all()}
-        self.assertEqual(MediaAsset.objects.count(), 2)  # PNG para Instagram + JPEG para TikTok
+        self.assertEqual(MediaAsset.objects.count(), 1)  # un solo JPEG compartido por Instagram y TikTok
         self.assertEqual(MediaAsset.objects.get(id=by["tiktok"].platform_specific_media[0]).mime_type, "image/jpeg")
-        self.assertEqual(MediaAsset.objects.get(id=by["instagram"].platform_specific_media[0]).mime_type, "image/png")
+        self.assertEqual(by["instagram"].platform_specific_media, by["tiktok"].platform_specific_media)
         self.assertNotIn("disable_duet", by["tiktok"].platform_extra)
         self.assertNotIn("disable_stitch", by["tiktok"].platform_extra)
 
@@ -58,6 +59,49 @@ class HardeningTests(ImportBase):
         self.assertEqual(self.up(make_zip([p], {"a.png": png()})).status_code, 200)
         self.assertEqual([a.mime_type for a in MediaAsset.objects.all()], ["image/jpeg"])
         self.assertEqual(Post.objects.get().media_attachments.count(), 1)
+
+
+class InstagramJpegTests(ImportBase):
+    def test_import_png_facebook_keeps_original_instagram_gets_jpeg(self):
+        p = piece(
+            id="j1", tipo="imagen", medios=["a.png"],
+            redes={"instagram": {"tipo": "feed", "descripcion": "x"}, "facebook": {"tipo": "feed", "descripcion": "x"}},
+        )  # fmt: skip
+        self.assertEqual(self.up(make_zip([p], {"a.png": png()})).status_code, 200)
+        by = {pp.social_account.platform: pp for pp in PlatformPost.objects.all()}
+        mime = lambda pp: MediaAsset.objects.get(id=pp.platform_specific_media[0]).mime_type  # noqa: E731
+        self.assertEqual((mime(by["instagram"]), mime(by["facebook"])), ("image/jpeg", "image/png"))
+
+    @patch("apps.publisher.engine.media_error_for_platform", return_value=None)
+    @patch("apps.publisher.engine.get_provider")
+    @patch("apps.publisher.engine._resolve_publish_credentials", return_value={})
+    def test_publish_png_reaches_instagram_as_jpeg_once_and_facebook_as_png(self, _creds, get_provider, _err):
+        fb = self.fb
+        asset = MediaAsset.objects.create(
+            workspace=self.workspace, organization=self.org, filename="a.png", mime_type="image/png",
+            media_type="image", uploaded_by=self.user,
+        )  # fmt: skip
+        asset.file.save("a.png", ContentFile(png()))
+        post = Post.objects.create(workspace=self.workspace, author=self.user, caption="x")
+        PostMedia.objects.create(post=post, media_asset=asset, position=0)
+        ig_pp, fb_pp = (
+            PlatformPost.objects.create(post=post, social_account=a, status="scheduled") for a in (self.ig, fb)
+        )
+        sent = {}
+
+        def publish(_token, content):
+            sent.setdefault(content.media_urls[0].rsplit(".", 1)[-1], 0)
+            sent[content.media_urls[0].rsplit(".", 1)[-1]] += 1
+            return MagicMock(platform_post_id="1", url="u", extra={})
+
+        provider = MagicMock(supported_post_types=[PostType.IMAGE], publish_post=publish)
+        get_provider.return_value = provider
+        engine = PublishEngine()
+        engine._dispatch_to_provider(fb_pp)
+        engine._dispatch_to_provider(ig_pp)
+        engine._dispatch_to_provider(ig_pp)  # reintento: no vuelve a convertir
+        self.assertEqual(sent, {"png": 1, "jpg": 2})
+        self.assertEqual(MediaAsset.objects.filter(mime_type="image/jpeg").count(), 1)
 
 
 class OwnMediaSyncTests(ImportBase):

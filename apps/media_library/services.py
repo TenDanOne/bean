@@ -11,6 +11,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.db.models import Sum
 from django.utils import timezone
@@ -431,6 +432,47 @@ def generate_image_thumbnail(file_path_or_file):
     except Exception:
         logger.exception("Failed to generate image thumbnail")
         return None
+
+
+def to_jpeg_bytes(data: bytes) -> bytes:
+    """Imagen (PNG, WEBP, GIF…) a JPEG sRGB calidad 90 sobre fondo blanco.
+
+    Lanza ``UnidentifiedImageError``/``OSError``/``ValueError``/``DecompressionBombError`` si no se puede leer.
+    """
+    from PIL import Image, ImageCms
+
+    src = Image.open(io.BytesIO(data))
+    icc = src.info.get("icc_profile")
+    rgba = src.convert("RGBA")
+    flat = Image.new("RGB", rgba.size, (255, 255, 255))
+    flat.paste(rgba, mask=rgba.getchannel("A"))
+    if icc:
+        try:
+            flat = (
+                ImageCms.profileToProfile(
+                    flat, ImageCms.ImageCmsProfile(io.BytesIO(icc)), ImageCms.createProfile("sRGB")
+                )
+                or flat
+            )
+        except Exception:  # perfil ICC ilegible: se deja tal cual
+            logger.warning("ICC profile could not be converted to sRGB", exc_info=True)
+    out = io.BytesIO()
+    flat.save(out, "JPEG", quality=90)
+    return out.getvalue()
+
+
+def jpeg_version(asset, workspace):
+    """Asset JPEG derivado de ``asset`` (Instagram solo publica JPEG), creado una vez por workspace y reutilizado."""
+    tag = f"jpeg-de:{asset.id}"
+    found = MediaAsset.objects.for_workspace(workspace.id).filter(tags__contains=[tag]).first()
+    if found:
+        return found
+    with asset.file.open("rb") as src:
+        data = to_jpeg_bytes(src.read())
+    name = os.path.splitext(os.path.basename(asset.filename))[0] + ".jpg"
+    return create_asset(
+        asset.organization, workspace, SimpleUploadedFile(name, data, "image/jpeg"), asset.uploaded_by, tags=[tag]
+    )
 
 
 def extract_video_metadata(file_path):

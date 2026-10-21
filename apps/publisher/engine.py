@@ -31,6 +31,7 @@ from django.utils import timezone
 from apps.composer.models import PlatformPost
 from apps.composer.services import media_error_for_platform
 from apps.credentials.models import resolve_platform_credentials
+from apps.media_library.services import jpeg_version
 from apps.social_accounts.models import SocialAccount
 from providers import get_provider
 from providers.exceptions import PublishError
@@ -498,6 +499,16 @@ class PublishEngine:
                 asset = pm.media_asset
                 if not asset.file:
                     continue
+                # Instagram solo publica JPEG: usa la versión derivada (el original queda para otras redes).
+                if platform == "instagram" and asset.media_type == "image" and asset.mime_type != "image/jpeg":
+                    try:
+                        asset = jpeg_version(asset, platform_post.post.workspace)
+                    except Exception as exc:
+                        raise PublishError(
+                            f"No se pudo convertir «{asset.filename}» a JPEG para Instagram: {exc}",
+                            platform=platform,
+                            retryable=False,
+                        ) from exc
                 # Track the first media type for post type detection
                 if first_media_type is None:
                     first_media_type = asset.media_type

@@ -285,7 +285,7 @@ def _net_media(piece: dict, net: str) -> list[str]:
 
 #: TikTok (modo fotos) solo admite JPEG y WEBP; el resto de imágenes se convierte a JPEG al importar.
 _TT_PHOTO_MIMES = ("image/jpeg", "image/webp")
-_JPG = "#tiktok-jpg"
+_JPG = "#jpg"  # JPEG convertido: lo comparten TikTok fotos e Instagram
 
 
 def _mime(zf, path: str) -> str:
@@ -457,20 +457,18 @@ def _as_jpeg(zf, info, name: str) -> SimpleUploadedFile:
     """Convierte una imagen (PNG, GIF…) a JPEG sobre fondo blanco; falla con un mensaje claro."""
     from PIL import Image, UnidentifiedImageError
 
+    from apps.media_library.services import to_jpeg_bytes
+
     buf = io.BytesIO()
     _read_member(zf, info, dest=buf)
     try:
-        img = Image.open(io.BytesIO(buf.getvalue())).convert("RGBA")
-        flat = Image.new("RGB", img.size, (255, 255, 255))
-        flat.paste(img, mask=img.getchannel("A"))
-        out = io.BytesIO()
-        flat.save(out, "JPEG", quality=92)
+        data = to_jpeg_bytes(buf.getvalue())
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as exc:
         raise PackageError(
-            "No se pudo preparar una imagen para TikTok.",
-            f"«{name}» no se pudo convertir a JPEG (TikTok solo admite JPG y WEBP).",
+            "No se pudo preparar una imagen.",
+            f"«{name}» no se pudo convertir a JPEG (TikTok e Instagram necesitan JPG).",
         ) from exc
-    return SimpleUploadedFile(posixpath.splitext(posixpath.basename(name))[0] + ".jpg", out.getvalue(), "image/jpeg")
+    return SimpleUploadedFile(posixpath.splitext(posixpath.basename(name))[0] + ".jpg", data, "image/jpeg")
 
 
 def _upload(zf, path: str, user, workspace, *, as_jpeg: bool = False) -> MediaAsset:
@@ -519,15 +517,21 @@ def create_draft(*, workspace, user, zf, plan: Plan, project: str, update: Post 
     paths = list(dict.fromkeys(paths))
     tt = plan.targets.get("tiktok")
     photos = bool(tt) and piece["redes"]["tiktok"].get("tipo") == "fotos"
-    conv = [p for p in tt["media"] if _mime(zf, p) not in _TT_PHOTO_MIMES] if photos and tt else []
-    shared = {r for n, t in plan.targets.items() if n != "tiktok" for r in t["media"]} | set(piece["_medios"]) - set(
-        conv
-    )
+    # Por red: medios que se convierten a JPEG (TikTok fotos: lo que no sea JPEG/WEBP; Instagram: todo lo no JPEG).
+    conv_by: dict[str, set[str]] = {}
+    for net, t in plan.targets.items():
+        if net == "tiktok" and photos:
+            conv_by[net] = {p for p in t["media"] if _mime(zf, p) not in _TT_PHOTO_MIMES}
+        elif net == "instagram":
+            conv_by[net] = {p for p in t["media"] if (m := _mime(zf, p)).startswith("image/") and m != "image/jpeg"}
+    conv = [p for p in dict.fromkeys(paths) if any(p in c for c in conv_by.values())]
+    shared = {r for n, t in plan.targets.items() for r in t["media"] if r not in conv_by.get(n, ())}
+    shared |= set(piece["_medios"]) - set(conv)
     shared |= {r for n in plan.targets for r in _cover_paths(piece, n)}
     paths = [p for p in paths if p not in conv or p in shared]
 
-    def akey(net, r):  # clave del asset de este medio para esta red (JPEG convertido en TikTok fotos)
-        return r + _JPG if net == "tiktok" and r in conv else r
+    def akey(net, r):  # clave del asset de este medio para esta red (JPEG convertido)
+        return r + _JPG if r in conv_by.get(net, ()) else r
 
     try:
         enforce_storage_quota(workspace.organization, sum(zf.getinfo(p).file_size for p in {*paths, *conv}))
