@@ -253,3 +253,4 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - **Importador:** lee musica y portadas.
 - pytest 1893 passed / 1 skipped (test de zips reales: requiere BEAN_TEST_PACKAGES_DIR).
 - **Pendiente del usuario:** grabar el demo de TikTok con la cuenta privada (escena extra de borrador; ver docs/APP-REVIEW.md) y enviar a revisión; reconectar FB/IG; CORS de R2; verificar el dominio ithos.mx en TikTok (para fotos y PULL_FROM_URL); S3_CUSTOM_DOMAIN para media.
+- Pendiente (2026-10-21): el importador debe leer `contiene_ia` a nivel de pieza y mapearlo a YouTube containsSyntheticMedia y TikTok is_aigc (el panel TikTok del composer ya tiene la opción de IA). En IG/FB solo mostrar el aviso «marca la etiqueta de IA en la app». Hasta que esté, el usuario activa a mano la IA en TikTok para simu_marca_carrusel.
