@@ -861,6 +861,7 @@ def _month_view_data(request, workspace, target_date, context):
                     "date": day,
                     "is_current_month": day.month == month,
                     "is_today": day == today,
+                    "is_tomorrow": day == today + timedelta(days=1),
                     "is_past": day < today,
                     "posts": day_posts,  # todas; la plantilla oculta las que pasan de 3 hasta «+N más»
                     "total_posts": len(day_posts),
@@ -878,6 +879,7 @@ def _month_view_data(request, workspace, target_date, context):
     context.update(
         {
             "calendar_weeks": calendar_weeks,
+            "month_empty": not any(d["posts"] for w in calendar_weeks for d in w if d["is_current_month"]),
             "period_label": date_format(date(year, month, 1), "F Y").capitalize(),
             "prev_date": prev_month.isoformat(),
             "next_date": next_month.isoformat(),

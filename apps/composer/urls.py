@@ -82,6 +82,7 @@ urlpatterns = [
     path("compose/<uuid:post_id>/save-as-template/", views.save_as_template, name="save_as_template"),
     # Importar publicación (.zip)
     path("import/package/", import_views.import_package, name="import_package"),
+    path("import/package/apply/", import_views.import_review, name="import_review"),
     # CSV Import
     path("import/csv/", views.csv_upload, name="csv_upload"),
     path("import/csv/preview/", views.csv_preview, name="csv_preview"),

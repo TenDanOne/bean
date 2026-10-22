@@ -28,6 +28,7 @@ from django.db.models import Q
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
+from apps.composer.delivery import DIRECTO, mode_of
 from apps.composer.models import PlatformPost
 from apps.composer.services import media_error_for_platform
 from apps.credentials.models import resolve_platform_credentials
@@ -226,7 +227,11 @@ class PublishEngine:
         # Schedule first comments for successful publishes (non-blocking)
         for pp in platform_posts:
             pp.refresh_from_db()
-            if pp.status != PlatformPost.Status.PUBLISHED or (pp.platform_extra or {}).get("manual_publish"):
+            # A mano, borrador (TikTok/Facebook) o privado (YouTube): no hay publicación pública donde comentar.
+            if (
+                pp.status != PlatformPost.Status.PUBLISHED
+                or mode_of(pp.social_account.platform, pp.platform_extra) != DIRECTO
+            ):
                 continue
             if not pp.social_account.supports_first_comment():
                 continue

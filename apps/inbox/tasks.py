@@ -4,11 +4,12 @@ import logging
 from datetime import timedelta
 
 from background_task import background
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.members.models import WorkspaceMembership
 from apps.notifications.engine import notify
-from apps.notifications.models import EventType
+from apps.notifications.models import EventType, Notification
 from apps.settings_manager.defaults import APP_DEFAULTS
 from apps.settings_manager.helpers import get_setting
 from apps.social_accounts.models import SocialAccount
@@ -230,8 +231,8 @@ class InboxSyncEngine:
                 obj.awaiting_reply = not self._already_answered(obj)
                 update_fields.append("awaiting_reply")
             obj.save(update_fields=update_fields)
-            # Never alert on our own words.
-            if notify and not is_outbound:
+            # Solo lo que sigue por contestar: ni lo propio ni lo ya contestado.
+            if notify and obj.is_pending:
                 self._notify_new_message(obj)
 
     @staticmethod
@@ -295,15 +296,33 @@ class InboxSyncEngine:
             ).select_related("user")
             users = [m.user for m in memberships]
 
+        account = message.social_account
         for user in users:
+            # Una notificación por cuenta: la no leída existente se actualiza en vez de sumar una por mensaje.
+            existing = Notification.objects.filter(
+                user=user,
+                event_type=EventType.NEW_INBOX_MESSAGE,
+                is_read=False,
+                data__group_account=str(account.id),
+            ).first()
+            n = existing.data.get("count", 1) + 1 if existing else 1
+            title = f"{n} mensaje{'s' if n > 1 else ''} nuevo{'s' if n > 1 else ''} en {account.account_name}"
+            body = f"Último de {message.sender_name}: {message.body[:150]}"
+            if existing:
+                existing.title, existing.body, existing.created_at = title, body, timezone.now()
+                existing.data = {**existing.data, "count": n}
+                existing.save(update_fields=["title", "body", "data", "created_at"])
+                continue
             notify(
                 user=user,
                 event_type=EventType.NEW_INBOX_MESSAGE,
-                title=f"Nuevo {message.get_message_type_display()} de {message.sender_name}",
-                body=message.body[:200],
+                title=title,
+                body=body,
                 data={
-                    "message_id": str(message.id),
+                    "group_account": str(account.id),
+                    "count": 1,
                     "workspace_id": str(message.workspace_id),
+                    "action_url": f"{reverse('inbox:feed', kwargs={'workspace_id': message.workspace_id})}?account={account.id}",
                 },
             )
 

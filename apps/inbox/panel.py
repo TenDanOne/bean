@@ -139,3 +139,20 @@ def conversations(dm_messages, pending_ids):
         out.append(c)
     out.sort(key=lambda c: c["last"].received_at, reverse=True)
     return out
+
+
+def pending_count(workspace_id, accounts):
+    """Cuántos hay en «No contestados»: comentarios pendientes más conversaciones de chat con algo pendiente.
+
+    Mismo criterio que las pestañas de la bandeja (``pending_q``, chats agrupados por conversación), sin filtros.
+    """
+    pending = InboxMessage.objects.for_workspace(workspace_id).filter(
+        InboxMessage.pending_q(), social_account__in=accounts
+    )
+    dm = InboxMessage.MessageType.DM
+    comments = pending.exclude(message_type=dm).count()
+    chats = {
+        (acc, conv or str(pk))
+        for acc, conv, pk in pending.filter(message_type=dm).values_list("social_account_id", "conversation_id", "id")
+    }
+    return comments + len(chats)

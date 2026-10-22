@@ -675,3 +675,51 @@ class DoublePublishGuardsTest(TestCase):
         self.pp.refresh_from_db()
         self.assertEqual(self.pp.status, PlatformPost.Status.FAILED)
         self.assertIn("Puede que se haya publicado", self.pp.publish_error)
+
+
+class FirstCommentSkippedWhenNotPublicTest(TestCase):
+    """Borrador, privado y «A mano» no tienen publicación pública donde comentar."""
+
+    def _run(self, platform, extra):
+        from apps.composer.models import PlatformPost, Post
+        from apps.organizations.models import Organization
+        from apps.social_accounts.models import SocialAccount
+        from apps.workspaces.models import Workspace
+
+        ws = Workspace.objects.create(organization=Organization.objects.create(name="Org"), name="WS")
+        acc = SocialAccount.objects.create(
+            workspace=ws,
+            platform=platform,
+            account_platform_id=platform + "1",
+            account_name=platform,
+            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+        )
+        post = Post.objects.create(workspace=ws, caption="hi", first_comment="primero")
+        pp = PlatformPost.objects.create(
+            post=post, social_account=acc, status=PlatformPost.Status.SCHEDULED, scheduled_at=timezone.now(),
+            platform_extra=extra,
+        )  # fmt: skip
+
+        # El hilo del motor no ve la transacción del test: el «publicado» se marca en el hilo principal.
+        def mark_published(self, _post):
+            PlatformPost.objects.filter(id=pp.id).update(status=PlatformPost.Status.PUBLISHED)
+
+        with (
+            patch.object(PublishEngine, "_publish_platform_post", return_value={"success": True}),
+            patch.object(PublishEngine, "_sync_parent_published_at", mark_published),
+            patch("apps.publisher.engine._post_first_comment_task") as task,
+        ):
+            PublishEngine()._publish_post_group(post, [pp])
+        return task
+
+    def test_directo_programa_el_comentario(self):
+        self.assertTrue(self._run("youtube", {}).called)
+
+    def test_borrador_privado_y_a_mano_lo_saltan(self):
+        for platform, extra in (
+            ("youtube", {"entrega": "borrador"}),
+            ("facebook", {"entrega": "borrador"}),
+            ("facebook", {"manual_publish": True}),
+        ):
+            with self.subTest(platform=platform):
+                self.assertFalse(self._run(platform, extra).called)

@@ -290,6 +290,8 @@ class YouTubeProvider(SocialProvider):
             title = f"{title} #Shorts".strip()
 
         privacy_status = content.extra.get("privacy_status", "public")
+        if content.extra.get("entrega") == "borrador":  # «subir como borrador»: privado hasta que lo pongas Público
+            privacy_status = "private"
         made_for_kids = content.extra.get("made_for_kids", content.extra.get("self_declared_made_for_kids", False))
         category_id = content.extra.get("category_id") or "22"  # 22 = People & Blogs
         tags = content.extra.get("tags", [])

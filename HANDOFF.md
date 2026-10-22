@@ -264,3 +264,11 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
   - Facebook Reel → video_state DRAFT (fotos y texto sin publicar si aplica);
   - Instagram → «A mano».
   - Estados finales visibles: Borrador / Privado / A mano.
+
+### Lote U2 hecho (2026-10-22)
+- Importar en 1 pantalla: hoja de revisión en el diálogo (ficha, cuentas con modo, niños obligatorio, portada «Del paquete»/fotogramas validada en servidor, fecha y hora) → Programar / Publicar ahora / Abrir en el editor (`import_review` → `save_post` sintético).
+- Modo de entrega por destino (backend): `apps/composer/delivery.py`; YouTube privado, Facebook video/Reel DRAFT, texto/foto FB e IG → A mano; primer comentario solo en DIRECTO.
+- Bandeja: `pending_count` (mismo criterio que «No contestados»), insignia + «(N)» en pestaña cada 60 s (solo con use_inbox); Avisos agrupados por cuenta (solo pendientes, decisión del usuario).
+- Agenda móvil con conmutador Agenda/Mes.
+- **Siguiente:** el usuario aprueba `mockups/mockup-borrador.html` → poner el selector «¿Cómo lo mandas?» en el paso 3 y por red (sustituye la casilla «A mano» y el radio TikTok; enviar `entrega_<cuenta>`).
+- Pendientes menores: probar en navegador real la hoja y la agenda; FB DRAFT sin probar contra API real; insignias ocultas con barra plegada.

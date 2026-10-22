@@ -662,13 +662,15 @@
                 <a href="{% url 'inbox:feed' workspace_id=request.workspace.id %}" data-tour="bandeja" class="mb-1 sidebar-nav-item {% if request.resolver_match.app_name == 'inbox' %}active{% endif %}" {% if request.resolver_match.app_name == 'inbox' %}aria-current="page"{% endif %}>
                     {% icon "comments" css_class="w-[18px] h-[18px] flex-shrink-0" %}
                     <span class="sidebar-nav-label">Bandeja social</span>
-                    {% if sidebar_unread_inbox_count %}<span class="sidebar-badge sidebar-badge-alert">{{ sidebar_unread_inbox_count }}</span>{% endif %}
+                    <span id="inbox-pending" {% if request|can:"use_inbox" %}hx-get="{% url 'inbox:pending_badge' workspace_id=request.workspace.id %}" hx-trigger="every 60s [document.visibilityState=='visible']" hx-swap="innerHTML"{% endif %}>{% include "inbox/partials/_pending_badge.html" with n=sidebar_unread_inbox_count %}</span>
                 </a>
+                <span id="inbox-live" class="sr-only" role="status" aria-live="polite"></span>
                 {% endif %}
 
                 <a href="{% url 'notifications:list' %}" class="mb-1 sidebar-nav-item {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'notifications' %}active{% endif %}" {% if request.resolver_match.url_name == 'list' and request.resolver_match.app_name == 'notifications' %}aria-current="page"{% endif %}>
                     {% icon "bell" css_class="w-[18px] h-[18px] flex-shrink-0" %}
-                    <span class="sidebar-nav-label">Notificaciones</span>
+                    <span class="sidebar-nav-label">Avisos</span>
+                    {% if unread_notification_count %}<span class="sidebar-badge" title="Avisos sin leer">{{ unread_notification_count }}<span class="sr-only"> sin leer</span></span>{% endif %}
                 </a>
 
                 {% if request.workspace %}
@@ -970,6 +972,7 @@
         })();
     </script>
     <script src="{% static 'js/modal-a11y.js' %}" defer></script>
+    {% if request.workspace %}<script src="{% static 'js/inbox-badge.js' %}" defer></script>{% endif %}
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
     {% if user.is_authenticated and request.workspace %}<script src="{% static 'js/tour.js' %}" defer></script>{% endif %}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>

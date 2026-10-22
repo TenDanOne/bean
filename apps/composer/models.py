@@ -551,6 +551,8 @@ class PlatformPost(models.Model):
         extra = self.platform_extra or {}
         if extra.get("tiktok_draft") and extra.get("tiktok_mode") == "draft":
             return "Borrador"
+        if extra.get("entrega") == "borrador" and self.social_account.platform in ("youtube", "facebook"):
+            return "Privado" if self.social_account.platform == "youtube" else "Borrador"
         return "A mano" if extra.get("manual_publish") else ""
 
     @property
@@ -559,7 +561,12 @@ class PlatformPost(models.Model):
         label = self.outcome_label
         if not label:
             return ""
-        note = "En TikTok · termínalo en la app." if label == "Borrador" else "Publícalo tú desde la app."
+        note = {
+            "Borrador": "En TikTok · termínalo en la app.",
+            "Privado": "Abre YouTube Studio, ponle música y cámbialo a Público.",
+        }.get(label, "Publícalo tú desde la app.")
+        if label == "Borrador" and self.social_account.platform == "facebook":
+            note = "Abre Meta Business Suite, ponle música y publícalo."
         m = (self.platform_extra or {}).get("musica") or {}
         if m.get("sugerencia"):
             note += f" Canción sugerida: {m['sugerencia']}" + (

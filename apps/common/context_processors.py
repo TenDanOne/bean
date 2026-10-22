@@ -114,15 +114,10 @@ def sidebar_context(request):
     # Unread inbox count for sidebar badge
     sidebar_unread_inbox_count = 0
     if workspace:
-        from apps.inbox.models import InboxMessage
+        from apps.inbox.panel import pending_count
 
-        # Only channels this member can see, and only what still needs an answer
-        # (not our own messages, not thread replies, not resolved ones).
-        sidebar_unread_inbox_count = (
-            InboxMessage.objects.for_workspace(workspace.id)
-            .filter(InboxMessage.pending_q(), social_account__in=assigned)
-            .count()
-        )
+        # Solo canales visibles para el miembro y solo lo que sigue sin contestar (igual que «No contestados»).
+        sidebar_unread_inbox_count = pending_count(workspace.id, assigned)
 
     # Pending approval count for badge
     sidebar_pending_approvals = 0

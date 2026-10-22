@@ -2785,6 +2785,37 @@ legend.cp-lb { font-size: 13px; font-weight: 700; color: var(--text-primary); pa
 .imp-info { --bg: var(--al-info-bg); --fg: var(--al-info-fg); --bd: var(--al-info-bd); }
 .imp-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .imp-dialog [hidden] { display: none !important; }
+/* Importar: hoja de revisión rápida (mockups/mockup-uiux.html, «Importar en 1 pantalla») */
+.imp-dialog.wide { width: min(720px, calc(100vw - 32px)); }
+.imp-review { display: grid; gap: 8px; max-height: min(70vh, 640px); overflow: auto; padding-right: 4px; }
+.imp-h { margin: 8px 0 0; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
+.imp-pc { display: flex; gap: 12px; align-items: flex-start; }
+.imp-th { width: 84px; aspect-ratio: 9 / 16; flex: none; border-radius: 10px; background: var(--warm-200) center / cover no-repeat; border: 1px solid var(--border); }
+.imp-pc h3 { margin: 2px 0; font-size: 16px; color: var(--text-primary); }
+.imp-ty { display: inline-block; font-size: 12px; font-weight: 700; color: var(--brand-800); background: var(--brand-100); border-radius: 99px; padding: 2px 10px; }
+.imp-fchip { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: var(--warm-50); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 8px 12px; font-size: 13px; }
+.imp-fchip small { display: block; color: var(--text-secondary); font-size: 12px; }
+.imp-fchip b { overflow-wrap: anywhere; }
+.imp-pz { font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+.imp-hrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.imp-hrow .imp-h { margin: 8px 0 0; }
+.imp-rows, .imp-avl { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.imp-rows li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; border: 1px solid var(--border-subtle); border-radius: 10px; padding: 8px 12px; background: var(--surface-0); }
+.imp-rows li > span:first-child { flex: 1; min-width: 0; }
+.imp-rows small { display: block; color: var(--text-secondary); }
+.imp-rows .imp-more { flex-basis: 100%; font-size: 13px; color: var(--text-secondary); }
+.imp-avl li { border: 1px solid var(--bd, var(--al-info-bd)); background: var(--bg, var(--al-info-bg)); color: var(--fg, var(--al-info-fg)); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+.imp-avl .ok { --bg: var(--al-ok-bg); --fg: var(--al-ok-fg); --bd: var(--al-ok-bd); }
+.imp-avl .warn { --bg: var(--al-warn-bg); --fg: var(--al-warn-fg); --bd: var(--al-warn-bd); }
+.imp-avl .block { --bg: var(--al-err-bg); --fg: var(--al-err-fg); --bd: var(--al-err-bd); }
+.imp-avl fieldset { border: 0; margin: 6px 0 0; padding: 0; display: flex; gap: 14px; flex-wrap: wrap; }
+.imp-dt { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.imp-dt label { display: grid; gap: 2px; font-size: 13px; color: var(--text-secondary); }
+.imp-dt input { border: 1px solid var(--border-control); border-radius: 8px; padding: 6px 8px; background: var(--surface-0); color: var(--text-primary); }
+.imp-hint { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.imp-hint.blk { color: var(--al-err-fg); font-weight: 600; }
+.imp-acts .ib-btn { text-decoration: none; }
+.imp-acts .ib-btn[disabled] { opacity: .55; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) { .imp-bar > i { transition: none; } }
 
 /* ── Modal «Publicando» del composer (static/js/publish-modal.js) ── */

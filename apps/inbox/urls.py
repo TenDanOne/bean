@@ -9,6 +9,7 @@ app_name = "inbox"
 urlpatterns = [
     # Main inbox feed
     path("", views.inbox_feed, name="feed"),
+    path("pending-badge/", views.pending_badge, name="pending_badge"),
     # Message detail + thread
     path("<uuid:message_id>/", views.message_detail, name="message_detail"),
     # Bandeja: hilo de comentarios, conversación de chat y marcar contestado

@@ -1356,3 +1356,58 @@ class CalendarStatusChipTests(TestCase):
         counts = self._counts(self._get())
         self.assertEqual(counts["published"], 0)
         self.assertEqual(counts["scheduled"], 2)
+
+
+class CalendarAgendaTests(TestCase):
+    """Agenda móvil: agrupa por día en la zona del espacio, no en UTC."""
+
+    def test_agenda_groups_by_workspace_local_day(self):
+        user = User.objects.create_user(email="agenda@example.com", password="pw", tos_accepted_at=timezone.now())
+        org = Organization.objects.create(name="Org")
+        ws = Workspace.objects.create(organization=org, name="WS", timezone="America/Mexico_City")
+        OrgMembership.objects.create(user=user, organization=org, org_role=OrgMembership.OrgRole.OWNER)
+        WorkspaceMembership.objects.create(
+            user=user, workspace=ws, workspace_role=WorkspaceMembership.WorkspaceRole.OWNER
+        )
+        sa = SocialAccount.objects.create(
+            workspace=ws,
+            platform="youtube",
+            account_platform_id="yt-agenda",
+            account_name="YT",
+            connection_status=SocialAccount.ConnectionStatus.CONNECTED,
+        )
+        # 23:30 del 10 en CDMX (UTC-6) = 05:30 del 11 en UTC
+        when = datetime(2027, 3, 11, 5, 30, tzinfo=zoneinfo.ZoneInfo("UTC"))
+        post = Post.objects.create(workspace=ws, caption="Noche", scheduled_at=when)
+        PlatformPost.objects.create(post=post, social_account=sa, status="scheduled", scheduled_at=when)
+        self.client.force_login(user)
+        url = reverse("calendar:calendar", kwargs={"workspace_id": ws.id})
+        resp = self.client.get(f"{url}?mode=calendar&view=month&date=2027-03-10", headers={"HX-Request": "true"})
+        body = resp.content.decode()
+        self.assertIn('data-agenda-day="2027-03-10"', body)
+        self.assertNotIn('data-agenda-day="2027-03-11"', body)  # días sin publicaciones se omiten
+        self.assertIn("23:30", body)
+
+    def _empty_month(self):
+        user = User.objects.create_user(email="vacio@example.com", password="pw", tos_accepted_at=timezone.now())
+        org = Organization.objects.create(name="Org")
+        ws = Workspace.objects.create(organization=org, name="WS")
+        OrgMembership.objects.create(user=user, organization=org, org_role=OrgMembership.OrgRole.OWNER)
+        WorkspaceMembership.objects.create(
+            user=user, workspace=ws, workspace_role=WorkspaceMembership.WorkspaceRole.OWNER
+        )
+        self.client.force_login(user)
+        url = reverse("calendar:calendar", kwargs={"workspace_id": ws.id})
+        return self.client.get(f"{url}?mode=calendar&view=month&date=2027-03-10", headers={"HX-Request": "true"})
+
+    def test_empty_month_shows_message_and_create_link(self):
+        body = self._empty_month().content.decode()
+        self.assertIn("No hay publicaciones este mes.", body)
+        self.assertIn("Crear publicación", body)
+
+    def test_agenda_month_toggle_exists(self):
+        body = self._empty_month().content.decode()
+        self.assertIn('aria-label="Vista del mes"', body)
+        self.assertIn(">Agenda</button>", body)
+        self.assertIn(">Mes</button>", body)
+        self.assertIn("aria-pressed", body)

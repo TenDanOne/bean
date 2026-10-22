@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from apps.members.channels import can_on_channel, visible_accounts
 from apps.members.decorators import require_channel_capability, require_permission
@@ -39,6 +39,7 @@ from .models import (
     InternalNote,
     SavedReply,
 )
+from .panel import pending_count
 
 logger = logging.getLogger(__name__)
 
@@ -411,6 +412,16 @@ def _feed_context(request, workspace):
         "legend": legend(),
         "sla_config": InboxSLAConfig.objects.filter(workspace=workspace, is_active=True).first(),
     }
+
+
+@login_required
+@require_permission("use_inbox")
+@require_GET
+def pending_badge(request, workspace_id):
+    """Insignia de pendientes por contestar; el menú la sondea cada ~60 s."""
+    workspace = _get_workspace(request, workspace_id)
+    n = pending_count(workspace.id, visible_accounts(request.workspace_membership))
+    return render(request, "inbox/partials/_pending_badge.html", {"n": n})
 
 
 @login_required

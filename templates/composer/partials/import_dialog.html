@@ -1,5 +1,8 @@
 {% load static %}{% comment %}Diálogo «Importar publicación (.zip)». Se abre con cualquier [data-import-open]; lógica en static/js/import-package.js.{% endcomment %}
-<dialog id="imp-dialog" class="imp-dialog" aria-labelledby="imp-title" data-url="{% url 'composer:import_package' workspace_id=request.workspace.id %}">
+<dialog id="imp-dialog" class="imp-dialog" aria-labelledby="imp-title" data-url="{% url 'composer:import_package' workspace_id=request.workspace.id %}"
+        data-workspace="{{ request.workspace.id }}" data-apply-url="{% url 'composer:import_review' workspace_id=request.workspace.id %}"
+        data-status-url="{% url 'composer:publish_status' workspace_id=request.workspace.id post_id='00000000-0000-0000-0000-000000000000' %}"
+        data-sent-url="{% url 'calendar:publish_tab_sent' workspace_id=request.workspace.id %}">
     <div class="imp-head">
         <h2 id="imp-title">Importar publicación</h2>
         <details class="imp-help">
@@ -14,7 +17,7 @@
                 </ul>
                 <h3>Qué no hace</h3>
                 <ul>
-                    <li>No publica ni programa nada: tú eliges cuándo.</li>
+                    <li>No publica nada sin que lo pidas: en la hoja de revisión eliges «Programar» o «Publicar ahora».</li>
                     <li>No elige la privacidad de TikTok ni fija comentarios.</li>
                 </ul>
                 <p>¿No tienes paquete? Crea una publicación con «Nuevo».</p>
@@ -49,6 +52,56 @@
             <p><b id="imp-err-t"></b></p>
             <p id="imp-err-m"></p>
             <button type="button" class="ib-btn ib-btn-secondary" id="imp-again">Elegir otro archivo</button>
+        </div>
+        <div id="imp-review" class="imp-review" hidden>
+            <div class="imp-fchip">
+                <span><b id="imp-fname"></b><small id="imp-fsize"></small></span>
+                <span class="imp-pz" id="imp-pz"></span>
+            </div>
+            <div class="imp-pc">
+                <div class="imp-th" id="imp-th" role="img" aria-label="Miniatura de la publicación"></div>
+                <div><span class="imp-ty" id="imp-ty"></span><h3 id="imp-rt" tabindex="-1"></h3><p class="imp-sub" id="imp-rx"></p></div>
+            </div>
+            <div class="imp-hrow">
+                <h3 class="imp-h">Cuentas (<span id="imp-nc"></span>)</h3>
+                <details class="imp-help">
+                    <summary aria-label="Ayuda: qué significan Directo, Borrador y A mano">?</summary>
+                    <div class="imp-pop">
+                        <h3>Directo</h3>
+                        <p>BEAN lo publica en esa red a la hora elegida.</p>
+                        <h3>Borrador</h3>
+                        <p>BEAN lo sube como borrador o privado; lo terminas tú en la app de la red.</p>
+                        <h3>A mano</h3>
+                        <p>BEAN no lo sube: queda como tarea tuya en Publicar, por ejemplo para poner música desde la app.</p>
+                    </div>
+                </details>
+            </div>
+            <ul class="imp-rows" id="imp-rows" aria-label="Cuentas y modo"></ul>
+            <h3 class="imp-h">Avisos del revisor</h3>
+            <ul class="imp-avl" id="imp-avisos"></ul>
+            <h3 class="imp-h" id="imp-cov-h">Portada</h3>
+            <div class="cp-opts" id="imp-covopts" role="radiogroup" aria-labelledby="imp-cov-h"></div>
+            <p class="imp-sub" id="imp-cov"></p>
+            <h3 class="imp-h">Cuándo</h3>
+            <div class="imp-dt">
+                <label>Fecha <input type="date" id="imp-fecha"></label>
+                <label>Hora <input type="time" id="imp-hora"></label>
+                <span class="imp-sub">Zona horaria: <b id="imp-tz"></b></span>
+            </div>
+            <p class="imp-hint" id="imp-rhint" role="status"></p>
+            <div class="imp-acts">
+                <a class="ib-btn ib-btn-secondary" id="imp-editor" href="#">Abrir en el editor</a>
+                <button type="button" class="ib-btn ib-btn-secondary" data-apply="publicar" aria-describedby="imp-rhint">Publicar ahora</button>
+                <button type="button" class="ib-btn ib-btn-primary" data-apply="programar" aria-describedby="imp-rhint">Programar</button>
+            </div>
+        </div>
+        <div id="imp-result" hidden>
+            <p role="status"><b id="imp-res-t" tabindex="-1"></b></p>
+            <ul class="imp-rows" id="imp-res-rows" aria-label="Avance por cuenta"></ul>
+            <div class="imp-acts">
+                <button type="button" class="ib-btn ib-btn-secondary" data-import-close>Cerrar</button>
+                <a class="ib-btn ib-btn-primary" id="imp-res-go" href="#">Ver en Publicar</a>
+            </div>
         </div>
         <p class="imp-sub" id="imp-status" role="status" aria-live="polite"></p>
     </div>

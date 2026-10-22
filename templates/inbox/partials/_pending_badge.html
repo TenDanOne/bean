@@ -1,0 +1,2 @@
+{# Insignia de pendientes por contestar. data-count lo lee static/js/inbox-badge.js (título y aviso de voz). #}
+<span data-count="{{ n }}" hidden></span>{% if n %}<span class="sidebar-badge sidebar-badge-alert" title="Por contestar">{{ n }}<span class="sr-only"> por contestar</span></span>{% endif %}

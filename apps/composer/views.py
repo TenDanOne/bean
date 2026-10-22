@@ -45,6 +45,7 @@ from apps.workspaces.models import Workspace
 from providers.tiktok import VALID_PRIVACY_LEVELS as TIKTOK_PRIVACY_LEVELS
 from providers.youtube import YOUTUBE_CATEGORIES, YOUTUBE_CATEGORY_IDS, chapters_error
 
+from . import delivery
 from .forms import ContentCategoryForm, PostForm
 from .models import (
     ContentCategory,
@@ -263,7 +264,7 @@ _PLACEHOLDER_RE = re.compile(r"\{\{[^{}]*\}\}")
 _C2_EXTRA_KEYS = {
     "category_id", "playlist_id", "made_for_kids", "contains_synthetic_media", "chapters", "solo_organico",
     "ig_cover_asset_id", "thumb_offset", "collaborators", "share_to_feed", "link", "import_source", "photo_cover_index",
-    "tiktok_mode", "manual_publish", "musica", "marca_ia_en_app",
+    "tiktok_mode", "manual_publish", "entrega", "musica", "marca_ia_en_app",
 }  # fmt: skip
 _IG_USERNAME_RE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
 _YT_PLAYLIST_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -283,7 +284,17 @@ def parse_chapters(raw):
     return [{"t": m.group(1), "title": m.group(2)[:100]} for m in rows if m][:50]
 
 
-def _apply_c2_extras(request, workspace, acc_id, platform, extra, prev=None):
+def _has_video(request, workspace, post) -> bool:
+    """Hay un video en el post (guardado o pendiente en la sesión): decide si Facebook admite borrador."""
+    from apps.media_library.models import MediaAsset
+
+    if post is not None and post.pk and post.media_attachments.filter(media_asset__media_type="video").exists():
+        return True
+    pending = request.session.get(f"pending_media_{workspace.id}", [])
+    return bool(pending) and MediaAsset.objects.filter(id__in=pending, workspace=workspace, media_type="video").exists()
+
+
+def _apply_c2_extras(request, workspace, acc_id, platform, extra, prev=None, post_obj=None):
     """Campos nuevos del composer por cuenta, validados y acotados al workspace.
 
     Solo se toca un campo si vino en el POST (un guardado parcial no borra lo anterior);
@@ -342,6 +353,9 @@ def _apply_c2_extras(request, workspace, acc_id, platform, extra, prev=None):
         (manual := flag(f"manual_publish_{acc_id}")) is not None
     ):
         put("manual_publish", manual)  # «Música desde la app»: BEAN no publica esta red
+    if (entrega := post.get(f"entrega_{acc_id}")) in delivery.MODES:  # «¿Cómo lo mandas?» (gana a los campos sueltos)
+        video = platform != "facebook" or out.get("post_type") == "reel" or _has_video(request, workspace, post_obj)
+        delivery.set_mode(platform, out, entrega, video=video)
     return out
 
 
@@ -601,7 +615,7 @@ def _sync_platform_posts(request, post, workspace, initial_status=None):
             pp.platform_extra = extra
 
         pp.platform_extra = _apply_c2_extras(
-            request, workspace, acc_id, account.platform, pp.platform_extra, prev_extra
+            request, workspace, acc_id, account.platform, pp.platform_extra, prev_extra, post
         )
         pp.save()
 
@@ -1175,10 +1189,10 @@ def _platform_status_map(post):
 
 
 def _publish_state(pp):
-    """Estado de una red para el modal «Publicando»: wait | run | proc | ok | draft | manual | fail."""
+    """Estado de una red para el modal «Publicando»: wait | run | proc | ok | draft | private | manual | fail."""
     st = PlatformPost.Status
     if pp.status == st.PUBLISHED:
-        return {"Borrador": "draft", "A mano": "manual"}.get(pp.outcome_label, "ok")
+        return {"Borrador": "draft", "Privado": "private", "A mano": "manual"}.get(pp.outcome_label, "ok")
     if pp.status == st.FAILED:
         return "fail"
     if pp.status == st.PUBLISHING:
@@ -1775,7 +1789,9 @@ def autosave(request, workspace_id, post_id=None):
                 post=post,
                 social_account_id=acc_id,
             )
-            new_extra = _apply_c2_extras(request, workspace, acc_id, platforms.get(acc_id, ""), pp.platform_extra)
+            new_extra = _apply_c2_extras(
+                request, workspace, acc_id, platforms.get(acc_id, ""), pp.platform_extra, post_obj=post
+            )
             if new_extra != (pp.platform_extra or {}):
                 pp.platform_extra = new_extra
                 pp.save(update_fields=["platform_extra"])

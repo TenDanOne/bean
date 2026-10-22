@@ -289,6 +289,13 @@ class FacebookProvider(SocialProvider):
                 platform=self.platform_name,
             )
 
+        if content.extra.get("entrega") == "borrador" and not (
+            content.media_urls and content.post_type in (PostType.REEL, PostType.VIDEO)
+        ):
+            # Solo video y Reel admiten borrador por API; el composer manda lo demás a «A mano». Nunca publicar en vivo.
+            raise PublishError(
+                "Facebook solo admite borrador para video o Reel.", platform=self.platform_name, retryable=False
+            )
         if content.post_type == PostType.REEL and content.media_urls:
             return self._publish_reel(access_token, page_id, content)
         if content.post_type == PostType.IMAGE and content.media_urls:
@@ -432,6 +439,8 @@ class FacebookProvider(SocialProvider):
         payload: dict = {"file_url": content.media_urls[0]}
         if content.text:
             payload["description"] = content.text
+        if content.extra.get("entrega") == "borrador":  # video sin publicar (queda en Meta Business Suite)
+            payload |= {"published": False, "unpublished_content_type": "DRAFT"}
         resp = self._request(
             "POST",
             f"{BASE_URL}/{page_id}/videos",
@@ -494,7 +503,7 @@ class FacebookProvider(SocialProvider):
             json={
                 "upload_phase": "finish",
                 "video_id": video_id,
-                "video_state": "PUBLISHED",
+                "video_state": "DRAFT" if content.extra.get("entrega") == "borrador" else "PUBLISHED",
                 "description": content.text or "",
             },
             may_have_published=True,

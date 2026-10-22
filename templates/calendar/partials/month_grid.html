@@ -4,10 +4,56 @@ Context: calendar_weeks, month_name, prev_month, next_month, day_names, unschedu
 Enhanced with: holidays, custom events, category colors, recurring badges.
 {% endcomment %}
 
-{% load tz %}
+{% load tz approval_extras %}
 {% include "calendar/partials/status_chips.html" %}
-<div class="bg-app overflow-x-auto cal-month" @post-deleted.window="reloadCalendar()" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both">
-  <div class="cal-grid">
+<div x-data="{ mes: false }" class="bg-app overflow-x-auto cal-month" @post-deleted.window="reloadCalendar()" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both">
+  <!-- Conmutador Agenda/Mes (móvil, < sm): la cuadrícula sigue disponible para crear por día, festivos y eventos. -->
+  <div class="sm:hidden px-3 pt-2" role="group" aria-label="Vista del mes">
+    <div class="inline-flex rounded-lg border border-app bg-app-1 p-0.5 text-sm font-semibold">
+      <button type="button" class="min-h-[36px] px-4 rounded-md" :class="mes ? 'text-app-tertiary' : 'bg-app text-app-strong font-bold ring-1 ring-[var(--brand-500)]'" :aria-pressed="(!mes).toString()" aria-pressed="true" @click="mes = false">Agenda</button>
+      <button type="button" class="min-h-[36px] px-4 rounded-md" :class="mes ? 'bg-app text-app-strong font-bold ring-1 ring-[var(--brand-500)]' : 'text-app-tertiary'" :aria-pressed="mes.toString()" aria-pressed="false" @click="mes = true">Mes</button>
+    </div>
+  </div>
+  <!-- Agenda (móvil, < sm): lista por día; días vacíos omitidos. Las fechas ya vienen en la zona del espacio. -->
+  <section class="sm:hidden px-3 pb-4" :class="mes && 'hidden'" id="cal-agenda" aria-label="Agenda del mes">
+    {% if month_empty %}
+    <p class="py-6 text-sm text-app-secondary">No hay publicaciones este mes. <a href="{% url 'composer:compose' workspace_id=workspace.id %}" class="font-semibold underline">Crear publicación</a></p>
+    {% endif %}
+    {% for week in calendar_weeks %}{% for day in week %}{% if day.is_current_month and day.posts or day.is_current_month and day.holidays or day.is_current_month and day.events %}
+    <section data-agenda-day="{{ day.date|date:'Y-m-d' }}">
+      <h3 class="flex items-baseline gap-2 pt-4 pb-1.5 text-sm font-extrabold text-app-strong">
+        {% if day.is_today %}Hoy <small class="font-semibold text-app-tertiary">{{ day.date|date:"D j b"|capfirst }}</small>{% elif day.is_tomorrow %}Mañana <small class="font-semibold text-app-tertiary">{{ day.date|date:"D j b"|capfirst }}</small>{% else %}{{ day.date|date:"D j b"|capfirst }}{% endif %}
+      </h3>
+      {% for h in day.holidays %}<p class="text-xs font-medium text-app-warning">{{ h.emoji }} {{ h.name }}</p>{% endfor %}
+      {% for event in day.events %}<p class="text-xs font-semibold text-app-inverse px-2 py-0.5 rounded mb-0.5" style="background: {{ event.color }};">{{ event.title }}</p>{% endfor %}
+      <ul class="space-y-1.5">
+        {% for pp in day.posts %}
+        <li>
+          <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}"
+             class="flex items-center gap-2.5 min-h-[44px] px-3 py-2 rounded-lg border border-app bg-app-1 hover:bg-app-2 no-underline text-app-strong">
+            {% timezone display_timezone %}<time class="w-11 flex-shrink-0 text-sm font-bold tabular-nums">{{ pp.effective_at|time:"H:i" }}</time>{% endtimezone %}
+            <span class="w-5 h-5 rounded flex items-center justify-center pi-{{ pp.social_account.platform }} flex-shrink-0 text-app-inverse" title="{{ pp.social_account.platform|capfirst }}">
+              {% include "social_accounts/partials/_platform_icon.html" with platform=pp.social_account.platform size="3" %}<span class="sr-only">{{ pp.social_account.get_platform_display }}</span>
+            </span>
+            {% with first_media=pp.post.media_attachments.all.0 %}
+            {% if pp.display_thumbnail_url %}
+            <img src="{{ pp.display_thumbnail_url }}" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0">
+            {% elif first_media and first_media.media_asset.thumbnail %}
+            <img src="{{ first_media.media_asset.thumbnail.url }}" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0">
+            {% elif first_media and not first_media.media_asset.is_video %}
+            <img src="{{ first_media.media_asset.file.url }}" alt="" class="w-8 h-8 rounded object-cover flex-shrink-0">
+            {% endif %}
+            {% endwith %}
+            <span class="flex-1 min-w-0 text-sm font-semibold break-words">{{ pp.post.title|default:pp.post.caption_snippet|default:"(sin texto)"|truncatechars:60 }}</span>
+            <span class="flex-shrink-0">{% status_badge pp.status %}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}{% endfor %}{% endfor %}
+  </section>
+  <div class="cal-grid max-sm:hidden" :class="{ 'max-sm:hidden': !mes }">
     <!-- Day headers -->
     <div class="grid grid-cols-7 border-b border-app bg-app-1">
         {% for day_name in day_names %}
@@ -43,7 +89,7 @@ Enhanced with: holidays, custom events, category colors, recurring badges.
             {% if day.holidays %}
             <div class="mb-1">
                 {% for h in day.holidays %}
-                <div class="text-[9px] text-amber-600 font-medium leading-tight truncate" title="{{ h.name }}">{{ h.name }}</div>
+                <div class="text-[9px] text-app-warning font-medium leading-tight truncate" title="{{ h.name }}">{{ h.name }}</div>
                 {% endfor %}
             </div>
             {% endif %}
