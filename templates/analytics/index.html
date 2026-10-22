@@ -9,13 +9,13 @@
     .a-card { background: var(--surface-0); border: 1px solid var(--border); border-radius: var(--radius-xl); }
     .a-card-hover { transition: box-shadow var(--dur-base) ease, border-color var(--dur-base) ease, transform var(--dur-base) ease; }
     .a-card-hover:hover { box-shadow: var(--shadow-md); border-color: var(--border-hover); transform: translateY(-2px); }
-    .a-mono { font-family: var(--font-mono); }
+    .a-mono { font-family: var(--font-body); font-variant-numeric: tabular-nums; }
 
     .a-pill-group { display: inline-flex; align-items: center; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-full); padding: 3px; }
     .a-pill-group > a, .a-pill-group > button { padding: 5px 14px; font-size: 0.8125rem; font-weight: 600; border-radius: var(--radius-full); border: none; cursor: pointer; background: transparent; color: var(--text-tertiary); text-decoration: none; }
     .a-pill-group > a.active, .a-pill-group > button.active { background: var(--surface-0); color: var(--neutral-900); box-shadow: var(--shadow-xs); }
 
-    .a-delta { display: inline-flex; align-items: center; gap: 3px; border-radius: var(--radius-full); font-family: var(--font-mono); font-weight: 700; font-size: 11.5px; padding: 2px 7px; }
+    .a-delta { display: inline-flex; align-items: center; gap: 3px; border-radius: var(--radius-full); font-family: var(--font-body); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 11.5px; padding: 2px 7px; }
     .a-delta.good { color: var(--success-700); background: var(--success-50); }
     .a-delta.bad { color: var(--error-700); background: var(--error-50); }
     .a-delta.neutral { color: var(--text-tertiary); background: var(--neutral-100); }
@@ -28,7 +28,7 @@
     .a-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
     .a-table th { padding: 10px 12px; text-align: right; font-weight: 600; color: var(--text-tertiary); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; cursor: pointer; user-select: none; }
     .a-table th.first { text-align: left; cursor: default; }
-    .a-table td { padding: 10px 12px; text-align: right; font-family: var(--font-mono); white-space: nowrap; color: var(--text-secondary); }
+    .a-table td { padding: 10px 12px; text-align: right; font-family: var(--font-body); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-secondary); }
     .a-table td.first { text-align: left; font-family: inherit; color: var(--text-primary); max-width: 280px; }
     .a-table td.sort-col { color: var(--text-primary); font-weight: 700; }
     .a-table tbody tr { border-bottom: 1px solid var(--neutral-100); cursor: pointer; }

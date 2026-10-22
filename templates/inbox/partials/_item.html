@@ -14,7 +14,7 @@ quien escribió, el extracto y las pastillas a la derecha. `it` trae type, m (me
     <span class="ib-row">
         <span class="ib-av ib-av-c{{ it.m.sender_name|tone }}" aria-hidden="true">{{ it.m.sender_name|initials }}</span>
         <span class="ib-mid">
-            <span class="ib-who"><b>{{ it.m.sender_name }}</b><time datetime="{{ it.at|date:'c' }}">hace {{ it.at|timesince }}</time></span>
+            <span class="ib-who"><b>{{ it.m.sender_name }}</b><time datetime="{{ it.at|date:'c' }}">{{ it.at|ago }}</time></span>
             <span class="ib-tx">{% if it.type == "chat" %}{% if it.c.last.is_outbound %}Tú: {% endif %}{{ it.c.last.body }}{% else %}{{ it.m.body }}{% endif %}</span>
         </span>
         <span class="ib-rt">{% for p in it.pills %}{% include "inbox/partials/_pill.html" %}{% endfor %}</span>

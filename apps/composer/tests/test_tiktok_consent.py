@@ -11,7 +11,7 @@ class TikTokComposerComplianceTests(ComposerTestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertIn('id="tiktok-consent"', html)
-        self.assertIn("Music Usage Confirmation", html)
+        self.assertIn("Confirmación de uso de música", html)
         self.assertIn("TikTok acepta videos de hasta", html)
         # Consent must precede the action bar so it sits by the publish/schedule button.
         self.assertLess(html.index('id="tiktok-consent"'), html.index('id="publish-action-btn"'))

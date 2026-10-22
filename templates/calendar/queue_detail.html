@@ -88,7 +88,7 @@
             <!-- Assigned slot -->
             <div class="text-right flex-shrink-0">
                 {% if entry.assigned_slot_datetime %}
-                <span class="text-xs font-medium text-app-body">{{ entry.assigned_slot_datetime|date:"d M" }}</span>
+                <span class="text-xs font-medium text-app-body">{{ entry.assigned_slot_datetime|date:"d M"|lower }}</span>
                 <span class="text-[10px] text-app-ghost block">{{ entry.assigned_slot_datetime|time:"H:i" }}</span>
                 {% else %}
                 <span class="text-xs text-app-ghost">Sin horario</span>

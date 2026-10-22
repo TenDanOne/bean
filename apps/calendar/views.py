@@ -498,7 +498,14 @@ def _get_tab_context(request, workspace, tab: str) -> dict:
             .order_by("effective_at", "-post__created_at")
         )
         platform_posts = _apply_pp_publish_filters(platform_posts, request)
-        return {**base_ctx, "platform_posts": platform_posts[:200]}
+        import zoneinfo
+
+        tz = zoneinfo.ZoneInfo(display_tz)
+        queue_posts = list(platform_posts[:200])
+        for pp in queue_posts:
+            # El día de agrupación sale en la zona mostrada, no en UTC.
+            pp.local_date = timezone.localtime(pp.effective_at, tz).date() if pp.effective_at else None  # type: ignore[attr-defined]
+        return {**base_ctx, "platform_posts": queue_posts}
 
     if tab == "drafts":
         platform_posts = (
@@ -955,7 +962,7 @@ def _week_view_data(request, workspace, target_date, context):
             "current_hour": now.hour,
             "prev_date": (monday - timedelta(weeks=1)).isoformat(),
             "next_date": (monday + timedelta(weeks=1)).isoformat(),
-            "period_label": f"{date_format(week_days[0], 'j M')} – {date_format(week_days[6], 'j M Y')}",
+            "period_label": f"{date_format(week_days[0], 'j M')} – {date_format(week_days[6], 'j M Y')}".lower(),
             "status_chips": _status_chips(workspace, request, display_tz, week_days[0], week_days[6]),
         }
     )

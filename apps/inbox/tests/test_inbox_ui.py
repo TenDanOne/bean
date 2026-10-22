@@ -149,7 +149,7 @@ class TestNoContestados:
         msg(workspace, fb, "d1", kind="dm", convo="t1", minutes_ago=30)
         client.force_login(operator)
         (item,) = client.get(feed(workspace)).context["items"]
-        assert [p["key"] for p in item["pills"]] == ["nuevo", "abierto"]
+        assert [p["key"] for p in item["pills"]] == ["nuevo"]  # Nuevo manda sobre la ventana del chat
         client.get(url("chat_detail", workspace, item["m"]))
         (item,) = client.get(feed(workspace)).context["items"]
         assert [p["key"] for p in item["pills"]] == ["abierto"]

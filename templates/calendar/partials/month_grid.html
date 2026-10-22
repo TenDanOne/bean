@@ -6,13 +6,13 @@ Enhanced with: holidays, custom events, category colors, recurring badges.
 
 {% load tz %}
 {% include "calendar/partials/status_chips.html" %}
-<div class="bg-app overflow-x-auto" @post-deleted.window="reloadCalendar()" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both">
-  <div class="min-w-[640px]">
+<div class="bg-app overflow-x-auto cal-month" @post-deleted.window="reloadCalendar()" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both">
+  <div class="cal-grid">
     <!-- Day headers -->
     <div class="grid grid-cols-7 border-b border-app bg-app-1">
         {% for day_name in day_names %}
-        <div class="px-3 py-2.5 text-xs font-semibold text-app-tertiary text-center border-r border-app last:border-r-0 tracking-wide">
-            {{ day_name }}
+        <div class="cal-dn px-3 py-2.5 text-xs font-semibold text-app-tertiary text-center border-r border-app last:border-r-0 tracking-wide" title="{{ day_name }}">
+            <span class="cal-dfull">{{ day_name }}</span><span class="cal-dabbr">{{ day_name|slice:":3" }}</span>
         </div>
         {% endfor %}
     </div>

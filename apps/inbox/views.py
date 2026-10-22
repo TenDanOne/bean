@@ -240,8 +240,9 @@ PLATFORM_FILTERS = {
     "facebook": ("facebook",),
     "instagram": ("instagram", "instagram_login"),
     "youtube": ("youtube",),
+    "tiktok": ("tiktok",),
 }
-PLATFORM_LABELS = {"facebook": "Facebook", "instagram": "Instagram", "youtube": "YouTube"}
+PLATFORM_LABELS = {"facebook": "Facebook", "instagram": "Instagram", "youtube": "YouTube", "tiktok": "TikTok"}
 # YouTube no tiene mensajes directos.
 NO_CHAT_PLATFORMS = ("youtube",)
 
@@ -353,7 +354,7 @@ def _feed_context(request, workspace):
             pills = [pill("nuevo")] if c["unread"] else []
             if show_all:
                 pills.append(pill("pendiente" if c["pending"] else "contestado"))
-            if c["window"]:
+            if c["window"] and not c["unread"]:  # Nuevo manda; la ventana se ve en el detalle
                 pills.append(pill(c["window"]))
             items.append(
                 {"type": "chat", "m": c["rep"], "c": c, "at": c["last"].received_at, "kind": "Chat", "pills": pills}
@@ -381,7 +382,7 @@ def _feed_context(request, workspace):
                 pills = [pill("nuevo")] if c["unread"] else []
                 if show_all:
                     pills.append(pill("pendiente" if c["pending"] else "contestado"))
-                if c["window"]:
+                if c["window"] and not c["unread"]:  # Nuevo manda; la ventana se ve en el detalle
                     pills.append(pill(c["window"]))
                 chats.append({"c": c, "pills": pills})
 
@@ -389,8 +390,13 @@ def _feed_context(request, workspace):
         "workspace": workspace,
         "st": st,
         "show_all": show_all,
+        "filtering": bool(st["platform"] or st["account"] or st["mine"] or st["q"] or show_all),
         "social_accounts": accounts,
-        "platform_chips": [(key, PLATFORM_LABELS[key]) for key in PLATFORM_FILTERS],
+        "platform_chips": [
+            (key, PLATFORM_LABELS[key])
+            for key, platforms in PLATFORM_FILTERS.items()
+            if key != "tiktok" or any(a.platform in platforms for a in accounts)
+        ],
         "tabs": [
             ("todo", "No contestados", com_count + chat_count),
             ("com", "Comentarios", com_count),

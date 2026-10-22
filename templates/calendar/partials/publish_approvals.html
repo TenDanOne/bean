@@ -6,6 +6,14 @@ The toast host lives in calendar.html (outside #tab-content) so a refresh doesn'
 tear down the toast.
 {% endcomment %}
 {% load tz approval_extras %}
+<style>
+@media (max-width: 640px) {
+    .ap-row { flex-wrap: wrap; }
+    .ap-row > .ap-main { flex: 1 1 0; min-width: 0; }
+    .ap-row > .ap-act { flex: 1 1 100%; justify-content: flex-end; }
+    .ap-row .line-clamp-1 { -webkit-line-clamp: 2; }
+}
+</style>
 
 <div x-data="{ selectedPosts: [], diffOpen: false, rejectOpen: false, bulkReason: '' }"
      hx-trigger="approvalAction from:body, bulkActionComplete from:body"
@@ -63,7 +71,7 @@ tear down the toast.
     </div>
 
     {# bulk reject modal #}
-    <div x-show="rejectOpen" x-cloak role="dialog" aria-modal="true" aria-label="Rechazar publicaciones" x-effect="if (rejectOpen) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="rejectOpen = false">
+    <div x-show="rejectOpen" x-cloak data-modal aria-label="Rechazar publicaciones" class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="rejectOpen = false">
         <div class="absolute inset-0" style="background: rgba(28,25,23,.42); backdrop-filter: blur(3px);"></div>
         <div class="relative bg-app rounded-2xl shadow-2xl w-full modal-pop" style="max-width: 440px;" @click.stop>
             <div class="p-6">
@@ -85,7 +93,7 @@ tear down the toast.
     {% endif %}
 
     {# version-diff modal (loaded via hx-get on the row's «Ver cambios» button) #}
-    <div x-show="diffOpen" x-cloak role="dialog" aria-modal="true" aria-label="Cambios de la versión" x-effect="if (diffOpen) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="diffOpen = false">
+    <div x-show="diffOpen" x-cloak data-modal aria-label="Cambios de la versión" class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="diffOpen = false">
         <div class="absolute inset-0" style="background: rgba(28,25,23,.42); backdrop-filter: blur(3px);"></div>
         <div class="relative bg-app rounded-2xl shadow-2xl w-full modal-pop max-h-[80vh] overflow-y-auto" style="max-width: 620px;" @click.stop>
             <div class="p-6">

@@ -19,7 +19,7 @@ showed three columns — 896px simply cannot hold four cards wide enough for
     </div>
 
     <!-- Platform grid -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div class="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {% for value, label in platform_choices %}
         <div class="flex flex-col gap-3 h-full p-4 transition-colors"
              style="background: {% if value in configured_platforms %}var(--surface-0){% else %}var(--warm-50){% endif %}; border: 1px {% if value in configured_platforms %}solid{% else %}dashed{% endif %} var(--border); border-radius: 14px; box-shadow: var(--shadow-xs);">
@@ -27,7 +27,7 @@ showed three columns — 896px simply cannot hold four cards wide enough for
                 <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center" style="background: var(--warm-100); border: 1px solid var(--border-subtle); border-radius: 10px;">
                     {% platform_icon value size="5" %}
                 </div>
-                <h3 class="text-base font-bold text-app min-w-0 truncate">{{ label }}</h3>
+                <h3 class="text-base font-bold text-app min-w-0 break-words">{{ label }}</h3>
             </div>
             <p class="text-sm text-app-secondary">
                 {% if value == 'facebook' %}Tus páginas de Facebook
@@ -53,11 +53,11 @@ showed three columns — 896px simply cannot hold four cards wide enough for
             </form>
             {% else %}
             {% if request.user.is_superuser %}
-            <a href="{% url 'admin:credentials_platformcredential_changelist' %}" class="ib-btn ib-btn-secondary w-full mt-auto">
+            <a href="{% url 'admin:credentials_platformcredential_changelist' %}" class="ib-btn ib-btn-secondary w-full mt-auto leading-snug text-center py-2">
                 Faltan credenciales: configurarlas
             </a>
             {% else %}
-            <span class="ib-btn ib-btn-ghost bbs-denied w-full mt-auto" aria-disabled="true"
+            <span class="ib-btn ib-btn-ghost bbs-denied w-full mt-auto leading-snug text-center py-2" aria-disabled="true"
                   title="Las credenciales de la plataforma se configuran en las variables de entorno o en el administrador de Django. Pídeselo a quien administra BEAN.">
                 Faltan credenciales (pide al administrador)
             </span>

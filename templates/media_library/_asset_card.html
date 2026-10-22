@@ -41,7 +41,7 @@
     <span class="ml-type-badge absolute top-2 left-2
       {% if asset.file_type == 'image' %}{% elif asset.file_type == 'video' %}{% elif asset.file_type == 'gif' %}{% else %}{% endif %}"
       style="{% if asset.file_type == 'video' %}background: var(--st-failed-dot); color: var(--on-primary);{% elif asset.file_type == 'gif' %}background: rgba(99,102,241,0.9); color: white;{% elif asset.file_type == 'document' %}background: rgba(59,130,246,0.9); color: white;{% else %}background: rgba(255,255,255,0.9); color: var(--text-secondary, #57534E);{% endif %}">
-      {{ asset.file_type|upper }}
+      {{ asset.get_media_type_display }}
     </span>
 
     {% if asset.is_shared %}

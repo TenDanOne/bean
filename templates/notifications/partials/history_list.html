@@ -61,8 +61,8 @@
                 </div>
                 {% endif %}
             </div>
-            <div class="flex items-center gap-3 mt-1.5">
-                <span class="text-[11px] text-app-ghost font-medium tabular-nums">hace {{ n.created_at|timesince }}</span>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                <span class="text-[11px] text-app-ghost font-medium tabular-nums whitespace-nowrap">hace {{ n.created_at|timesince }}</span>
                 <span class="text-[10px] font-semibold uppercase tracking-wider text-app-ghost">{{ n.get_event_type_display }}</span>
                 {% if not n.is_read %}
                 <button

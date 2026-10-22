@@ -19,6 +19,8 @@ fecha) las suma Alpine en la columna. ``#review-data`` lleva los bloqueos para q
 <ul class="cp-vis" aria-label="Caracteres visibles por cuenta">
     {% for p in previews %}{% if p.visible %}
     <li><b>{{ p.platform_label }}{% if p.kind %} · {{ p.kind }}{% endif %}</b> <span{% if p.visible.over %} class="over"{% endif %}>{{ p.visible.what }}: {{ p.visible.used }} / {{ p.visible.limit }} visibles</span></li>
+    {% elif p.account.platform == "tiktok" %}
+    <li><b>{{ p.platform_label }}{% if p.kind %} · {{ p.kind }}{% endif %}</b> <span{% if p.is_over_limit %} class="over"{% endif %}>texto: {{ p.char_count }} / {{ p.char_limit }}</span></li>
     {% endif %}{% endfor %}
 </ul>
 {% endif %}

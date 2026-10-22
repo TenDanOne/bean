@@ -15,6 +15,9 @@ from .models import (
 # Eventos definidos pero que nada emite todavía: no se ofrecen en preferencias.
 NOT_EMITTED = {EventType.REPORT_GENERATED, EventType.ENGAGEMENT_ALERT, EventType.CLIENT_CONNECTED_ACCOUNTS}
 
+# El canal webhook no tiene origen de URL configurable por el usuario: no se ofrece en preferencias.
+PREF_CHANNELS = [c for c in Channel.choices if c[0] != Channel.WEBHOOK]
+
 
 @login_required
 @require_GET
@@ -126,7 +129,7 @@ def preferences(request):
         if event_value in NOT_EMITTED:
             continue
         channel_toggles = []
-        for ch_value, ch_label in Channel.choices:
+        for ch_value, ch_label in PREF_CHANNELS:
             if (event_value, ch_value) in pref_map:
                 enabled = pref_map[(event_value, ch_value)]
             else:
@@ -151,7 +154,7 @@ def preferences(request):
 
     context = {
         "matrix": matrix,
-        "channel_choices": Channel.choices,
+        "channel_choices": PREF_CHANNELS,
         "quiet_hours": quiet_hours,
     }
     return render(request, "notifications/preferences.html", context)
@@ -163,7 +166,7 @@ def _save_preferences(request):
 
     # Save channel toggles
     for event_value, _ in EventType.choices:
-        for ch_value, _ in Channel.choices:
+        for ch_value, _ in PREF_CHANNELS:
             field_name = f"pref_{event_value}_{ch_value}"
             is_enabled = field_name in request.POST
 

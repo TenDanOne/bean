@@ -1,3 +1,4 @@
+{% load inbox_extras %}
 {% comment %}
 Asignar y notas internas de un mensaje (`m`). Las notas son solo del equipo: estilo punteado ámbar, distinto de las
 respuestas públicas. Reutiliza las vistas assign y add_note con ui=1 (devuelven el hilo o el chat completo).
@@ -10,7 +11,7 @@ respuestas públicas. Reutiliza las vistas assign y add_note con ui=1 (devuelven
     <div class="ib-notes" id="notes-{{ m.id }}" x-show="notes" x-cloak>
         <p class="ib-hint"><strong>Solo el equipo</strong> ve estas notas; no se publican.</p>
         {% for n in notes_list %}
-        <div class="ib-note"><b>{{ n.author.display_name|default:"Usuario eliminado" }}</b> <time datetime="{{ n.created_at|date:'c' }}">hace {{ n.created_at|timesince }}</time><div>{{ n.body }}</div></div>
+        <div class="ib-note"><b>{{ n.author.display_name|default:"Usuario eliminado" }}</b> <time datetime="{{ n.created_at|date:'c' }}">{{ n.created_at|ago }}</time><div>{{ n.body }}</div></div>
         {% endfor %}
         {% if caps.reply %}
         <form hx-post="{% url 'inbox:add_note' workspace_id=workspace.id message_id=m.id %}" hx-target="#inbox-detail-panel" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">

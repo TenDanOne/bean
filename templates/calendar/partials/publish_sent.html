@@ -2,6 +2,7 @@
 Sent tab partial for the Publish page.
 Shows all published/partially_published platform posts. Loaded via HTMX into #tab-content.
 {% endcomment %}
+{% load tz %}
 
 <div x-data="{ showFailedModal: false, deleting: false }"{% if is_htmx %} class="tab-slide-in"{% endif %}>
     {% if failed_count and request.workspace_membership.effective_permissions.create_posts %}
@@ -13,8 +14,8 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
         </button>
     </div>
     <template x-teleport="body">
-        <div x-show="showFailedModal" x-effect="if (showFailedModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[60] flex items-center justify-center"
-             @keydown.escape.window="showFailedModal = false" role="dialog" aria-modal="true" aria-labelledby="failed-modal-title"
+        <div x-show="showFailedModal" data-modal class="fixed inset-0 z-[60] flex items-center justify-center"
+             @keydown.escape.window="showFailedModal = false" aria-labelledby="failed-modal-title"
              style="display: none;">
             <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="showFailedModal = false"></div>
             <div class="relief-float relative rounded-2xl p-6 w-full max-w-sm mx-4">
@@ -22,7 +23,7 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                 <p class="text-sm text-app-tertiary mb-6 text-center">Se eliminarán {{ failed_count }} publicaciones fallidas. No se puede deshacer.</p>
                 <div class="flex gap-3">
                     <button @click="showFailedModal = false"
-                            class="flex-1 px-4 py-2 text-sm font-semibold text-app-body bg-app-2 rounded-full hover:bg-app-3 transition-colors cursor-pointer">Cancelar</button>
+                            class="flex-1 ib-btn ib-btn-secondary">Cancelar</button>
                     <button :disabled="deleting"
                             @click="
                                 deleting = true;
@@ -36,7 +37,7 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                                 }).catch(() => { deleting = false; });
                             "
                             :class="deleting && 'opacity-50 cursor-not-allowed'"
-                            class="flex-1 ib-btn ib-btn-danger" style="min-height:40px">
+                            class="flex-1 ib-btn ib-btn-danger">
                         <span x-text="deleting ? 'Eliminando...' : 'Eliminar'"></span>
                     </button>
                 </div>
@@ -45,7 +46,8 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
     </template>
     {% endif %}
     {% if platform_posts %}
-    <div class="overflow-x-auto">
+    <p class="cal-hint">Desliza hacia los lados para ver todas las columnas.</p>
+    <div class="overflow-x-auto cal-tscroll">
     <table class="w-full min-w-[640px]">
         <thead>
             <tr class="border-b border-app text-left">
@@ -95,7 +97,7 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                     {% endwith %}
                 </td>
                 <td class="px-4 py-3">
-                    <span class="post-chip status-{{ pp.status }} inline-flex" {% if pp.outcome_label %}title="{{ pp.outcome_note }}"{% endif %}>
+                    <span class="st-pill ib-k st-{{ pp.status }}" style="width: auto;" {% if pp.outcome_label %}title="{{ pp.outcome_note }}"{% endif %}>
                         {{ pp.outcome_label|default:pp.get_status_display }}
                     </span>
                     {% if pp.outcome_label %}<p class="text-[11px] text-app-ghost mt-1 max-w-[220px]">{{ pp.outcome_note }}</p>{% endif %}
@@ -105,8 +107,10 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                 </td>
                 <td class="px-4 py-3 text-xs text-app-tertiary tabular-nums whitespace-nowrap">
                     {% if pp.post.scheduled_at %}
-                    {{ pp.post.scheduled_at|date:"d M Y" }}<br>
+                    {% timezone display_timezone %}
+                    {{ pp.post.scheduled_at|date:"d M Y"|lower }}<br>
                     <span class="text-app-ghost">{{ pp.post.scheduled_at|date:"H:i" }}</span>
+                    {% endtimezone %}
                     {% else %}
                     <span style="color: var(--text-tertiary)">-</span>
                     {% endif %}

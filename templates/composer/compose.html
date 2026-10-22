@@ -44,6 +44,21 @@
         padding: 8px 16px; border-radius: 9999px; font-size: 13px; font-weight: 500;
         box-shadow: 0 10px 15px rgba(15,42,48,0.2); z-index: 100;
     }
+    /* «?» de 28 px en línea con su etiqueta (no 44 px en fila propia). */
+    .ib-help > .ib-helpb { width: 28px; height: 28px; }
+    .cp-chks .ib-chk, .cp-pvctl .ib-chk { flex-wrap: wrap; row-gap: 2px; }
+    .cp-chks .ib-chk { align-items: center; }
+    /* TikTok: opciones de envío del mismo ancho; la etiqueta «zona segura» a la derecha para no pisar «sonido original». */
+    .cp-opts.cp-tt-opts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .cp-tt-opts .cp-opt { flex-wrap: wrap; row-gap: 0; align-items: baseline; text-align: left; white-space: normal; }
+    .cp-sz i { left: auto; right: 6px; }
+    @media (max-width: 640px) {
+        #tiktok-consent { padding: 4px 12px 0; font-size: 10.5px; line-height: 1.3; }
+        .cp-bar { padding: 8px 12px; gap: 6px 8px; }
+        .cp-bar .cp-why { flex: 1 1 100%; min-width: 0; font-size: 12px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .cp-bar .ib-btn { flex: 1 1 auto; min-height: 40px; }
+        .cp-tt-card { padding: 12px !important; }
+    }
     .panel-scroll::-webkit-scrollbar { width: 6px; }
     .panel-scroll::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
 </style>
@@ -449,7 +464,7 @@
 
                     <!-- Create Tag Modal (teleported to body to escape stacking contexts) -->
                     <template x-teleport="body">
-                        <div x-show="showCreateTagModal" x-cloak role="dialog" aria-modal="true" aria-label="Crear etiqueta" x-effect="if (showCreateTagModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
+                        <div x-show="showCreateTagModal" x-cloak data-modal aria-label="Crear etiqueta" class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
                             <div class="fixed inset-0 bg-black/30" @click="showCreateTagModal = false"></div>
                             <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
                                 <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>
@@ -784,18 +799,18 @@
                                  .catch(() => { ttLoaded = true; })
                                  .finally(() => { ttLoading = false; });
                          }"
-                         class="relief p-4 space-y-3">
-                                                <p class="ib-hint" x-show="tt?.creator_nickname" x-text="'Publicando en @' + (tt?.creator_nickname || '')"></p>
+                         class="relief p-4 space-y-3 cp-tt-card">
+                                                <p class="ib-hint" x-show="tt?.creator_nickname" x-text="'Publicando en @' + (tt?.creator_nickname || '').replace(/^@/, '')"></p>
 
                         <fieldset class="cp-f cp-set" role="radiogroup">
                             <legend class="cp-lb">¿Cómo lo mandas a TikTok?</legend>
-                            <div class="cp-opts" style="margin-top:5px">
+                            <div class="cp-opts cp-tt-opts" style="margin-top:5px">
                                 <label class="ib-chip cp-opt"><input type="radio" :name="'tiktok_mode_' + accId" value="direct" x-model="ttMode" @change="platformExtras[accId] = { ...(platformExtras[accId] || {}), tiktok_mode: ttMode }"> Publicar directo <small>(sale en tu perfil)</small></label>
                                 <label class="ib-chip cp-opt"><input type="radio" :name="'tiktok_mode_' + accId" value="draft" x-model="ttMode" @change="platformExtras[accId] = { ...(platformExtras[accId] || {}), tiktok_mode: ttMode }"> Enviar como borrador a TikTok <small>(llega a tu bandeja de la app para ponerle música y publicar desde ahí)</small></label>
                             </div>
                             <p class="ib-hint" x-show="ttDraft">TikTok te pedirá la privacidad, las interacciones y la música en su app. BEAN solo envía el borrador; termínalo en la app de TikTok.</p>
                         </fieldset>
-                        <div x-show="!ttDraft" class="space-y-3">
+                        <div x-show="!ttDraft" class="space-y-3" style="margin-top: 16px;">
                         <!-- Privacy: TikTok requires an explicit choice from the creator's allowed options -->
                         <div>
                             <label class="block text-[11px] font-semibold text-app-ghost uppercase tracking-wider mb-1">
@@ -1253,9 +1268,9 @@ Seleccionar tablero <span class="text-red-400">*</span>
             <p x-show="selectedAccounts.some(id => charLimits[id]?.platform === 'tiktok')" x-cloak
                id="tiktok-consent" class="text-[11px] text-app-ghost px-4 pt-2">
                 Al publicar o programar en TikTok aceptas la
-                <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener" class="underline hover:text-app-secondary">Music Usage Confirmation</a>
+                <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noopener" class="underline hover:text-app-secondary">Confirmación de uso de música</a>
                 de TikTok y, si declaras contenido de marca, la
-                <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener" class="underline hover:text-app-secondary">Branded Content Policy</a>.
+                <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noopener" class="underline hover:text-app-secondary">Política de contenido de marca</a>.
             </p>
 
             <!-- Barra de acción -->
@@ -1426,7 +1441,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
     <!-- ════════════════════════════════════════════════════════════
          MEDIA PICKER MODAL
          ════════════════════════════════════════════════════════════ -->
-    <div x-show="showMediaPicker" x-cloak role="dialog" aria-modal="true" aria-label="Elegir de la biblioteca" x-effect="if (showMediaPicker) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
+    <div x-show="showMediaPicker" x-cloak data-modal aria-label="Elegir de la biblioteca"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
@@ -1460,7 +1475,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
     <!-- ════════════════════════════════════════════════════════════
          YOUTUBE THUMBNAIL PICKER MODAL
          ════════════════════════════════════════════════════════════ -->
-    <div x-show="showThumbnailPicker" x-cloak role="dialog" aria-modal="true" aria-label="Elegir miniatura" x-effect="if (showThumbnailPicker) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
+    <div x-show="showThumbnailPicker" x-cloak data-modal aria-label="Elegir miniatura"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
@@ -1490,7 +1505,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
          UNSPLASH SEARCH MODAL (only rendered when an API key is configured)
          ════════════════════════════════════════════════════════════ -->
     {% if unsplash_enabled %}
-    <div x-show="showUnsplashModal" x-cloak role="dialog" aria-modal="true" aria-label="Buscar en Unsplash" x-effect="if (showUnsplashModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
+    <div x-show="showUnsplashModal" x-cloak data-modal aria-label="Buscar en Unsplash"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          @keydown.escape.window="showUnsplashModal && closeUnsplashModal()"
          x-transition:enter="transition ease-out duration-200"
@@ -1581,7 +1596,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
     <!-- ════════════════════════════════════════════════════════════
          FRAME PICKER MODAL (YouTube thumbnail / TikTok cover)
          ════════════════════════════════════════════════════════════ -->
-    <div x-show="showFramePicker" x-cloak role="dialog" aria-modal="true" aria-label="Elegir fotograma" x-effect="if (showFramePicker) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
+    <div x-show="showFramePicker" x-cloak data-modal aria-label="Elegir fotograma"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          @keydown.escape.window="showFramePicker && closeFramePicker()"
          x-transition:enter="transition ease-out duration-200"
@@ -1700,7 +1715,7 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
     <!-- Delete Confirmation Modal -->
     <div x-data="{ showDeleteModal: false, deleting: false }" style="display: contents;"
          @open-delete-modal.window="showDeleteModal = true">
-        <div x-show="showDeleteModal" x-cloak role="dialog" aria-modal="true" aria-label="Eliminar publicación" x-effect="if (showDeleteModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[60] flex items-center justify-center"
+        <div x-show="showDeleteModal" x-cloak data-modal aria-label="Eliminar publicación" class="fixed inset-0 z-[60] flex items-center justify-center"
              @keydown.escape.window="showDeleteModal = false">
             <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="showDeleteModal = false"
                  x-show="showDeleteModal"
@@ -1976,6 +1991,9 @@ function composerApp() {
         },
         syncPreviewTab() {
             document.querySelectorAll('#preview-panel [data-pv-acc]').forEach(el => { el.hidden = el.dataset.pvAcc !== this.activeTab; });
+            // «Zonas seguras» solo aplica a vistas 9:16 (las que dibujan .cp-sz).
+            const ctl = document.querySelector('.cp-pvctl');
+            if (ctl) ctl.style.display = document.querySelector('#preview-panel [data-pv-acc]:not([hidden]) .cp-sz') ? '' : 'none';
         },
         get firstCommentSuggestion() {
             return ({

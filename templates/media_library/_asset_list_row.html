@@ -39,7 +39,7 @@
   <div class="col-span-2">
     <span class="ml-type-badge"
           style="{% if asset.file_type == 'video' %}background: var(--error-50); color: var(--error-700);{% elif asset.file_type == 'gif' %}background: var(--accent-indigo-soft); color: #4338CA;{% elif asset.file_type == 'document' %}background: var(--info-50); color: var(--info-700);{% else %}background: var(--surface-2); color: var(--text-secondary);{% endif %}">
-      {{ asset.get_file_type_display }}
+      {{ asset.get_media_type_display }}
     </span>
   </div>
 

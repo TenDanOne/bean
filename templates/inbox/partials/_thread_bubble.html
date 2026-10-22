@@ -1,4 +1,4 @@
-{% load humanize %}
+{% load humanize inbox_extras %}
 {% comment %}
 One turn of the conversation. The only bubble in the inbox.
 
@@ -63,7 +63,7 @@ that consistency is worth more than the pixels.
                 </span>
                 {% endif %}
                 <time datetime="{{ turn.at|date:'c' }}"
-                      class="text-[11px] ml-auto text-app-ghost">hace {{ turn.at|timesince }}</time>
+                      class="text-[11px] ml-auto text-app-ghost">{{ turn.at|ago }}</time>
             </div>
 
             {% if turn.side == "right" %}

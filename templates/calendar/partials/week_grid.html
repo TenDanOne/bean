@@ -4,9 +4,9 @@ Context: week_days, week_slots, workspace.
 {% endcomment %}
 
 {% include "calendar/partials/status_chips.html" %}
-<div class="bg-app overflow-auto" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both; max-height: calc(100vh - 200px);">
+<div class="bg-app overflow-auto cal-wk" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both; max-height: calc(100vh - 200px);">
     <!-- Day headers -->
-    <div class="grid grid-cols-[72px_repeat(7,minmax(0,1fr))] border-b border-app sticky top-0 bg-app z-10">
+    <div class="cal-wkrow grid grid-cols-[72px_repeat(7,minmax(0,1fr))] border-b border-app sticky top-0 bg-app z-10">
         <div class="border-r border-app"></div>
         {% for day in week_days %}
         <div class="px-2 py-2 text-center border-r border-app last:border-r-0 {% if day == today %}bg-orange-50{% endif %}">
@@ -18,7 +18,7 @@ Context: week_days, week_slots, workspace.
 
     <!-- Hour rows -->
     {% for hour, day_cells in week_slots %}
-    <div class="grid grid-cols-[72px_repeat(7,minmax(0,1fr))] border-b border-app-subtle min-h-[56px]">
+    <div class="cal-wkrow grid grid-cols-[72px_repeat(7,minmax(0,1fr))] border-b border-app-subtle min-h-[56px]">
         <div class="border-r border-app px-2 py-1 text-right">
             <span class="text-[11px] font-medium text-app-ghost tabular-nums">{{ hour }}:00</span>
         </div>

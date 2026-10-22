@@ -13,7 +13,7 @@
         {% else %}
         <div class="hd">
             <b>{{ m.sender_name }}</b>
-            <time datetime="{{ m.received_at|date:'c' }}" title="{{ m.received_at|date:'j/m/Y H:i' }}">hace {{ m.received_at|timesince }}</time>
+            <time datetime="{{ m.received_at|date:'c' }}" title="{{ m.received_at|date:'j/m/Y H:i' }}">{{ m.received_at|ago }}</time>
             {% for p in r.pills %}{% include "inbox/partials/_pill.html" %}{% endfor %}
         </div>
         {% if m.is_hidden %}
@@ -89,7 +89,7 @@
                 <div class="bd">
                     <div class="hd">
                         <b>{{ t.name }}</b>{% if t.side == "right" %}<span class="sr-only">(tu respuesta)</span>{% endif %}
-                        <time datetime="{{ t.at|date:'c' }}" title="{{ t.at|date:'j/m/Y H:i' }}">hace {{ t.at|timesince }}</time>
+                        <time datetime="{{ t.at|date:'c' }}" title="{{ t.at|date:'j/m/Y H:i' }}">{{ t.at|ago }}</time>
                         {% if t.pending %}<span class="st-pill ib-k st-scheduled ib-k-enviando" title="Tu respuesta va en camino">Enviando</span>{% endif %}
                     </div>
                     <div class="tx">{{ t.body }}</div>

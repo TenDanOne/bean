@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.formats import date_format
 
 from apps.composer.models import PlatformPost
 from apps.members.channels import visible_accounts
@@ -206,7 +208,10 @@ def analytics_account(request: HttpRequest, workspace_id, account_id) -> HttpRes
             "engagement": engagement,
             "chart": chart,
             "chart_series_json": json.dumps([round(v, 4) for v in chart["derived"].series]),
-            "chart_labels_json": json.dumps(chart["labels"]),
+            # Eje X en corto y local («23 sep»), no la fecha ISO.
+            "chart_labels_json": json.dumps(
+                [date_format(date.fromisoformat(d), "j M").lower() for d in chart["labels"]]
+            ),
             "table": table,
         }
     )

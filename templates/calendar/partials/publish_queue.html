@@ -2,16 +2,16 @@
 Queue tab partial for the Publish page.
 Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-content.
 {% endcomment %}
-{% load tz %}
+{% load inbox_extras tz %}
 
 <div{% if is_htmx %} class="tab-slide-in"{% endif %}>
     {% if platform_posts %}
-    {% regroup platform_posts by effective_at.date as date_groups %}
+    {% regroup platform_posts by local_date as date_groups %}
     {% for group in date_groups %}
     <div class="{% if not forloop.first %}mt-8{% endif %}">
         <!-- Date header -->
         <h3 class="text-base font-semibold text-app-strong mb-4">
-            {% timezone display_timezone %}{{ group.grouper|date:"l, j \d\e F" }}{% endtimezone %}
+            {% timezone display_timezone %}{{ group.grouper|date:"l, j \d\e F"|lower }}{% endtimezone %}
         </h3>
 
         <div class="space-y-4">
@@ -39,6 +39,7 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
                             <span class="text-sm font-semibold text-app-strong">
                                 {{ pp.social_account.account_name|default:pp.social_account.account_handle }}
                             </span>
+                            {% if pp.platform_extra.manual_publish %}<span class="st-pill ib-k st-review" style="width: auto;" title="BEAN no publica esta red: la subes tú desde la app">A mano</span>{% endif %}
                         </div>
 
                         <!-- Title / caption -->
@@ -83,10 +84,10 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
                     <!-- Footer -->
                     <div class="flex items-center justify-between border-t border-app-subtle px-4 py-2.5">
                         <span class="text-xs text-app-ghost">
-                            hace {{ pp.post.created_at|timesince }}
+                            {{ pp.post.created_at|ago }}
                         </span>
                         <div class="flex items-center gap-1.5">
-                            {% if request.workspace_membership.effective_permissions.publish_directly %}
+                            {% if request.workspace_membership.effective_permissions.publish_directly and not pp.platform_extra.manual_publish %}
                             <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}&action=publish_now"
                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border border-app text-app-secondary hover:border-app-hover hover:text-app-strong transition-colors">
                                 {% icon "paper-plane" css_class="w-3.5 h-3.5 rotate-90" %}

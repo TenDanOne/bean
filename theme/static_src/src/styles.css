@@ -1152,6 +1152,7 @@ span.flatpickr-weekday {
   background: var(--surface-0);
   border: 1px solid var(--border);
   border-radius: 14px;
+  padding: 16px; /* gana a [popover]{padding:0} */
 }
 .bean-confirm::backdrop { background: var(--overlay); }
 

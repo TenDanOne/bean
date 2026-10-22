@@ -26,7 +26,21 @@ URL y no en JavaScript. Solo el detalle se carga aparte, en #inbox-detail-panel.
 {% include "inbox/partials/_empty_state.html" %}
 {% else %}
 
-<form id="ib-filters" class="ib-filters" hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}?tab={{ st.tab }}&acc={{ selected.id|default:'' }}"
+<style>
+.ib .ib-helpb { width: 28px; height: 28px; }
+.ib-fbtn { display: none; }
+.ib-who b { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) {
+    .ib-fbtn { display: inline-flex; margin-bottom: 8px; }
+    .ib-filters:not(.ib-f-open) { display: none; }
+    .ib .ib-tab { font-size: 12.5px; padding: 10px 4px; gap: 3px; }
+    .ib .ib-n { padding: 0 5px; min-width: 18px; }
+    .ib-composer { position: sticky; bottom: 0; z-index: 5; margin: 0; padding: 8px 0; background: var(--surface-0); border-top: 1px solid var(--border); }
+}
+</style>
+<div x-data="{ fo: {{ filtering|yesno:'true,false' }} }">
+<button type="button" class="ib-btn ib-btn-secondary ib-fbtn" @click="fo = !fo" :aria-expanded="fo" aria-controls="ib-filters">Filtros{% if filtering %} (activos){% endif %}</button>
+<form id="ib-filters" class="ib-filters" :class="{ 'ib-f-open': fo }" hx-get="{% url 'inbox:feed' workspace_id=workspace.id %}?tab={{ st.tab }}&acc={{ selected.id|default:'' }}"
       hx-trigger="change, keyup changed delay:400ms from:#ib-q" hx-target="#inbox-message-list" hx-swap="innerHTML" hx-push-url="true">
     <div class="ib-chipg" role="group" aria-label="Plataforma">
         <label class="ib-chip"><input type="radio" id="ib-pl-all" name="platform" value="" {% if not st.platform %}checked{% endif %}>Todas</label>
@@ -49,6 +63,7 @@ URL y no en JavaScript. Solo el detalle se carga aparte, en #inbox-detail-panel.
     </div>
     <label class="ib-chk" for="ib-mine"><input type="checkbox" id="ib-mine" name="mine" value="1" {% if st.mine %}checked{% endif %}> Asignado a mí</label>
 </form>
+</div>
 
 <div class="ib-tabsrow">
     <div class="ib-tabs" role="tablist" aria-label="Vistas de la bandeja" data-ib-tablist>
@@ -135,7 +150,7 @@ URL y no en JavaScript. Solo el detalle se carga aparte, en #inbox-detail-panel.
                                     hx-target="#inbox-detail-panel" hx-swap="innerHTML">
                             <span class="ib-row">
                                 <span class="ib-av ib-av-c{{ c.name|tone }}" aria-hidden="true">{{ c.name|initials }}</span>
-                                <span class="ib-mid"><span class="ib-who"><b>{{ c.name }}</b><time datetime="{{ c.last.received_at|date:'c' }}">hace {{ c.last.received_at|timesince }}</time></span><span class="ib-tx">{% if c.last.is_outbound %}Tú: {% endif %}{{ c.last.body }}</span></span>
+                                <span class="ib-mid"><span class="ib-who"><b>{{ c.name }}</b><time datetime="{{ c.last.received_at|date:'c' }}">{{ c.last.received_at|ago }}</time></span><span class="ib-tx">{% if c.last.is_outbound %}Tú: {% endif %}{{ c.last.body }}</span></span>
                                 <span class="ib-rt">{% for p in ch.pills %}{% include "inbox/partials/_pill.html" %}{% endfor %}</span>
                             </span>
                         </button></li>

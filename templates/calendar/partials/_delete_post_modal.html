@@ -9,7 +9,7 @@ Expects context: workspace, csrf_token.
 <div x-data="{ showDeleteModal: false, deletePostId: null, deleteAccountId: null, deleting: false }" style="display: contents;"
      @open-delete-modal.window="showDeleteModal = true; deletePostId = $event.detail.postId; deleteAccountId = $event.detail.accountId || null">
     <template x-teleport="body">
-        <div x-show="showDeleteModal" role="dialog" aria-modal="true" aria-label="Eliminar publicación" x-effect="if (showDeleteModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[60] flex items-center justify-center"
+        <div x-show="showDeleteModal" data-modal aria-label="Eliminar publicación" class="fixed inset-0 z-[60] flex items-center justify-center"
              @keydown.escape.window="showDeleteModal = false"
              style="display: none;">
             <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="showDeleteModal = false"
@@ -37,7 +37,7 @@ Expects context: workspace, csrf_token.
                 </div>
                 <div class="flex gap-3">
                     <button @click="showDeleteModal = false"
-                            class="flex-1 px-4 py-2 text-sm font-semibold text-app-body bg-app-2 rounded-full hover:bg-app-3 transition-colors cursor-pointer">
+                            class="flex-1 ib-btn ib-btn-secondary">
                         Cancelar
                     </button>
                     <button :disabled="deleting"
@@ -54,7 +54,7 @@ Expects context: workspace, csrf_token.
                                 }).catch(() => { deleting = false; });
                             "
                             :class="deleting && 'opacity-50 cursor-not-allowed'"
-                            class="flex-1 ib-btn ib-btn-danger" style="min-height:40px">
+                            class="flex-1 ib-btn ib-btn-danger">
                         <span x-text="deleting ? 'Eliminando...' : 'Eliminar'"></span>
                     </button>
                 </div>

@@ -3,6 +3,7 @@
 import re
 
 from django import template
+from django.utils import timezone
 
 from apps.inbox.panel import KIND_ICONS, VERTICAL_KINDS
 
@@ -36,3 +37,19 @@ def thumb_shape(kind):
     if kind in VERTICAL_KINDS:
         return "ib-th-v"
     return "" if kind == "Video" else "ib-th-s"
+
+
+@register.filter
+def ago(when):
+    """«hace 3 h, 24 min» / «hace 3 h» / «hace 12 min» / «hace 2 d»: tiempo relativo corto y con espacios."""
+    if not when:
+        return ""
+    mins = max(0, int((timezone.now() - when).total_seconds() // 60))
+    if mins < 1:
+        return "hace un momento"
+    if mins < 60:
+        return f"hace {mins} min"
+    hours, rest = divmod(mins, 60)
+    if hours < 24:
+        return f"hace {hours} h, {rest} min" if rest else f"hace {hours} h"
+    return f"hace {hours // 24} d"

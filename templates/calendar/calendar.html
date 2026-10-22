@@ -315,6 +315,47 @@
         margin-left: auto;
     }
 
+
+    /* Chips: nunca se cortan sin puntos suspensivos; el texto «Publicando» de ::after también encoge. */
+    .post-chip { text-overflow: ellipsis; white-space: nowrap; }
+    .post-chip .truncate { flex: 1 1 0; min-width: 2ch; }
+    .post-chip.status-publishing::after { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .post-chip .pp-kind { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cal-month .post-chip.status-publishing::after { display: none; } /* el punto y la leyenda de arriba dicen «Publicando»; no hay ancho para repetirlo */
+    .cal-grid { min-width: 640px; }
+    .cal-dabbr { display: none; }
+    .cal-hint { display: none; }
+    .cal-tscroll { scrollbar-width: thin; scrollbar-color: var(--warm-400) transparent; }
+    .cal-tscroll::-webkit-scrollbar { height: 8px; }
+    .cal-tscroll::-webkit-scrollbar-thumb { background: var(--warm-400); border-radius: 4px; }
+
+    /* Móvil: el mes y la semana caben en 7 columnas (chips solo con icono); filtros en filas. */
+    @media (max-width: 640px) {
+        .cal-grid { min-width: 0; }
+        .cal-dfull { display: none; }
+        .cal-hint { display: block; margin: 0 0 6px; font-size: 12px; color: var(--text-tertiary); }
+        .cal-dabbr { display: inline; }
+        .cal-month .cal-day { padding: 3px; min-height: 64px; }
+        .cal-month .cal-dn { padding: 8px 0; font-size: 11px; }
+        .cal-month .cal-day .day-num { width: 24px; height: 24px; font-size: 12px; }
+        .cal-month .cal-more { padding: 2px 4px; font-size: 10px; min-width: 0; }
+        .cal-month .cal-chip-row { display: flex; align-items: center; gap: 2px; margin-bottom: 2px; }
+        .cal-month .cal-chip-row:has(.cal-chip-del) .post-chip { padding-right: 3px; }
+        .cal-month .cal-chip-del { position: static; transform: none; flex: none; min-width: 20px; min-height: 24px; }
+        .cal-month .post-chip, .cal-wk .post-chip { flex: 1 1 0; min-width: 0; padding: 3px; margin-bottom: 2px; }
+        .cal-month .post-chip > :not(span:first-child):not(.chip-dot),
+        .cal-wk .post-chip > :not(span:first-child):not(.chip-dot) { display: none; }
+        .cal-month .post-chip::after, .cal-wk .post-chip::after { display: none; }
+        .cal-month .post-chip::before, .cal-wk .post-chip::before { display: none; }
+        .cal-wk .cal-wkrow { grid-template-columns: 40px repeat(7, minmax(0, 1fr)) !important; }
+        .cal-wk .cal-add-cell { overflow: hidden; padding: 2px; }
+        .cal-wk .calendar-channel-slot { display: none; }
+        .cal-filters-scroll { flex-wrap: wrap !important; width: 100%; margin-left: 0 !important; }
+        .cal-fl { flex-wrap: wrap; width: 100%; }
+        .cal-filters-scroll > div, .cal-fl > div { flex: 1 1 140px; min-width: 0; }
+        .cal-filters-scroll select, .cal-fl select { width: 100%; max-width: 100%; }
+    }
+
     /* Draggable feedback */
     .post-chip.dragging { opacity: 0.5; transform: rotate(2deg); }
 

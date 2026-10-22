@@ -2,7 +2,7 @@
 {% block title %}Claves de API · Ajustes · BEAN{% endblock %}
 {% block content %}
 <div x-data="{ showIssueModal: false, showRevealModal: {% if reveal_token %}true{% else %}false{% endif %} }">
-    <div class="flex items-start justify-between mb-8 gap-6">
+    <div class="flex flex-col sm:flex-row items-start justify-between mb-8 gap-4 sm:gap-6">
         <div>
             <h1 class="text-xl font-semibold" style="color: var(--text-primary);">Claves de API</h1>
             <p class="text-sm mt-1 max-w-xl" style="color: var(--text-tertiary);">

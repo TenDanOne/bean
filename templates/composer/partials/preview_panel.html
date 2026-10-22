@@ -97,10 +97,8 @@ tarjeta de enlace 1.91:1 y texto. Con ``oob_review`` también refresca el panel 
             <div class="cp-dots" aria-hidden="true">{% for m in media_items %}<i></i>{% empty %}<i></i><i></i>{% endfor %}</div>
             {% endif %}
             <div class="act">{% icon "heart" size="" %}{% icon "comment" size="" %}{% icon "paper-plane" size="" %}{% icon "bookmark" size="" %}</div>
-            <div class="cp-cap">
-                {% if p.caption %}<b>{{ p.account.account_name|default:p.account.account_handle }}</b> {{ p.truncated_caption|truncatechars:125 }}{% if p.caption|length > 125 %} <em>más</em>{% endif %}{% else %}<em>Escribe un texto…</em>{% endif %}
-                {% if p.first_comment %}<div><em>Ver todos los comentarios</em></div>{% endif %}
-            </div>
+            {# .cp-cap conserva espacios (pre-wrap): sin saltos ni sangría dentro de la etiqueta #}
+            <div class="cp-cap">{% if p.caption %}<b>{{ p.account.account_name|default:p.account.account_handle }}</b> {{ p.truncated_caption|truncatechars:125 }}{% if p.caption|length > 125 %} <em>más</em>{% endif %}{% else %}<em>Escribe un texto…</em>{% endif %}{% if p.first_comment %}<div><em>Ver todos los comentarios</em></div>{% endif %}</div>
         </div>
         {% endif %}
 
@@ -157,7 +155,7 @@ tarjeta de enlace 1.91:1 y texto. Con ``oob_review`` también refresca el panel 
             <div class="cp-media ar-916">
                 {% include "composer/partials/_pv_inner.html" with m=media_items.0 empty_text="Sube un video vertical" %}
                 {% if p.cover_text %}<span class="cp-cover"><b>{{ p.cover_text }}</b></span>{% endif %}
-                <div class="cp-ov"><b>@{{ p.account.account_name|default:p.account.account_handle }}</b>{{ p.truncated_caption|truncatechars:80 }}<span style="margin-top:4px">{% icon "music" css_class="w-3 h-3 inline" %} sonido original</span></div>
+                <div class="cp-ov"><b>@{{ p.account.account_name|default:p.account.account_handle|cut:"@" }}</b>{{ p.truncated_caption|truncatechars:80 }}<span style="margin-top:4px">{% icon "music" css_class="w-3 h-3 inline" %} sonido original</span></div>
                 <div class="cp-rc"><span>{% icon "heart" size="" %}<br>12 mil</span><span>{% icon "comment" size="" %}<br>240</span><span>{% icon "share-nodes" size="" %}</span></div>
                 <span class="cp-sz"><i>zona segura</i></span>
             </div>

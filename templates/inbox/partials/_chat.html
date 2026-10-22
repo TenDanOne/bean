@@ -17,7 +17,7 @@ Pasadas 24 h solo se puede responder como agente humano (hasta 7 días); despué
         {% for b in bubbles %}
         <div class="ib-bub {% if b.out %}ib-bub-out{% else %}ib-bub-in{% endif %}">
             <span>{{ b.text }}</span>
-            <small>{% if b.out %}{% if b.sent_by %}{{ b.sent_by.display_name }}{% else %}Tú{% endif %} · {% endif %}hace {{ b.at|timesince }}{% if b.pending %} · Enviando…{% endif %}</small>
+            <small>{% if b.out %}{% if b.sent_by %}{{ b.sent_by.display_name }}{% else %}Tú{% endif %} · {% endif %}{{ b.at|ago }}{% if b.pending %} · Enviando…{% endif %}</small>
         </div>
         {% endfor %}
     </div>

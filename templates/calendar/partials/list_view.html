@@ -25,7 +25,7 @@ Context: posts, workspace.
                 </td>
                 <td class="px-4 py-3 text-xs text-app-tertiary tabular-nums whitespace-nowrap">
                     {% if post.scheduled_at %}
-                    {{ post.scheduled_at|date:"d M Y" }}<br>
+                    {{ post.scheduled_at|date:"d M Y"|lower }}<br>
                     <span class="text-app-ghost">{{ post.scheduled_at|date:"H:i" }}</span>
                     {% else %}
                     <span style="color: var(--text-tertiary)">Sin programar</span>

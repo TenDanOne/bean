@@ -476,7 +476,7 @@
                 </div>
 
                 <!-- Create Tag Modal -->
-                <div x-show="showCreateTagModal" x-cloak role="dialog" aria-modal="true" aria-label="Crear etiqueta" x-effect="if (showCreateTagModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
+                <div x-show="showCreateTagModal" x-cloak data-modal aria-label="Crear etiqueta" class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
                     <div class="fixed inset-0 bg-black/30" @click="showCreateTagModal = false"></div>
                     <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
                         <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>
@@ -892,7 +892,7 @@
 
     <!-- Delete Idea Confirmation Modal -->
     <template x-teleport="body">
-        <div x-show="showDeleteIdeaConfirm" x-cloak role="dialog" aria-modal="true" aria-label="Eliminar idea" x-effect="if (showDeleteIdeaConfirm) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
+        <div x-show="showDeleteIdeaConfirm" x-cloak data-modal aria-label="Eliminar idea"
              class="fixed inset-0 z-[250] flex items-center justify-center"
              style="display: none;"
              @keydown.escape.window="if (showDeleteIdeaConfirm) { showDeleteIdeaConfirm = false; }">
@@ -950,7 +950,7 @@
     </template>
 
     <template x-teleport="body">
-        <div x-show="showIdeaCreateTagModal" x-cloak role="dialog" aria-modal="true" aria-label="Crear etiqueta" x-effect="if (showIdeaCreateTagModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeIdeaCreateTagModal()">
+        <div x-show="showIdeaCreateTagModal" x-cloak data-modal aria-label="Crear etiqueta" class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeIdeaCreateTagModal()">
             <div class="fixed inset-0 bg-black/30" @click="closeIdeaCreateTagModal()"></div>
             <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
                 <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>

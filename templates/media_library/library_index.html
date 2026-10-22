@@ -74,10 +74,9 @@
     backdrop-filter: blur(4px);
   }
   .ml-type-badge {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.02em;
     padding: 2px 6px;
     border-radius: var(--radius-sm, 0.25rem);
   }
@@ -99,12 +98,13 @@
 {% block page_title %}Biblioteca de medios · BEAN{% endblock %}
 
 {% block content %}
-<div x-data="{ ...mediaLibrary(), folderSidebarOpen: false }" class="flex flex-1 min-h-0 -m-3 sm:-m-4 lg:-m-6 -mb-3 sm:-mb-4 lg:-mb-6">
-  <h1 class="sr-only">Biblioteca de medios</h1>
+<div x-data="{ ...mediaLibrary(), folderSidebarOpen: false }" class="flex flex-col flex-1 min-h-0">
+  <h1 class="text-2xl font-bold mb-4" style="color: var(--text-primary);">Biblioteca</h1>
+  <div class="flex flex-1 min-h-0 rounded-xl overflow-hidden" style="border: 1px solid var(--border);">
 
   <!-- Mobile folder sidebar toggle -->
   <button @click="folderSidebarOpen = !folderSidebarOpen"
-          class="lg:hidden fixed bottom-4 left-4 z-40 flex items-center gap-2 px-3 py-2.5 bg-app border border-app rounded-xl shadow-lg text-sm font-medium text-app-secondary hover:bg-app-1 transition-colors cursor-pointer"
+          class="lg:hidden fixed bottom-16 left-4 z-40 flex items-center gap-2 px-3 py-2.5 bg-app border border-app rounded-xl shadow-lg text-sm font-medium text-app-secondary hover:bg-app-1 transition-colors cursor-pointer"
           x-show="!detailOpen">
     {% icon "folder" css_class="w-4 h-4" %}
    Carpetas
@@ -318,6 +318,7 @@
          id="detail-panel">
       <!-- Content loaded via HTMX -->
     </div>
+  </div>
   </div>
 </div>
 {% endblock %}

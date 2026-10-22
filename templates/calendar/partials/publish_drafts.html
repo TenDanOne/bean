@@ -2,11 +2,12 @@
 Drafts tab partial for the Publish page.
 Shows all draft platform posts in a table. Loaded via HTMX into #tab-content.
 {% endcomment %}
-{% load tz %}
+{% load inbox_extras tz %}
 
 <div x-data{% if is_htmx %} class="tab-slide-in"{% endif %}>
     {% if platform_posts %}
-    <div class="overflow-x-auto">
+    <p class="cal-hint">Desliza hacia los lados para ver todas las columnas.</p>
+    <div class="overflow-x-auto cal-tscroll">
     <table class="w-full min-w-[640px]">
         <thead>
             <tr class="border-b border-app text-left">
@@ -70,9 +71,9 @@ Shows all draft platform posts in a table. Loaded via HTMX into #tab-content.
                     {{ pp.post.author.display_name|default:"-" }}
                 </td>
                 <td class="px-4 py-3 text-xs text-app-tertiary tabular-nums whitespace-nowrap">
-                    hace {{ pp.post.updated_at|timesince }}
+                    {{ pp.post.updated_at|ago }}
                     {% if pp.post.proposed_publish_at %}
-                    <span class="block text-[0.6875rem] text-orange-500" title="Hora de publicación propuesta">Publicación propuesta: {% timezone display_timezone %}{{ pp.post.proposed_publish_at|date:"j M, H:i" }}{% endtimezone %}</span>
+                    <span class="block text-[0.6875rem] text-orange-500" title="Hora de publicación propuesta">Publicación propuesta: {% timezone display_timezone %}{{ pp.post.proposed_publish_at|date:"j M, H:i"|lower }}{% endtimezone %}</span>
                     {% endif %}
                 </td>
                 <td class="px-4 py-3 text-right" @click.stop>

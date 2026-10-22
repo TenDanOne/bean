@@ -29,7 +29,7 @@
             </div>
 
             {# Table header #}
-            <div class="grid grid-cols-[1fr_80px_80px_80px] gap-0 px-5 py-2.5 border-b border-app-subtle bg-stone-50/30">
+            <div class="hidden sm:grid grid-cols-[1fr_80px_80px] gap-0 px-5 py-2.5 border-b border-app-subtle bg-stone-50/30">
                 <div class="text-[10px] font-bold text-app-ghost uppercase tracking-widest">Evento</div>
                 {% for ch_value, ch_label in channel_choices %}
                 <div class="text-[10px] font-bold text-app-ghost uppercase tracking-widest text-center">{{ ch_label }}</div>
@@ -38,10 +38,10 @@
 
             {# Rows #}
             {% for row in matrix %}
-            <div class="grid grid-cols-[1fr_80px_80px_80px] gap-0 px-5 py-3 border-b border-stone-50 last:border-b-0 hover:bg-stone-50/50 transition-colors duration-100 items-center">
-                <div class="text-[13px] text-app-body font-medium pr-4">{{ row.event_label }}</div>
+            <div class="grid grid-cols-2 sm:grid-cols-[1fr_80px_80px] gap-y-2 px-5 py-3 border-b border-stone-50 last:border-b-0 hover:bg-stone-50/50 transition-colors duration-100 items-center">
+                <div class="col-span-2 sm:col-span-1 text-[13px] text-app-body font-medium pr-4">{{ row.event_label }}</div>
                 {% for toggle in row.channel_toggles %}
-                <div class="flex justify-center">
+                <div class="flex items-center gap-2 justify-start sm:justify-center">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input
                             type="checkbox"
@@ -50,6 +50,7 @@
                             class="sr-only peer"
                         >
                         <div class="w-8 h-[18px] bg-app-3 rounded-full peer peer-checked:bg-orange-500 peer-focus-visible:ring-2 peer-focus-visible:ring-orange-200 transition-colors duration-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app after:rounded-full after:h-[14px] after:w-[14px] after:shadow-sm after:transition-transform after:duration-200 peer-checked:after:translate-x-[14px]"></div>
+                        <span class="text-xs text-app-tertiary ml-2 sm:sr-only">{{ toggle.label }}</span>
                     </label>
                 </div>
                 {% endfor %}

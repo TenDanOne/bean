@@ -254,3 +254,13 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - pytest 1893 passed / 1 skipped (test de zips reales: requiere BEAN_TEST_PACKAGES_DIR).
 - **Pendiente del usuario:** grabar el demo de TikTok con la cuenta privada (escena extra de borrador; ver docs/APP-REVIEW.md) y enviar a revisión; reconectar FB/IG; CORS de R2; verificar el dominio ithos.mx en TikTok (para fotos y PULL_FROM_URL); S3_CUSTOM_DOMAIN para media.
 - Pendiente (2026-10-21): el importador debe leer `contiene_ia` a nivel de pieza y mapearlo a YouTube containsSyntheticMedia y TikTok is_aigc (el panel TikTok del composer ya tiene la opción de IA). En IG/FB solo mostrar el aviso «marca la etiqueta de IA en la app». Hasta que esté, el usuario activa a mano la IA en TikTok para simu_marca_carrusel.
+
+### Siguiente lote U2 + borradores (decidido 2026-10-22)
+- **Aprobado del mockup mockups/mockup-uiux.html:** importar en 1 pantalla; Bandeja «no perder nada» (contador de pendientes por contestar en menú y pestaña «(N) BEAN», campana «Avisos» con no leídos, separados); agenda en móvil.
+- **NO aprobado:** el cambio de navegación. El menú se queda igual y «Procesar pendientes» sigue en Ajustes.
+- **Borrador global para poner música:** «¿Cómo lo mandas?» con «Publicar directo» o «Subir como borrador para poner música», en el paso 3 y en el importador, con detalle por red editable en su pestaña.
+  - TikTok → bandeja (inbox);
+  - YouTube → privacyStatus private;
+  - Facebook Reel → video_state DRAFT (fotos y texto sin publicar si aplica);
+  - Instagram → «A mano».
+  - Estados finales visibles: Borrador / Privado / A mano.
