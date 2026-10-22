@@ -12,8 +12,8 @@
                 {% icon "check" css_class="w-[18px] h-[18px] text-green-600" %}
             </div>
             {% elif n.event_type == "post_rejected" or n.event_type == "post_failed" %}
-            <div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center ring-1 ring-red-100">
-                {% icon "xmark" css_class="w-[18px] h-[18px] text-red-600" %}
+            <div class="w-9 h-9 rounded-lg bg-[var(--al-err-bg)] flex items-center justify-center ring-1 ring-[var(--al-err-bd)]">
+                {% icon "xmark" css_class="w-[18px] h-[18px] text-[var(--al-err-fg)]" %}
             </div>
             {% elif n.event_type == "post_published" %}
             <div class="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center ring-1 ring-orange-100">
@@ -24,8 +24,8 @@
                 {% icon "comments" css_class="w-[18px] h-[18px] text-blue-600" %}
             </div>
             {% elif n.event_type == "social_account_disconnected" %}
-            <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center ring-1 ring-amber-100">
-                {% icon "triangle-exclamation" css_class="w-[18px] h-[18px] text-amber-600" %}
+            <div class="w-9 h-9 rounded-lg bg-[var(--al-warn-bg)] flex items-center justify-center ring-1 ring-[var(--al-warn-bd)]">
+                {% icon "triangle-exclamation" css_class="w-[18px] h-[18px] text-[var(--al-warn-fg)]" %}
             </div>
             {% elif n.event_type == "post_submitted" or n.event_type == "post_changes_requested" %}
             <div class="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center ring-1 ring-indigo-100">
@@ -69,7 +69,7 @@
                     hx-post="{% url 'notifications:mark_as_read' n.id %}"
                     hx-target="closest div.group"
                     hx-swap="outerHTML"
-                    class="text-[11px] font-semibold text-orange-600 hover:text-orange-700 ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150 cursor-pointer"
+                    class="text-[11px] font-semibold text-orange-600 hover:text-orange-700 ml-auto opacity-0 rev-act group-hover:opacity-100 transition-opacity duration-150 cursor-pointer"
                 >
                     Marcar como leída
                 </button>

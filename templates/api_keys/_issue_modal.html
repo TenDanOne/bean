@@ -7,7 +7,7 @@ reveal modal on top of the freshly-rendered list page.
 <template x-teleport="body">
     <div x-show="showIssueModal" x-transition.opacity
          @keydown.escape.window="showIssueModal = false"
-         class="fixed inset-0 z-50 flex items-center justify-center"
+         data-modal class="fixed inset-0 z-50 flex items-center justify-center"
          style="background: rgba(0,0,0,0.4);">
         <div @click.outside="showIssueModal = false"
              x-show="showIssueModal" x-transition
@@ -22,7 +22,7 @@ reveal modal on top of the freshly-rendered list page.
                             El token en texto plano se muestra <strong>una sola vez</strong> justo después de crearlo.
                         </p>
                     </div>
-                    <button type="button" @click="showIssueModal = false"
+                    <button aria-label="Cerrar" type="button" @click="showIssueModal = false"
                             class="text-xl leading-none px-2 cursor-pointer"
                             style="color: var(--text-tertiary);">&times;</button>
                 </div>
@@ -67,8 +67,7 @@ reveal modal on top of the freshly-rendered list page.
 
                 <div class="flex items-center justify-end gap-3 px-6 pt-5 pb-6 flex-shrink-0">
                     <button type="button" @click="showIssueModal = false"
-                            class="btn-neutral px-4 py-2 text-sm font-medium rounded-full cursor-pointer"
-                            style="background: var(--neutral-100); color: var(--text-primary);">
+                            class="ib-btn ib-btn-secondary cursor-pointer">
                         Cancelar
                     </button>
                     <button type="submit"

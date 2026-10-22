@@ -347,13 +347,5 @@ def portal_activity(request):
 @portal_auth_required
 @require_GET
 def portal_reports(request):
-    """Placeholder reports page."""
-    workspace = request.portal_workspace
-
-    return render(
-        request,
-        "client_portal/reports.html",
-        {
-            "workspace": workspace,
-        },
-    )
+    """Reportes aún no existen: se oculta redirigiendo al inicio del portal."""
+    return redirect("client_portal:dashboard")

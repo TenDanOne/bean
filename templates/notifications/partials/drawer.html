@@ -40,8 +40,8 @@
                         {% icon "check" css_class="w-4 h-4 text-green-600" %}
                     </div>
                     {% elif n.event_type == "post_rejected" or n.event_type == "post_failed" %}
-                    <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-                        {% icon "xmark" css_class="w-4 h-4 text-red-600" %}
+                    <div class="w-8 h-8 rounded-lg bg-[var(--al-err-bg)] flex items-center justify-center">
+                        {% icon "xmark" css_class="w-4 h-4 text-[var(--al-err-fg)]" %}
                     </div>
                     {% elif n.event_type == "post_published" %}
                     <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
@@ -52,8 +52,8 @@
                         {% icon "comments" css_class="w-4 h-4 text-blue-600" %}
                     </div>
                     {% elif n.event_type == "social_account_disconnected" %}
-                    <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                        {% icon "triangle-exclamation" css_class="w-4 h-4 text-amber-600" %}
+                    <div class="w-8 h-8 rounded-lg bg-[var(--al-warn-bg)] flex items-center justify-center">
+                        {% icon "triangle-exclamation" css_class="w-4 h-4 text-[var(--al-warn-fg)]" %}
                     </div>
                     {% elif n.event_type == "post_submitted" or n.event_type == "post_changes_requested" %}
                     <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">

@@ -1,2 +1,2 @@
 {% comment %}Editorial-status pill: dashed border + label, no dot. `meta` = {css,label} from approval_extras.status_badge.{% endcomment %}
-<span class="st-pill st-{{ meta.css }} inline-flex items-center px-2 py-0.5 text-[0.6875rem] font-semibold rounded-full">{{ meta.label }}</span>
+<span title="{{ meta.title|default:meta.label }}" class="st-pill st-{{ meta.css }} inline-flex items-center px-2 py-0.5 text-[0.6875rem] font-semibold rounded-full">{{ meta.label }}</span>

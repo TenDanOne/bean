@@ -78,6 +78,8 @@
       document.querySelectorAll('#glist section').forEach(function (s) {
         s.hidden = !s.querySelector('.cp-ge:not([hidden])');
       });
+      var none = document.getElementById('gnone');
+      if (none) none.hidden = !t || !!document.querySelector('.cp-ge:not([hidden])');
     });
   }
   function flash() {

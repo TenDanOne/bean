@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block page_title %}Seleccionar cuenta{% endblock %}
+{% block page_title %}Seleccionar cuenta · BEAN{% endblock %}
 {% block content %}
 <div class="max-w-2xl">
     <!-- Header -->
@@ -7,7 +7,7 @@
         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
             {% platform_icon platform size="6" brand_color=True %}
         </div>
-        <h2 class="text-xl font-semibold text-app">Seleccionar cuenta{{ pages|length|pluralize }}</h2>
+        <h1 class="text-xl font-semibold text-app">Seleccionar cuenta{{ pages|length|pluralize }}</h1>
         <p class="text-sm text-app-tertiary mt-1">Tu inicio de sesión de {{ platform|title }} tiene acceso a varias cuentas. Elige cuál{{ pages|length|pluralize:",es" }} conectar.</p>
     </div>
 
@@ -44,7 +44,7 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <button type="submit" id="connect-btn" class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-app-inverse bg-orange-500 rounded-full shadow-[0_4px_14px_rgba(249,115,22,0.28)] hover:bg-orange-600 transition-all duration-200 cursor-pointer">
+            <button type="submit" id="connect-btn" class="ib-btn ib-btn-primary cursor-pointer">
                 <span id="connect-btn-text">Conectar selección</span>
                 <svg id="connect-btn-check" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 <svg id="connect-btn-spinner" class="w-4 h-4 animate-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>

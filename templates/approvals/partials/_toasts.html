@@ -21,7 +21,7 @@ fired by the same response doesn't tear down the toast before it's seen.
   #bb-toast-host { position:fixed; z-index:200; bottom:1.5rem; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:.5rem; pointer-events:none; }
   .bb-toast { display:flex; align-items:center; gap:.625rem; padding:.625rem 1rem .625rem .75rem; border-radius:.75rem; color:var(--surface-0); box-shadow:0 12px 30px rgba(23,20,18,.32); animation:bb-toastPop 240ms cubic-bezier(.16,1,.3,1); pointer-events:auto; }
   .bb-toast-title { font-size:.8125rem; font-weight:600; line-height:1.2; }
-  .bb-toast-body { font-size:.75rem; color:var(--text-ghost); line-height:1.2; }
+  .bb-toast-body { font-size:.75rem; color:color-mix(in srgb, var(--surface-0) 78%, transparent); line-height:1.2; }
 </style>
 <div id="bb-toast-host" aria-live="polite" aria-atomic="true"></div>
 <script nonce="{{ request.csp_nonce }}">
@@ -29,10 +29,10 @@ fired by the same response doesn't tear down the toast before it's seen.
   if (window.__bbToastInit) return;
   window.__bbToastInit = true;
   var TONES = {
-    success: { accent: '#34D399', bg: '#1C1917', icon: '<circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>' },
-    info:    { accent: '#FB923C', bg: '#1C1917', icon: '<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>' },
-    warn:    { accent: '#FBBF24', bg: '#1C1917', icon: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' },
-    error:   { accent: '#FCA5A5', bg: '#7F1D1D', icon: '<path d="M6 18L18 6M6 6l12 12"/>' },
+    success: { accent: 'var(--al-ok-bd)', bg: 'var(--text-primary)', icon: '<circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>' },
+    info:    { accent: 'var(--al-info-bd)', bg: 'var(--text-primary)', icon: '<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>' },
+    warn:    { accent: 'var(--al-warn-bd)', bg: 'var(--text-primary)', icon: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' },
+    error:   { accent: 'var(--al-err-bd)', bg: 'var(--st-failed-fg)', icon: '<path d="M6 18L18 6M6 6l12 12"/>' },
   };
   function render(detail) {
     if (!detail || !detail.title) return;

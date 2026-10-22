@@ -135,7 +135,7 @@
                         <p class="text-xs text-app-secondary">Esta publicación está <span class="font-semibold">{{ post_outcome|default:post.get_status_display|default:post.status }}</span> y es de solo lectura. Usa <span class="font-semibold">Clonar</span> para republicar una copia editable.</p>
                     </div>
                     <button type="button"
-                            class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-stone-800 text-app-inverse hover:bg-stone-900 flex-shrink-0 cursor-pointer"
+                            class="ib-btn ib-btn-primary flex-shrink-0"
                             hx-post="{% url 'composer:clone_post' workspace_id=workspace.id post_id=post.id %}"
                             title="Crear una copia editable como borrador">
                        Clonar
@@ -214,7 +214,7 @@
                                     <div x-data="{ tplName: '', tplDesc: '' }">
                                         <input type="text" x-model="tplName" aria-label="Nombre de la plantilla" placeholder="Nombre de la plantilla…" class="form-input w-full text-sm mb-2">
                                         <textarea x-model="tplDesc" aria-label="Descripción de la plantilla" placeholder="Descripción (opcional)…" rows="2" class="form-input w-full text-xs mb-2"></textarea>
-                                        <button type="button" class="btn-brand text-xs py-1.5 px-3 w-full"
+                                        <button type="button" class="ib-btn ib-btn-primary w-full"
                                                 :disabled="!tplName.trim()"
                                                 @click="if (!tplName.trim()) return;
                                                     fetch('{% url 'composer:save_as_template' workspace_id=workspace.id post_id=post.id %}', {
@@ -388,7 +388,7 @@
                         <template x-for="(tag, idx) in tags" :key="tag">
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-app-2 text-app-body">
                                 <span x-text="tag"></span>
-                                <button type="button" @click.stop="removeTag(idx)" class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-app-ghost hover:text-red-500 hover:bg-red-50 transition-colors">
+                                <button type="button" @click.stop="removeTag(idx)" :aria-label="'Quitar etiqueta ' + tag" class="w-6 h-6 -mr-1 rounded-full flex items-center justify-center text-app-ghost hover:bg-app-3 transition-colors" style="--tw-text-opacity:1">
                                     {% icon "xmark" css_class="w-2.5 h-2.5" %}
                                 </button>
                             </span>
@@ -449,7 +449,7 @@
 
                     <!-- Create Tag Modal (teleported to body to escape stacking contexts) -->
                     <template x-teleport="body">
-                        <div x-show="showCreateTagModal" x-cloak class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
+                        <div x-show="showCreateTagModal" x-cloak role="dialog" aria-modal="true" aria-label="Crear etiqueta" x-effect="if (showCreateTagModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
                             <div class="fixed inset-0 bg-black/30" @click="showCreateTagModal = false"></div>
                             <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
                                 <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>
@@ -522,6 +522,9 @@
                                             <span x-text="tabLabel(accId) + ' · ' + accName(accId)"></span>
                                         </div>
 
+                                        <template x-if="platformExtras[accId]?.marca_ia_en_app">
+                                            <div class="ib-alert ib-al-warn" style="margin-top:0">{% icon "circle-info" css_class="w-4 h-4" %}<div>Contenido con IA: marca la etiqueta de IA en la app al publicar.</div></div>
+                                        </template>
                                         <template x-if="platformExtras[accId]?.musica?.sugerencia">
                                             <div class="ib-alert ib-al-info" style="margin-top:0">{% icon "circle-info" css_class="w-4 h-4" %}<div>
                                                 <b>Canción sugerida:</b> <span x-text="platformExtras[accId].musica.sugerencia"></span><span x-show="platformExtras[accId].musica.golpe_seg != null" x-text="', golpe en ' + String(platformExtras[accId].musica.golpe_seg).replace('.', ',') + ' s'"></span>
@@ -987,7 +990,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                 </template>
                                 <!-- Disclosure requires at least one sub-option; gate submit via native validity -->
                                 <template x-if="!ttBrandOrganic && !ttBrandContent">
-                                    <p class="text-[11px] text-red-500">Debes indicar si tu contenido promociona a ti, a un tercero o ambos.</p>
+                                    <p class="text-[11px]" style="color: var(--st-failed-fg)">Debes indicar si tu contenido promociona a ti, a un tercero o ambos.</p>
                                 </template>
                                 <input type="text" tabindex="-1" aria-hidden="true" class="sr-only"
                                        :required="ttDisclose && !ttDraft"
@@ -1323,12 +1326,12 @@ Seleccionar tablero <span class="text-red-400">*</span>
 
             <!-- Reviewer feedback to address (latest changes-requested / rejected comment) -->
             {% if show_resubmit_button and latest_feedback %}
-            <div class="flex gap-3 p-4 rounded-xl mb-3" style="background:#FFF7ED;border:1px solid #FED7AA;">
+            <div class="ib-alert ib-al-warn" style="margin-top:0;margin-bottom:12px;padding:16px;">
                 <span class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-app-inverse flex-shrink-0" style="background: var(--primary);">{{ latest_feedback.user.display_name|default:"?"|make_list|first|upper }}</span>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-[0.8125rem] font-semibold text-app-strong">{{ latest_feedback.user.display_name|default:"Revisor" }}</span>
-                        <span class="text-[0.6875rem] font-semibold px-2 py-0.5 rounded-full" style="background:#FFEDD5;color:#C2410C;">{% if latest_feedback.action == 'rejected' %}rechazó{% else %}solicitó cambios{% endif %}</span>
+                        <span class="st-pill ib-k {% if latest_feedback.action == 'rejected' %}st-failed{% else %}st-review{% endif %}">{% if latest_feedback.action == 'rejected' %}rechazó{% else %}solicitó cambios{% endif %}</span>
                         <span class="text-[0.6875rem] text-app-ghost">hace {{ latest_feedback.created_at|timesince }}</span>
                     </div>
                     <p class="text-[0.875rem] text-app-body mt-1 leading-relaxed">{{ latest_feedback.comment }}</p>
@@ -1423,7 +1426,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
     <!-- ════════════════════════════════════════════════════════════
          MEDIA PICKER MODAL
          ════════════════════════════════════════════════════════════ -->
-    <div x-show="showMediaPicker" x-cloak
+    <div x-show="showMediaPicker" x-cloak role="dialog" aria-modal="true" aria-label="Elegir de la biblioteca" x-effect="if (showMediaPicker) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
@@ -1457,7 +1460,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
     <!-- ════════════════════════════════════════════════════════════
          YOUTUBE THUMBNAIL PICKER MODAL
          ════════════════════════════════════════════════════════════ -->
-    <div x-show="showThumbnailPicker" x-cloak
+    <div x-show="showThumbnailPicker" x-cloak role="dialog" aria-modal="true" aria-label="Elegir miniatura" x-effect="if (showThumbnailPicker) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
@@ -1487,7 +1490,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
          UNSPLASH SEARCH MODAL (only rendered when an API key is configured)
          ════════════════════════════════════════════════════════════ -->
     {% if unsplash_enabled %}
-    <div x-show="showUnsplashModal" x-cloak
+    <div x-show="showUnsplashModal" x-cloak role="dialog" aria-modal="true" aria-label="Buscar en Unsplash" x-effect="if (showUnsplashModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          @keydown.escape.window="showUnsplashModal && closeUnsplashModal()"
          x-transition:enter="transition ease-out duration-200"
@@ -1509,8 +1512,8 @@ Seleccionar tablero <span class="text-red-400">*</span>
                     <h2 class="text-base font-semibold text-app">Buscar en Unsplash</h2>
                     <p class="text-xs text-app-ghost truncate">Fotos gratuitas de alta resolución &middot; agrega una o varias</p>
                 </div>
-                <button @click="closeUnsplashModal()"
-                        class="ml-auto w-8 h-8 rounded-lg border border-app text-app-ghost hover:text-app-secondary hover:border-app-hover flex items-center justify-center transition-all duration-150 cursor-pointer flex-shrink-0">
+                <button @click="closeUnsplashModal()" aria-label="Cerrar"
+                        class="ml-auto ib-btn ib-btn-secondary flex-shrink-0">
                     {% icon "xmark" css_class="w-4 h-4" %}
                 </button>
             </div>
@@ -1522,7 +1525,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
                            placeholder="Buscar fotos gratuitas de alta resolución…"
                            class="flex-1 text-sm bg-transparent outline-none border-none placeholder-app-ghost text-app">
                     <button type="button" @click="unsplashActiveChip = ''; searchUnsplash()"
-                            class="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-app-inverse text-sm font-semibold transition-colors cursor-pointer flex-shrink-0">Buscar</button>
+                            class="ib-btn ib-btn-primary flex-shrink-0">Buscar</button>
                 </div>
                 <div class="flex flex-wrap gap-1.5">
                     <template x-for="chip in unsplashChips" :key="chip">
@@ -1563,11 +1566,11 @@ Seleccionar tablero <span class="text-red-400">*</span>
                       x-text="unsplashSelectedCount ? unsplashSelectedCount + (unsplashSelectedCount === 1 ? ' foto seleccionada' : ' fotos seleccionadas') : 'Selecciona fotos para agregar'"></span>
                 <div class="ml-auto flex items-center gap-2">
                     <button type="button" @click="closeUnsplashModal()"
-                            class="px-4 py-2 rounded-lg text-sm font-semibold text-app-secondary hover:text-app transition-colors cursor-pointer">Cancelar</button>
+                            class="ib-btn ib-btn-ghost">Cancelar</button>
                     <button type="button"
                             :disabled="!unsplashSelectedCount || unsplashImporting"
                             @click="importUnsplashPhotos()"
-                            class="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-app-inverse text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="ib-btn ib-btn-primary"
                             x-text="unsplashImporting ? 'Agregando…' : (unsplashSelectedCount > 1 ? 'Agregar ' + unsplashSelectedCount + ' imágenes' : 'Agregar imágenes')"></button>
                 </div>
             </div>
@@ -1578,7 +1581,7 @@ Seleccionar tablero <span class="text-red-400">*</span>
     <!-- ════════════════════════════════════════════════════════════
          FRAME PICKER MODAL (YouTube thumbnail / TikTok cover)
          ════════════════════════════════════════════════════════════ -->
-    <div x-show="showFramePicker" x-cloak
+    <div x-show="showFramePicker" x-cloak role="dialog" aria-modal="true" aria-label="Elegir fotograma" x-effect="if (showFramePicker) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
          class="fixed inset-0 z-[60] flex items-center justify-center"
          @keydown.escape.window="showFramePicker && closeFramePicker()"
          x-transition:enter="transition ease-out duration-200"
@@ -1633,17 +1636,17 @@ Seleccionar tablero <span class="text-red-400">*</span>
                 </div>
             </div>
             <div class="px-4 sm:px-6 py-4 border-t border-app-subtle flex items-center gap-3 flex-shrink-0">
-                <p x-show="frameError" class="text-xs text-red-500 flex-1" x-text="frameError"></p>
+                <p x-show="frameError" class="text-xs flex-1" style="color: var(--st-failed-fg)" x-text="frameError"></p>
                 <span x-show="!frameError" class="text-sm text-app-ghost">
 Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-text="formatTimecode(frameCurrentTime)"></span>
                 </span>
                 <div class="ml-auto flex items-center gap-2">
                     <button type="button" @click="closeFramePicker()"
-                            class="px-4 py-2 rounded-lg text-sm font-semibold text-app-secondary hover:text-app transition-colors cursor-pointer">Cancelar</button>
+                            class="ib-btn ib-btn-ghost">Cancelar</button>
                     <button type="button"
                             :disabled="frameCapturing"
                             @click="captureFrame()"
-                            class="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-app-inverse text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+                            class="ib-btn ib-btn-primary">
                         <svg x-show="!frameCapturing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         <span x-text="frameCapturing ? 'Guardando…' : 'Usar este fotograma'"></span>
                     </button>
@@ -1697,7 +1700,7 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
     <!-- Delete Confirmation Modal -->
     <div x-data="{ showDeleteModal: false, deleting: false }" style="display: contents;"
          @open-delete-modal.window="showDeleteModal = true">
-        <div x-show="showDeleteModal" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center"
+        <div x-show="showDeleteModal" x-cloak role="dialog" aria-modal="true" aria-label="Eliminar publicación" x-effect="if (showDeleteModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[60] flex items-center justify-center"
              @keydown.escape.window="showDeleteModal = false">
             <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="showDeleteModal = false"
                  x-show="showDeleteModal"
@@ -1717,7 +1720,7 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
                  x-transition:leave-end="opacity-0 scale-95">
                 <div class="text-center">
                     <div class="w-12 h-12 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-4">
-                        {% icon "trash" css_class="w-6 h-6 text-red-500" %}
+                        <span style="color: var(--st-failed-fg)">{% icon "trash" css_class="w-6 h-6" %}</span>
                     </div>
                     <h3 class="text-base font-semibold text-app mb-1">¿Eliminar publicación?</h3>
                     <p class="text-sm text-app-tertiary mb-6">Esta acción no se puede deshacer. La publicación y todos sus datos asociados se eliminarán de forma permanente.</p>
@@ -1743,7 +1746,7 @@ Fotograma en <span class="font-mono font-semibold text-app-body tabular-nums" x-
                                 }).catch(() => { deleting = false; });
                             "
                             :class="deleting && 'opacity-50 cursor-not-allowed'"
-                            class="flex-1 px-4 py-2 text-sm font-semibold text-app-inverse bg-red-500 rounded-full hover:bg-red-600 transition-colors cursor-pointer">
+                            class="flex-1 ib-btn ib-btn-danger" style="min-height:40px">
                         <span x-text="deleting ? 'Eliminando...' : 'Eliminar'"></span>
                     </button>
                 </div>

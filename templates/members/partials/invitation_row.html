@@ -41,7 +41,7 @@
         <div x-data="{ copied: false }">
             <button type="button"
                     @click="navigator.clipboard.writeText('{{ request.scheme }}://{{ request.get_host }}{% url 'members:accept_invite' token=invite.token %}').then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
-                    class="btn-neutral-surface text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
+                    class="ib-btn ib-btn-secondary cursor-pointer"
                     style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
                 <span x-show="!copied">Copiar enlace</span>
                 <span x-show="copied" x-cloak>Copiado</span>
@@ -52,7 +52,7 @@
               hx-swap="outerHTML">
             {% csrf_token %}
             <button type="submit"
-                    class="btn-neutral-surface text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
+                    class="ib-btn ib-btn-secondary cursor-pointer"
                     style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
                 Reenviar
             </button>
@@ -64,7 +64,7 @@
             {% csrf_token %}
             <button type="submit"
                     class="btn-danger-soft-bg text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
-                    style="color: #DC2626; background: transparent;">
+                    style="color: var(--st-failed-dot); background: transparent;">
                 Revocar
             </button>
         </form>

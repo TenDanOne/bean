@@ -4,7 +4,7 @@
   <!-- Header -->
   <div class="flex items-center justify-between px-5 py-4 border-b" style="border-color: var(--border, #E7E5E4);">
     <h2 class="text-sm font-bold truncate pr-4" style="color: var(--text-primary, #1C1917);">{{ asset.original_filename }}</h2>
-    <button @click="detailOpen = false"
+    <button aria-label="Cerrar" @click="detailOpen = false"
             class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors btn-surface-2"
             style="color: var(--text-tertiary, #78716C);">
       {% icon "xmark" css_class="w-4 h-4" %}
@@ -52,7 +52,7 @@
 
     <!-- Delete confirmation modal -->
     <div x-show="showDeleteConfirm" x-cloak
-         class="fixed inset-0 z-[60] flex items-center justify-center"
+         data-modal class="fixed inset-0 z-[60] flex items-center justify-center"
          @keydown.escape.window="showDeleteConfirm = false">
       <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="showDeleteConfirm = false"></div>
       <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>

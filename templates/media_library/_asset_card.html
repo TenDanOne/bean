@@ -40,7 +40,7 @@
     <!-- Type badge -->
     <span class="ml-type-badge absolute top-2 left-2
       {% if asset.file_type == 'image' %}{% elif asset.file_type == 'video' %}{% elif asset.file_type == 'gif' %}{% else %}{% endif %}"
-      style="{% if asset.file_type == 'video' %}background: rgba(239,68,68,0.9); color: white;{% elif asset.file_type == 'gif' %}background: rgba(99,102,241,0.9); color: white;{% elif asset.file_type == 'document' %}background: rgba(59,130,246,0.9); color: white;{% else %}background: rgba(255,255,255,0.9); color: var(--text-secondary, #57534E);{% endif %}">
+      style="{% if asset.file_type == 'video' %}background: var(--st-failed-dot); color: var(--on-primary);{% elif asset.file_type == 'gif' %}background: rgba(99,102,241,0.9); color: white;{% elif asset.file_type == 'document' %}background: rgba(59,130,246,0.9); color: white;{% else %}background: rgba(255,255,255,0.9); color: var(--text-secondary, #57534E);{% endif %}">
       {{ asset.file_type|upper }}
     </span>
 
@@ -52,8 +52,8 @@
     {% endif %}
 
     <!-- Star button -->
-    <button @click.stop
-            class="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+    <button aria-label="Destacar" @click.stop
+            class="absolute bottom-2 right-2 w-7 h-7 rounded-full flex items-center justify-center opacity-0 rev-act group-hover:opacity-100 transition-opacity"
             style="background: rgba(255,255,255,0.9); box-shadow: var(--shadow-sm);"
             hx-post="{% url 'media_library:asset_star' workspace_id=workspace.id asset_id=asset.id %}"
             hx-swap="outerHTML"

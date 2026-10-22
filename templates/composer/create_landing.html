@@ -265,7 +265,7 @@
     }
     .idea-media-zone.drag-over {
         border-color: var(--primary);
-        background: rgba(var(--primary-rgb, 249, 115, 22), 0.05);
+        background: color-mix(in srgb, var(--primary) 5%, transparent);
     }
     .idea-media-strip-layout {
         margin-top: 16px;
@@ -384,7 +384,7 @@
 
     .idea-selected-tags .idea-tag-chip button {
         display: flex; align-items: center; justify-content: center;
-        width: 12px; height: 12px; border: none; background: none;
+        width: 24px; height: 24px; margin: -6px -6px -6px 0; border: none; background: none;
         cursor: pointer; color: inherit; padding: 0;
     }
 </style>
@@ -401,7 +401,7 @@
         <!-- + New Idea -->
         <button x-show="activeTab === 'ideas'" x-cloak
                 @click="showCreateModal = true; createSelectedGroup = _defaultGroupId"
-                class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150 cursor-pointer">
+                class="ib-btn ib-btn-secondary cursor-pointer">
             {% icon "plus" css_class="w-4 h-4" %}
            Nueva idea
         </button>        
@@ -476,7 +476,7 @@
                 </div>
 
                 <!-- Create Tag Modal -->
-                <div x-show="showCreateTagModal" x-cloak class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
+                <div x-show="showCreateTagModal" x-cloak role="dialog" aria-modal="true" aria-label="Crear etiqueta" x-effect="if (showCreateTagModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[200] flex items-center justify-center" @keydown.escape.window="showCreateTagModal = false">
                     <div class="fixed inset-0 bg-black/30" @click="showCreateTagModal = false"></div>
                     <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
                         <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>
@@ -620,7 +620,7 @@
                         <template x-for="tag in createSelectedTags" :key="tag">
                             <span class="idea-tag-chip">
                                 <span x-text="tag"></span>
-                                <button type="button" @click="toggleCreateTag(tag)">
+                                <button type="button" @click="toggleCreateTag(tag)" :aria-label="'Quitar etiqueta ' + tag">
                                     {% icon "xmark" css_class="w-[8px] h-[8px]" %}
                                 </button>
                             </span>
@@ -699,14 +699,14 @@
                     <button type="button" @click="createPostFromIdea($event, 'create')"
                             :disabled="createMediaUploadCount > 0 || isCreateSaving"
                             :class="(createMediaUploadCount > 0 || isCreateSaving) && 'opacity-50 cursor-not-allowed'"
-                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
+                            class="ib-btn ib-btn-secondary"
                             style="background: var(--neutral-100); color: var(--text-primary);">
                         Crear publicación
                     </button>
                     <button type="submit"
                             :disabled="createMediaUploadCount > 0 || isCreateSaving"
                             :class="(createMediaUploadCount > 0 || isCreateSaving) && 'opacity-50 cursor-not-allowed'"
-                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
+                            class="ib-btn ib-btn-secondary"
                             style="background: var(--neutral-100); color: var(--text-primary);">
                         Guardar idea
                     </button>
@@ -817,7 +817,7 @@
                         <template x-for="tag in editSelectedTags" :key="tag">
                             <span class="idea-tag-chip">
                                 <span x-text="tag"></span>
-                                <button type="button" @click="toggleEditTag(tag)">
+                                <button type="button" @click="toggleEditTag(tag)" :aria-label="'Quitar etiqueta ' + tag">
                                     {% icon "xmark" css_class="w-[8px] h-[8px]" %}
                                 </button>
                             </span>
@@ -874,14 +874,14 @@
                     <button type="button" @click="createPostFromIdea($event, 'edit')"
                             :disabled="editMediaUploadCount > 0 || isEditSaving"
                             :class="(editMediaUploadCount > 0 || isEditSaving) && 'opacity-50 cursor-not-allowed'"
-                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
+                            class="ib-btn ib-btn-secondary"
                             style="background: var(--neutral-100); color: var(--text-primary);">
                         Crear publicación
                     </button>
                     <button type="submit"
                             :disabled="editMediaUploadCount > 0 || isEditSaving"
                             :class="(editMediaUploadCount > 0 || isEditSaving) && 'opacity-50 cursor-not-allowed'"
-                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
+                            class="ib-btn ib-btn-secondary"
                             style="background: var(--neutral-100); color: var(--text-primary);">
                         Guardar idea
                     </button>
@@ -892,7 +892,7 @@
 
     <!-- Delete Idea Confirmation Modal -->
     <template x-teleport="body">
-        <div x-show="showDeleteIdeaConfirm" x-cloak
+        <div x-show="showDeleteIdeaConfirm" x-cloak role="dialog" aria-modal="true" aria-label="Eliminar idea" x-effect="if (showDeleteIdeaConfirm) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }"
              class="fixed inset-0 z-[250] flex items-center justify-center"
              style="display: none;"
              @keydown.escape.window="if (showDeleteIdeaConfirm) { showDeleteIdeaConfirm = false; }">
@@ -917,7 +917,7 @@
                  x-transition:leave-end="opacity-0 scale-95"
                  @click.stop>
                 <div class="mx-auto mb-3 w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-                    {% icon "trash" css_class="w-5 h-5 text-red-500" %}
+                    <span style="color: var(--st-failed-fg)">{% icon "trash" css_class="w-5 h-5" %}</span>
                 </div>
                 <h3 class="text-base font-semibold text-app-strong mb-1">¿Eliminar idea?</h3>
                 <p class="text-sm text-app-tertiary mb-5">Esta acción no se puede deshacer. La idea y todos sus datos asociados se eliminarán de forma permanente.</p>
@@ -940,7 +940,7 @@
                             "
                             :disabled="deletingIdea"
                             :class="deletingIdea && 'opacity-50 cursor-not-allowed'"
-                            class="flex-1 px-4 py-2.5 text-sm font-medium rounded-full bg-red-500 text-app-inverse hover:bg-red-600 transition-colors cursor-pointer">
+                            class="flex-1 ib-btn ib-btn-danger" style="min-height:40px">
                         <span x-show="!deletingIdea">Eliminar</span>
                         <span x-show="deletingIdea">Eliminando…</span>
                     </button>
@@ -950,7 +950,7 @@
     </template>
 
     <template x-teleport="body">
-        <div x-show="showIdeaCreateTagModal" x-cloak class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeIdeaCreateTagModal()">
+        <div x-show="showIdeaCreateTagModal" x-cloak role="dialog" aria-modal="true" aria-label="Crear etiqueta" x-effect="if (showIdeaCreateTagModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeIdeaCreateTagModal()">
             <div class="fixed inset-0 bg-black/30" @click="closeIdeaCreateTagModal()"></div>
             <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
                 <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>
@@ -1008,14 +1008,14 @@
                     <!-- Actions -->
                     <div class="flex items-center justify-end gap-2 mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.06);">
                         <button type="button" @click="copyTemplateBody()"
-                                class="btn-neutral-100 w-9 h-9 rounded-lg border flex items-center justify-center cursor-pointer"
+                                class="ib-btn ib-btn-secondary-100 w-9 h-9 rounded-lg border flex items-center justify-center"
                                 style="border-color: var(--border); color: var(--text-tertiary);"
                                 title="Copiar al portapapeles">
                             {% icon "copy" css_class="w-[16px] h-[16px]" %}
                         </button>
                         <button type="button" @click="useTemplate()"
                                 class="btn-primary-tint inline-flex items-center border gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg cursor-pointer"
-                                style="background: rgba(var(--primary-rgb, 249, 115, 22), 0.12); color: var(--primary);border-color: var(--primary); ">
+                                style="background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary);border-color: var(--primary); ">
                             {% icon "lightbulb" css_class="w-[14px] h-[14px]" %}
                            Usar plantilla
                         </button>

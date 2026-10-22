@@ -2,6 +2,7 @@
 List view - table format of posts.
 Context: posts, workspace.
 {% endcomment %}
+{% load approval_extras %}
 
 <div x-data class="bg-app overflow-x-auto" style="animation: slideUp 200ms cubic-bezier(0.16,1,0.3,1) both">
     {% if posts %}
@@ -18,22 +19,20 @@ Context: posts, workspace.
         <tbody>
             {% for post in posts %}
             <tr class="border-b border-app-subtle hover:bg-app-1 transition-colors duration-100 cursor-pointer"
-                @click="window.location='{% url 'composer:compose_edit' workspace_id=workspace.id post_id=post.id %}'">
+                @click="if (!$event.target.closest('a,button')) window.location='{% url 'composer:compose_edit' workspace_id=workspace.id post_id=post.id %}'">
                 <td class="px-4 py-3">
-                    <span class="post-chip status-{{ post.status }} inline-flex">
-                        {{ post.get_status_display }}
-                    </span>
+                    {% status_badge post.status %}
                 </td>
                 <td class="px-4 py-3 text-xs text-app-tertiary tabular-nums whitespace-nowrap">
                     {% if post.scheduled_at %}
                     {{ post.scheduled_at|date:"d M Y" }}<br>
                     <span class="text-app-ghost">{{ post.scheduled_at|date:"H:i" }}</span>
                     {% else %}
-                    <span class="text-app-faint">Sin programar</span>
+                    <span style="color: var(--text-tertiary)">Sin programar</span>
                     {% endif %}
                 </td>
                 <td class="px-4 py-3 text-sm text-app-secondary max-w-xs truncate">
-                    {{ post.caption_snippet|default:"(sin texto)" }}
+                    <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=post.id %}" class="no-underline" style="color: inherit;">{{ post.caption_snippet|default:"(sin texto)" }}</a>
                 </td>
                 <td class="px-4 py-3">
                     <div class="flex gap-1">
@@ -59,12 +58,12 @@ Context: posts, workspace.
     <!-- Empty state -->
     <div class="text-center py-20 px-6">
         <div class="w-16 h-16 mx-auto rounded-2xl bg-app-2 flex items-center justify-center mb-4">
-            {% icon "calendar-days" css_class="w-7 h-7 text-app-faint" %}
+            {% icon "calendar-days" css_class="w-7 h-7" style="color: var(--text-tertiary)" %}
         </div>
         <p class="text-sm font-medium text-app-tertiary mb-1">Aún no hay contenido programado</p>
         <p class="text-xs text-app-ghost mb-5 max-w-[240px] mx-auto">Crea tu primera publicación para verla en el calendario</p>
         <a href="{% url 'composer:compose' workspace_id=workspace.id %}"
-           class="inline-flex items-center gap-1.5 px-5 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
+           class="ib-btn ib-btn-secondary">
             {% icon "plus" css_class="w-4 h-4" %}
             Crear publicación
         </a>

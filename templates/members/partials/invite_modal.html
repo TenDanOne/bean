@@ -1,7 +1,7 @@
 <!-- Invitar miembro Modal -->
 <template x-teleport="body">
     <div x-show="showInviteModal" x-transition.opacity
-         class="fixed inset-0 z-50 flex items-center justify-center"
+         data-modal class="fixed inset-0 z-50 flex items-center justify-center"
          style="background: rgba(0,0,0,0.4);">
         <div @click.outside="showInviteModal = false"
              x-show="showInviteModal"
@@ -12,7 +12,7 @@
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 flex-shrink-0" style="border-bottom: 1px solid var(--border);">
                 <h3 class="text-base font-semibold" style="color: var(--text-primary);">Invitar miembro</h3>
-                <button @click="showInviteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
+                <button aria-label="Cerrar" @click="showInviteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                     {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                 </button>
             </div>
@@ -84,13 +84,12 @@
                 </div>
 
                 <!-- Error container (populated by the global htmx:responseError handler in base.html) -->
-                <div id="invite-error" class="mb-3 text-sm text-red-600 empty:hidden"></div>
+                <div id="invite-error" class="mb-3 text-sm text-[var(--st-failed-fg)] empty:hidden"></div>
 
                 <!-- Submit -->
                 <div class="flex justify-end gap-3">
                     <button type="button" @click="showInviteModal = false"
-                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer transition-colors"
-                            style="background: var(--neutral-100); color: var(--text-primary);">
+                            class="ib-btn ib-btn-secondary cursor-pointer">
                         Cancelar
                     </button>
                     <button type="submit"

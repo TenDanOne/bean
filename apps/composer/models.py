@@ -550,7 +550,7 @@ class PlatformPost(models.Model):
             return ""
         extra = self.platform_extra or {}
         if extra.get("tiktok_draft") and extra.get("tiktok_mode") == "draft":
-            return "Borrador en TikTok"
+            return "Borrador"
         return "A mano" if extra.get("manual_publish") else ""
 
     @property
@@ -559,7 +559,7 @@ class PlatformPost(models.Model):
         label = self.outcome_label
         if not label:
             return ""
-        note = "Termínalo en la app de TikTok." if label.startswith("Borrador") else "Publícalo tú desde la app."
+        note = "En TikTok · termínalo en la app." if label == "Borrador" else "Publícalo tú desde la app."
         m = (self.platform_extra or {}).get("musica") or {}
         if m.get("sugerencia"):
             note += f" Canción sugerida: {m['sugerencia']}" + (

@@ -1,5 +1,5 @@
 {% comment %}Approvals filter pill. Vars: pid, label, count. Uses status_filter + workspace from context.{% endcomment %}
-<button hx-get="{% url 'calendar:publish_tab_approvals' workspace_id=workspace.id %}?approval_status={{ pid }}{% if approval_filter_qs %}&{{ approval_filter_qs }}{% endif %}"
+<button title="{{ full|default:label }}" hx-get="{% url 'calendar:publish_tab_approvals' workspace_id=workspace.id %}?approval_status={{ pid }}{% if approval_filter_qs %}&{{ approval_filter_qs }}{% endif %}"
         hx-target="#tab-content" hx-swap="innerHTML"
         class="px-3.5 py-1.5 text-[0.8125rem] font-semibold rounded-full transition-colors {% if status_filter == pid %}text-app-inverse{% else %}text-app-secondary hover:bg-app-2{% endif %}"
         {% if status_filter == pid %}style="background: var(--primary);"{% endif %}>

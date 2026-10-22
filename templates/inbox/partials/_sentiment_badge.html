@@ -1,4 +1,4 @@
-<span class="badge-pill badge-sentiment-{{ message.sentiment }}">
+<span class="st-pill ib-k {% if message.sentiment == 'positive' %}st-published{% elif message.sentiment == 'negative' %}st-failed{% else %}st-draft{% endif %}">
     {% if message.sentiment == 'positive' %}
     {% elif message.sentiment == 'negative' %}
     {% endif %}

@@ -20,7 +20,7 @@
 
     <!-- Agregar categoría Form -->
     <div class="mb-6">
-        <button @click="showForm = !showForm" class="btn-brand text-sm py-2 px-4 flex items-center gap-1.5">
+        <button @click="showForm = !showForm" class="ib-btn ib-btn-primary flex items-center gap-1.5">
             {% icon "plus" css_class="w-4 h-4" %}
             Agregar categoría
         </button>
@@ -40,7 +40,7 @@
                 <label class="block text-xs font-semibold text-app-body mb-1">Color</label>
                 <input type="color" name="color" value="#3B82F6" class="w-10 h-[38px] rounded-lg border border-app cursor-pointer p-0.5">
             </div>
-            <button type="submit" class="btn-brand text-sm py-2 px-4">Guardar</button>
+            <button type="submit" class="ib-btn ib-btn-primary">Guardar</button>
             <button type="button" @click="showForm = false" class="text-sm text-app-tertiary hover:text-app-body py-2 px-3">Cancelar</button>
         </form>
     </div>

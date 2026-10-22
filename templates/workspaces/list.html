@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block page_title %}Espacios de trabajo{% endblock %}
+{% block page_title %}Espacios de trabajo · BEAN{% endblock %}
 {% block content %}
 <div style="max-width: 720px;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
-        <h2 style="
+        <h1 style="
             font-family: var(--font-display);
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.015em;
-        ">Espacios de trabajo</h2>
+        ">Espacios de trabajo</h1>
     </div>
 
     {% if workspaces %}
@@ -66,7 +66,7 @@
                     class="form-input-styled"
                 >
             </div>
-            <button type="submit" class="btn-brand" style="width: auto; white-space: nowrap;">
+            <button type="submit" class="ib-btn ib-btn-primary" style="width: auto; white-space: nowrap;">
                 Crear
             </button>
         </form>

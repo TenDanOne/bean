@@ -9,15 +9,15 @@ register = template.Library()
 # surface (publish tab, composer panel, client portal) renders an identical badge.
 STATUS_META = {
     "draft": {"label": "Borrador", "css": "draft"},
-    "pending_review": {"label": "En revisión", "css": "review"},
-    "pending_client": {"label": "Pendiente del cliente", "css": "review"},
+    "pending_review": {"label": "Revisión", "title": "En revisión", "css": "review"},
+    "pending_client": {"label": "Cliente", "title": "Pendiente del cliente", "css": "review"},
     "approved": {"label": "Aprobado", "css": "approved"},
-    "changes_requested": {"label": "Cambios solicitados", "css": "review"},
+    "changes_requested": {"label": "Cambios", "title": "Cambios solicitados", "css": "review"},
     "rejected": {"label": "Rechazado", "css": "failed"},
     "scheduled": {"label": "Programado", "css": "scheduled"},
     "publishing": {"label": "Publicando", "css": "publishing"},
     "published": {"label": "Publicado", "css": "published"},
-    "partially_published": {"label": "Parcialmente publicado", "css": "review"},
+    "partially_published": {"label": "Parcial", "css": "review"},
     "failed": {"label": "Falló", "css": "failed"},
     "on_hold": {"label": "En pausa", "css": "paused"},
 }

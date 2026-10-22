@@ -31,7 +31,7 @@
                 <!-- Status dropdown -->
                 <div x-data="{ statusOpen: false }" class="relative">
                     <button @click="statusOpen = !statusOpen"
-                            class="badge-pill badge-status-{{ message.status }} cursor-pointer hover:opacity-80 transition-opacity">
+                            class="st-pill ib-k {% if message.status == 'unread' %}st-scheduled{% elif message.status == 'open' %}st-review{% elif message.status == 'resolved' %}st-published{% else %}st-draft{% endif %}" style="cursor:pointer">
                         {{ message.get_status_display }}
                         {% icon "chevron-down" css_class="w-2.5 h-2.5 ml-0.5" %}
                     </button>
@@ -69,7 +69,7 @@
                 <div x-data="{ sentimentOpen: false }" class="relative">
                     <button @click="{% if request|can:'reply_from_inbox' %}sentimentOpen = !sentimentOpen{% endif %}"
                             {% if not request|can:"reply_from_inbox" %}disabled title="Tu rol no puede cambiar el sentimiento"{% endif %}
-                            class="badge-pill badge-sentiment-{{ message.sentiment }} cursor-pointer hover:opacity-80 transition-opacity disabled:cursor-not-allowed disabled:opacity-60">
+                            class="st-pill ib-k {% if message.sentiment == 'positive' %}st-published{% elif message.sentiment == 'negative' %}st-failed{% else %}st-draft{% endif %} disabled:opacity-60" style="cursor:pointer">
                         {{ message.get_sentiment_display }}
                         {% if message.sentiment_source == "manual" %}
                         <span title="Definido por una persona, no por la detección automática">·</span>

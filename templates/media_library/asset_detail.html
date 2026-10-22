@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}{{ asset.original_filename }} - Biblioteca de medios{% endblock %}
+{% block title %}{{ asset.original_filename }} · Biblioteca de medios · BEAN{% endblock %}
 
 {% block page_header %}
 <div class="flex items-center gap-3">
-  <a href="{% url 'media_library:index' workspace_id=workspace.id %}"
+  <a aria-label="Volver a la biblioteca" href="{% url 'media_library:index' workspace_id=workspace.id %}"
      class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors btn-surface-2"
      style="color: var(--text-tertiary, #78716C);">
     {% icon "chevron-left" css_class="w-4 h-4" %}

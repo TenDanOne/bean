@@ -30,7 +30,7 @@
             <p style="font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px;">
                 Aún no hay cuentas con analíticas conectadas a este espacio de trabajo. Conecta una para dar seguimiento al rendimiento de cada publicación.
             </p>
-            <a href="{% url 'social_accounts:connect' workspace_id=workspace.id %}" class="btn-brand" style="width: auto; padding: 9px 20px;">Conectar un canal</a>
+            <a href="{% url 'social_accounts:connect' workspace_id=workspace.id %}" class="ib-btn ib-btn-primary" style="width: auto; padding: 9px 20px;">Conectar un canal</a>
         </div>
         {% else %}
         {% include "common/_no_access.html" with icon="chart-line" title="No hay canales con cifras para mostrar" body="Puedes ver las analíticas de los canales que te han asignado y que tienen las métricas activadas. Todavía no hay ninguno aquí." ask=workspace_owner.display_name %}

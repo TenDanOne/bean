@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static i18n %}
 
-{% block title %}Cerrar sesión - BEAN{% endblock %}
+{% block title %}Cerrar sesión · BEAN{% endblock %}
 
 {% block auth_content %}
 <div class="w-full max-w-md px-4">
@@ -21,8 +21,8 @@
         <form method="post" action="{% url 'account_logout' %}">
             {% csrf_token %}
             <div class="flex gap-3">
-                <a href="/" class="btn-outline flex-1">Cancelar</a>
-                <button type="submit" class="btn-brand flex-1">Cerrar sesión</button>
+                <a href="/" class="ib-btn ib-btn-secondary flex-1">Cancelar</a>
+                <button type="submit" class="ib-btn ib-btn-primary flex-1">Cerrar sesión</button>
             </div>
         </form>
     </div>

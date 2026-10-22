@@ -510,14 +510,14 @@ img.sidebar-logo-mark {
   transition: background var(--dur-fast) ease;
 }
 .btn-danger-tint:hover {
-  background: rgba(239,68,68,0.08) !important;
+  background: color-mix(in srgb, var(--st-failed-dot) 8%, transparent) !important;
 }
 
 .btn-primary-tint {
   transition: background var(--dur-fast) ease;
 }
 .btn-primary-tint:hover {
-  background: rgba(var(--primary-rgb, 249, 115, 22), 0.2) !important;
+  background: color-mix(in srgb, var(--primary) 20%, transparent) !important;
 }
 
 .input-focus {
@@ -1483,7 +1483,7 @@ dialog::backdrop {
 
 @utility text-app-body     { color: var(--text-body); }
 @utility text-app-strong   { color: var(--text-strong); }
-@utility text-app-faint    { color: var(--text-faint); }
+@utility text-app-faint    { color: var(--text-tertiary); }
 @utility border-app-subtle { border-color: var(--border-subtle); }
 @utility ring-app          { --tw-ring-color: var(--border); }
 @utility placeholder-app-ghost { &::placeholder { color: var(--text-ghost); } }
@@ -2285,6 +2285,7 @@ button.filter-select:active {
 .ib-btn-del:hover { color: var(--st-failed-fg); background: var(--al-err-bg); }
 .ib-btn-danger { background: var(--st-failed-bg); color: var(--st-failed-fg); border-color: var(--al-err-bd); }
 .ib-btn-danger:hover { background: var(--st-failed-dot); color: var(--on-primary); border-color: var(--st-failed-dot); }
+.ib-btn:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 .ib-btn[disabled], .ib-btn[aria-disabled="true"] {
   background: var(--warm-200); color: var(--text-disabled); border-color: transparent; cursor: not-allowed;
 }
@@ -2512,6 +2513,7 @@ button.filter-select:active {
 }
 .ib-alert svg { margin-top: 2px; flex: none; }
 .ib-al-info { --bg: var(--al-info-bg); --fg: var(--al-info-fg); --bd: var(--al-info-bd); }
+.ib-al-ok { --bg: var(--al-ok-bg); --fg: var(--al-ok-fg); --bd: var(--al-ok-bd); }
 .ib-al-warn { --bg: var(--al-warn-bg); --fg: var(--al-warn-fg); --bd: var(--al-warn-bd); }
 .ib-al-err { --bg: var(--al-err-bg); --fg: var(--al-err-fg); --bd: var(--al-err-bd); }
 .ib-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
@@ -2817,3 +2819,12 @@ legend.cp-lb { font-size: 13px; font-weight: 700; color: var(--text-primary); pa
 .ib-btn[aria-busy="true"][disabled] { cursor: progress; opacity: 0.92; }
 @media (max-width: 480px) { .pm-ft .ib-btn { flex: 1 1 100%; } }
 @media (prefers-reduced-motion: reduce) { .pm-spin { animation: none; } .pm-bar i { transition: none; } }
+
+/* Acciones reveladas al pasar el cursor (opacity-0 + group-hover): visibles también con foco de teclado y en pantallas táctiles.
+   Uso: añadir la clase .rev-act junto a opacity-0 group-hover:opacity-100. */
+.rev-act:focus-visible, .group:focus-within .rev-act { opacity: 1; }
+@media (hover: none) { .rev-act { opacity: 1; } }
+/* Objetivo táctil mínimo de 24 px para controles pequeños (WCAG 2.5.8). */
+.hit-24 { min-width: 24px; min-height: 24px; display: inline-flex; align-items: center; justify-content: center; }
+/* Filas de ajustes input + Guardar: en móvil el botón baja a una segunda línea. */
+@media (max-width: 480px) { .set-row { flex-wrap: wrap; } .set-row > input, .set-row > select { flex: 1 1 100%; min-width: 0; } .set-row > .ib-btn { flex: 1 1 auto; } }

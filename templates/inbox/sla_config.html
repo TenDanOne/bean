@@ -28,8 +28,7 @@
                         <p class="text-[12px] text-app-tertiary mt-0.5">Muestra cuentas regresivas e insignias de retraso en los mensajes sin resolver.</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="is_active" {% if config.is_active %}checked{% endif %} class="sr-only peer">
-                        <div class="w-9 h-5 bg-app-3 rounded-full peer peer-checked:bg-orange-500 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <input type="checkbox" name="is_active" {% if config.is_active %}checked{% endif %} role="switch" aria-label="Activar cronómetro de SLA" style="accent-color: var(--primary); width: 20px; height: 20px;">
                     </label>
                 </div>
 
@@ -47,8 +46,7 @@
                         <p class="text-[12px] text-app-tertiary mt-0.5">Marca los mensajes como resueltos cuando se envía una respuesta.</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="auto_resolve_on_reply" {% if config.auto_resolve_on_reply %}checked{% endif %} class="sr-only peer">
-                        <div class="w-9 h-5 bg-app-3 rounded-full peer peer-checked:bg-orange-500 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-app after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <input type="checkbox" name="auto_resolve_on_reply" {% if config.auto_resolve_on_reply %}checked{% endif %} role="switch" aria-label="Resolver automáticamente al responder" style="accent-color: var(--primary); width: 20px; height: 20px;">
                     </label>
                 </div>
             </div>

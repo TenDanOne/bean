@@ -144,6 +144,21 @@ class ValidImportTests(ImportBase):
             ][0],
         )
 
+    def test_contiene_ia_de_la_pieza_marca_youtube_tiktok_y_avisa_en_ig_fb(self):
+        self.assertEqual(self.up(make_zip(pieces=[piece(contiene_ia=True)])).status_code, 200)
+        by = {pp.social_account.platform: pp.platform_extra for pp in Post.objects.get().platform_posts.all()}
+        self.assertIs(by["youtube"]["contains_synthetic_media"], True)
+        self.assertIs(by["tiktok"]["is_aigc"], True)
+        self.assertIs(by["instagram"]["marca_ia_en_app"], True)
+        self.assertIs(by["facebook"]["marca_ia_en_app"], True)
+
+    def test_sin_contiene_ia_no_marca_nada(self):
+        self.assertEqual(self.up(make_zip()).status_code, 200)
+        by = {pp.social_account.platform: pp.platform_extra for pp in Post.objects.get().platform_posts.all()}
+        self.assertNotIn("contains_synthetic_media", by["youtube"])
+        self.assertNotIn("is_aigc", by["tiktok"])
+        self.assertNotIn("marca_ia_en_app", by["instagram"])
+
     def test_per_network_media_and_tiktok_photos(self):
         p = piece(
             id="m1", tipo="imagen", medios=["a.png"], medios_por_red={"instagram": ["a45.png"], "tiktok": ["a.png"]},

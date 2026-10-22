@@ -50,7 +50,7 @@ that consistency is worth more than the pixels.
                 <span class="text-[11px] text-app-tertiary truncate">@{{ turn.handle }}</span>
                 {% endif %}
                 {% if turn.side == "none" %}
-                <span class="badge-pill" style="background: var(--surface-0); color: var(--warning-700);">Nota interna</span>
+                <span class="st-pill ib-k st-review">Nota interna</span>
                 {% endif %}
                 {% if turn.pending %}
                 {% comment %}
@@ -58,7 +58,7 @@ that consistency is worth more than the pixels.
                 itself must not — a message that reshapes when the platform
                 acknowledges it reads as a second, different message.
                 {% endcomment %}
-                <span class="badge-pill inline-flex items-center gap-1" style="background: var(--surface-0); color: var(--text-tertiary);">
+                <span class="st-pill ib-k st-draft">
                     {% icon "clock" css_class="w-2.5 h-2.5" %} Enviando
                 </span>
                 {% endif %}

@@ -16,7 +16,7 @@ disappears reads as "this product cannot do that".
 Nothing left to act on. The row survives so the thread and who-did-what
 survive with it, but the comment itself is gone from the platform.
 {% endcomment %}
-<span class="badge-pill" style="background: var(--surface-2); color: var(--text-tertiary);"
+<span class="st-pill ib-k st-draft"
       title="Eliminado el {{ message.deleted_on_platform|date:'j/m/Y H:i' }}{% if message.moderated_by %} por {{ message.moderated_by.display_name }}{% endif %}">
     Eliminado
 </span>
@@ -30,13 +30,13 @@ survive with it, but the comment itself is gone from the platform.
         hx-swap="innerHTML"
         {% comment %} Stops a double-click sending two opposite toggles. {% endcomment %}
         hx-disabled-elt="this"
-        class="badge-pill badge-status-{% if message.is_hidden %}archived{% else %}open{% endif %} cursor-pointer hover:opacity-80 transition-opacity"
+        class="ib-btn ib-btn-secondary"
         title="{% if message.is_hidden %}Volver a hacer visible esto en la plataforma{% else %}Evita que el público lo vea. Puedes deshacerlo{% endif %}">
     {% if message.is_hidden %}Mostrar{% else %}Ocultar{% endif %}
 </button>
 {% else %}
 <button type="button" disabled
-        class="badge-pill badge-status-open cursor-not-allowed opacity-60"
+        class="ib-btn ib-btn-secondary"
         title="{% if not request|can:'reply_from_inbox' %}Tu rol no puede moderar comentarios.{% else %}No tienes el permiso Moderar en este canal. Pídeselo al propietario o a un gestor del espacio de trabajo.{% endif %}">
     Ocultar
 </button>
@@ -57,14 +57,13 @@ was nested inside it too.
         hx-swap="innerHTML"
         hx-disabled-elt="this"
         hx-confirm="¿Eliminar este comentario en {{ message.social_account.account_name|default:message.social_account.account_handle }}? No se puede deshacer. Para retirarlo de la vista pública de forma reversible, usa Ocultar."
-        class="badge-pill badge-type cursor-pointer hover:opacity-80 transition-opacity"
-        style="color: #DC2626;"
+        class="ib-btn ib-btn-danger"
         title="Eliminar de forma permanente en la plataforma. No se puede deshacer.">
     Eliminar
 </button>
 {% else %}
 <button type="button" disabled
-        class="badge-pill badge-type cursor-not-allowed opacity-60"
+        class="ib-btn ib-btn-secondary"
         title="{% if not request|can:'reply_from_inbox' %}Tu rol no puede moderar comentarios.{% else %}Eliminar es permanente, por lo que requiere el permiso Eliminar en este canal y un rol de gestor o superior.{% endif %}">
     Eliminar
 </button>

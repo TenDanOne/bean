@@ -8,7 +8,7 @@ forever; we explicitly do NOT persist plaintext anywhere.
 {% endcomment %}
 <template x-teleport="body">
     <div x-show="showRevealModal" x-transition.opacity
-         class="fixed inset-0 z-50 flex items-center justify-center"
+         data-modal class="fixed inset-0 z-50 flex items-center justify-center"
          style="background: rgba(0,0,0,0.55);">
         <div x-show="showRevealModal" x-transition
              class="w-full max-w-lg mx-4 rounded-xl p-6"
@@ -46,8 +46,7 @@ forever; we explicitly do NOT persist plaintext anywhere.
 
             <div class="flex justify-end">
                 <button type="button" @click="showRevealModal = false"
-                        class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
-                        style="background: var(--neutral-100); color: var(--text-primary);">
+                        class="ib-btn ib-btn-secondary cursor-pointer">
                     Ya lo guardé
                 </button>
             </div>

@@ -132,7 +132,7 @@ class EngineManualTests(ImportBase):
         pp.status = "published"
         self.assertEqual(pp.outcome_label, "")
         pp.platform_extra["tiktok_mode"] = "draft"
-        self.assertEqual(pp.outcome_label, "Borrador en TikTok")
+        self.assertEqual(pp.outcome_label, "Borrador")
         pp.save()
         copia = clone_post(self.post).platform_posts.get()
         self.assertEqual(copia.platform_extra, {"tiktok_mode": "draft", "musica": {"nota": "n"}})
@@ -164,8 +164,8 @@ class EngineManualTests(ImportBase):
         pp.refresh_from_db()
         self.assertEqual(pp.status, "published")
         self.assertEqual(pp.platform_post_id, "v_inbox_file~1")
-        self.assertEqual((pp.outcome_label, _publish_state(pp)), ("Borrador en TikTok", "draft"))
-        self.assertIn("Termínalo en la app de TikTok", pp.outcome_note)
+        self.assertEqual((pp.outcome_label, _publish_state(pp)), ("Borrador", "draft"))
+        self.assertIn("termínalo en la app", pp.outcome_note)
 
     def test_nota_con_cancion_y_golpe(self):
         pp = self._pp(self.ig, manual_publish=True, musica={"sugerencia": "triste", "golpe_seg": 31.9})

@@ -30,7 +30,7 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
 
                 <!-- Right: post card -->
                 <div x-data class="relief relief-interactive flex-1 transition-colors group">
-                    <div class="p-4 cursor-pointer" @click="window.location='{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}'">
+                    <div class="p-4 cursor-pointer" @click="if (!$event.target.closest('a,button')) window.location='{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}'">
                         <!-- Channel info -->
                         <div class="flex items-center gap-2 mb-2">
                             <span class="w-6 h-6 rounded-md flex items-center justify-center">
@@ -43,7 +43,7 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
 
                         <!-- Title / caption -->
                         <p class="text-sm text-app-secondary leading-relaxed">
-                            {{ pp.post.title|default:pp.post.caption_snippet|default:"(sin texto)" }}
+                            <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}" class="no-underline" style="color: inherit;">{{ pp.post.title|default:pp.post.caption_snippet|default:"(sin texto)" }}</a>
                         </p>
 
                         <!-- Media thumbnails -->
@@ -113,7 +113,7 @@ Shows all scheduled platform posts grouped by date. Loaded via HTMX into #tab-co
         <p class="text-sm font-medium text-app-tertiary mb-1">No hay publicaciones en cola</p>
         <p class="text-xs text-app-ghost mb-5 max-w-[240px] mx-auto">Las publicaciones en cola aparecerán aquí cuando las agregues</p>
         <a href="{% url 'composer:compose' workspace_id=workspace.id %}"
-           class="inline-flex items-center gap-1.5 px-5 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
+           class="ib-btn ib-btn-secondary">
             {% icon "plus" css_class="w-4 h-4" %}
             Crear publicación
         </a>

@@ -1,13 +1,13 @@
 {% extends "layouts/settings.html" %}
-{% block title %}Miembros del equipo - Ajustes - BEAN{% endblock %}
+{% block title %}Miembros del equipo · Ajustes · BEAN{% endblock %}
 {% block content %}
 <div x-data="{ showInviteModal: false }">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-semibold" style="color: var(--text-primary);">Miembros del equipo</h2>
+        <h1 class="text-xl font-semibold" style="color: var(--text-primary);">Miembros del equipo</h1>
         {% if is_admin %}
         <button @click="showInviteModal = true"
-                class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150 cursor-pointer whitespace-nowrap">
+                class="ib-btn ib-btn-primary cursor-pointer whitespace-nowrap">
             {% icon "plus" css_class="w-4 h-4" %}
             Invitar miembro
         </button>

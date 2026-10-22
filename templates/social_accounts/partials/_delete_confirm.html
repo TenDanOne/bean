@@ -3,50 +3,50 @@ Permanent deletion. The counts come first and the name has to be typed back:
 this is the only action in the product that destroys work irreversibly, and the
 numbers are usually larger than people expect.
 {% endcomment %}
-<div id="account-{{ account.id }}" class="rounded-xl p-4" style="background: #FEF2F2; border: 1px solid #FECACA;">
+<div id="account-{{ account.id }}" class="rounded-xl p-4" style="background: var(--al-err-bg); border: 1px solid var(--al-err-bd);">
     <div class="flex items-start gap-2.5 mb-3">
         {% icon "triangle-exclamation" css_class="w-5 h-5 flex-shrink-0 mt-0.5" %}
         <div>
-            <h4 class="text-sm font-semibold" style="color: #991B1B;">Eliminar {{ account_name }} de forma permanente</h4>
-            <p class="text-[13px] mt-1" style="color: #B91C1C;">
+            <h4 class="text-sm font-semibold" style="color: var(--al-err-fg);">Eliminar {{ account_name }} de forma permanente</h4>
+            <p class="text-[13px] mt-1" style="color: var(--al-err-fg);">
                 Esto también destruye
                 <strong>{{ impact.posts }} publicaci{{ impact.posts|pluralize:"ón,ones" }}</strong> y
                 <strong>{{ impact.messages }} mensaje{{ impact.messages|pluralize }} de la bandeja</strong>.
                 No se puede deshacer.
             </p>
-            <p class="text-[12px] mt-1.5" style="color: #B91C1C; opacity: 0.85;">
+            <p class="text-[12px] mt-1.5" style="color: var(--al-err-fg); opacity: 0.85;">
                 Para conservar el historial y solo detener el canal, mejor archívalo.
             </p>
         </div>
     </div>
 
     {% if error %}
-    <p class="text-[12px] mb-2 font-medium" role="alert" style="color: #991B1B;">{{ error }}</p>
+    <p class="text-[12px] mb-2 font-medium" role="alert" style="color: var(--al-err-fg);">{{ error }}</p>
     {% endif %}
 
     <form hx-post="{% url 'social_accounts:delete_account' workspace_id=workspace_id account_id=account.id %}"
           hx-target="#account-{{ account.id }}"
           hx-swap="outerHTML">
         {% csrf_token %}
-        <label for="confirm-{{ account.id }}" class="block text-[12px] font-medium mb-1" style="color: #991B1B;">
+        <label for="confirm-{{ account.id }}" class="block text-[12px] font-medium mb-1" style="color: var(--al-err-fg);">
             Escribe <strong>{{ account_name }}</strong> para confirmar
         </label>
         <div class="flex items-center gap-2">
             <input type="text" id="confirm-{{ account.id }}" name="confirm_name" autocomplete="off" required
                    class="flex-1 px-3 py-1.5 text-sm outline-none"
-                   style="border: 1px solid #FCA5A5; background: var(--surface-0); color: var(--text-primary);">
+                   style="border: 1px solid var(--al-err-bd); background: var(--surface-0); color: var(--text-primary);">
             <button type="button"
                     hx-get="{% url 'social_accounts:list' workspace_id=workspace_id %}"
                     hx-target="#account-{{ account.id }}"
                     hx-select="#account-{{ account.id }}"
                     hx-swap="outerHTML"
                     class="px-4 py-1.5 text-sm font-semibold rounded-full cursor-pointer"
-                    style="color: #991B1B;">
+                    style="color: var(--al-err-fg);">
                 Cancelar
             </button>
             <button type="submit"
                     class="px-4 py-1.5 text-sm font-semibold text-app-inverse rounded-full cursor-pointer transition-colors"
-                    style="background: #DC2626;">
+                    style="background: var(--st-failed-dot);">
                 Eliminar
             </button>
         </div>

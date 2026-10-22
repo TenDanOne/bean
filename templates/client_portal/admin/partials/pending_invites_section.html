@@ -33,7 +33,7 @@
                       hx-swap="outerHTML">
                     {% csrf_token %}
                     <button type="submit"
-                            class="btn-neutral-surface text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
+                            class="ib-btn ib-btn-secondary cursor-pointer"
                             style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
                         Reenviar
                     </button>
@@ -45,7 +45,7 @@
                     {% csrf_token %}
                     <button type="submit"
                             class="btn-danger-soft-bg text-xs px-3 py-1.5 rounded-full font-medium cursor-pointer transition-colors"
-                            style="color: #DC2626; background: transparent;">
+                            style="color: var(--st-failed-dot); background: transparent;">
                         Revocar
                     </button>
                 </form>

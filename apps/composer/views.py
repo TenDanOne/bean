@@ -263,7 +263,7 @@ _PLACEHOLDER_RE = re.compile(r"\{\{[^{}]*\}\}")
 _C2_EXTRA_KEYS = {
     "category_id", "playlist_id", "made_for_kids", "contains_synthetic_media", "chapters", "solo_organico",
     "ig_cover_asset_id", "thumb_offset", "collaborators", "share_to_feed", "link", "import_source", "photo_cover_index",
-    "tiktok_mode", "manual_publish", "musica",
+    "tiktok_mode", "manual_publish", "musica", "marca_ia_en_app",
 }  # fmt: skip
 _IG_USERNAME_RE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
 _YT_PLAYLIST_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -1178,7 +1178,7 @@ def _publish_state(pp):
     """Estado de una red para el modal «Publicando»: wait | run | proc | ok | draft | manual | fail."""
     st = PlatformPost.Status
     if pp.status == st.PUBLISHED:
-        return {"Borrador en TikTok": "draft", "A mano": "manual"}.get(pp.outcome_label, "ok")
+        return {"Borrador": "draft", "A mano": "manual"}.get(pp.outcome_label, "ok")
     if pp.status == st.FAILED:
         return "fail"
     if pp.status == st.PUBLISHING:

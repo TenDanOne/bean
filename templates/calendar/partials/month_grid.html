@@ -25,7 +25,7 @@ Enhanced with: holidays, custom events, category colors, recurring badges.
              @dragover.prevent="allowDrop($event)"
              @drop="dropOnSlot($event, '{{ day.date|date:'Y-m-d' }}', '09:00', true)">
             {% if not day.is_past %}
-            <a href="{% url 'composer:compose' workspace_id=workspace.id %}?scheduled_date={{ day.date|date:'Y-m-d' }}&scheduled_time=09:00" class="cal-add-btn" title="Crear publicación">
+            <a href="{% url 'composer:compose' workspace_id=workspace.id %}?scheduled_date={{ day.date|date:'Y-m-d' }}&scheduled_time=09:00" class="cal-add-btn" title="Crear publicación" aria-label="Crear publicación">
                 {% icon "plus" css_class="w-3 h-3" %}
             </a>
             {% endif %}

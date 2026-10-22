@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load approval_extras %}
 
 {% block title %}{{ queue.name }} - {{ workspace.name }} - BEAN{% endblock %}
 
@@ -25,6 +26,7 @@
 {% endblock %}
 
 {% block content %}
+<style nonce="{{ request.csp_nonce }}">.q-del:focus-visible, .group:focus-within .q-del { opacity: 1; } @media (hover: none) { .q-del { opacity: 1; } }</style>
 <div class="max-w-2xl"
      x-data="{
          draggedId: null,
@@ -60,7 +62,7 @@
              @drop="onDrop($event, '{{ entry.id }}')">
 
             <!-- Drag handle -->
-            <div class="text-app-faint flex-shrink-0">
+            <div class="flex-shrink-0" style="color: var(--text-tertiary)">
                 {% icon "grip-vertical" css_class="w-4 h-4" %}
             </div>
 
@@ -76,13 +78,7 @@
                     {{ entry.post.caption_snippet|default:"(sin texto)" }}
                 </a>
                 <div class="flex items-center gap-2 mt-0.5">
-                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full
-                        {% if entry.post.status == 'draft' %}bg-app-2 text-app-secondary
-                        {% elif entry.post.status == 'scheduled' %}bg-blue-50 text-blue-700
-                        {% elif entry.post.status == 'published' %}bg-green-50 text-green-700
-                        {% else %}bg-app-2 text-app-secondary{% endif %}">
-                        {{ entry.post.get_status_display }}
-                    </span>
+                    {% status_badge entry.post.status %}
                     {% if entry.post.author %}
                     <span class="text-[10px] text-app-ghost">{{ entry.post.author.name|default:entry.post.author.email }}</span>
                     {% endif %}
@@ -101,7 +97,7 @@
 
             <!-- Remove from queue (leaves a gap; the slot frees up) -->
             <button type="button"
-                    class="text-app-faint hover:text-red-500 transition-colors flex-shrink-0 opacity-0 group-hover:opacity-100"
+                    class="ib-btn ib-btn-ghost ib-btn-del flex-shrink-0 q-del opacity-0 group-hover:opacity-100" style="min-width:32px" aria-label="Quitar de la cola"
                     hx-post="{% url 'calendar:queue_entry_remove' workspace_id=workspace.id queue_id=queue.id entry_id=entry.id %}"
                     hx-confirm="¿Quitar esta publicación de la cola? Su horario quedará libre."
                     @click.stop

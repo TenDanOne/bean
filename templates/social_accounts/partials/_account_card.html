@@ -53,7 +53,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
             {% if account.needs_reconnect or account.is_archived or account.connection_status == "token_expiring" %}
             <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=workspace_id account_id=account.id %}">
                 {% csrf_token %}
-                <button type="submit" class="bbs-btn bbs-btn-neutral text-xs px-3 py-1.5" style="color: var(--brand-700);">
+                <button type="submit" class="ib-btn ib-btn-secondary" style="color: var(--brand-700);">
                     Reconectar
                 </button>
             </form>
@@ -61,7 +61,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
 
             <button type="button"
                     popovertarget="archive-{{ account.id }}"
-                    class="bbs-btn bbs-btn-ghost p-1.5"
+                    class="ib-btn ib-btn-ghost"
                     aria-label="Quitar {{ account.account_name|default:account.account_handle }}">
                 {% icon "xmark" css_class="w-4 h-4" %}
             </button>
@@ -77,7 +77,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
                 <p class="text-xs mb-3" style="color: var(--text-tertiary);">Deja de sincronizar y de publicar. Se conservan sus publicaciones, comentarios y métricas, y puedes reconectarla cuando quieras.</p>
                 <div class="flex gap-2 justify-end">
                     <button type="button" popovertarget="archive-{{ account.id }}" popovertargetaction="hide"
-                            class="bbs-btn bbs-btn-ghost text-xs px-3 py-1.5">Cancelar</button>
+                            class="ib-btn ib-btn-ghost">Cancelar</button>
                     <form method="post"
                           action="{% url 'social_accounts:disconnect' workspace_id=workspace_id account_id=account.id %}"
                           hx-post="{% url 'social_accounts:disconnect' workspace_id=workspace_id account_id=account.id %}"
@@ -85,7 +85,7 @@ light dismiss and Escape, all of which the Alpine version reimplemented by hand.
                           hx-swap="outerHTML"
                           hx-disabled-elt="find button">
                         {% csrf_token %}
-                        <button type="submit" class="bbs-btn bbs-btn-primary text-xs px-3 py-1.5">Archivar</button>
+                        <button type="submit" class="ib-btn ib-btn-danger">Archivar</button>
                     </form>
                 </div>
 

@@ -9,7 +9,7 @@ Expects context: workspace, csrf_token.
 <div x-data="{ showDeleteModal: false, deletePostId: null, deleteAccountId: null, deleting: false }" style="display: contents;"
      @open-delete-modal.window="showDeleteModal = true; deletePostId = $event.detail.postId; deleteAccountId = $event.detail.accountId || null">
     <template x-teleport="body">
-        <div x-show="showDeleteModal" class="fixed inset-0 z-[60] flex items-center justify-center"
+        <div x-show="showDeleteModal" role="dialog" aria-modal="true" aria-label="Eliminar publicación" x-effect="if (showDeleteModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[60] flex items-center justify-center"
              @keydown.escape.window="showDeleteModal = false"
              style="display: none;">
             <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="showDeleteModal = false"
@@ -30,7 +30,7 @@ Expects context: workspace, csrf_token.
                  x-transition:leave-end="opacity-0 scale-95">
                 <div class="text-center">
                     <div class="w-12 h-12 mx-auto rounded-full bg-red-50 flex items-center justify-center mb-4">
-                        {% icon "trash" css_class="w-6 h-6 text-red-500" %}
+                        <span style="color: var(--st-failed-fg)">{% icon "trash" css_class="w-6 h-6" %}</span>
                     </div>
                     <h3 class="text-base font-semibold text-app mb-1">¿Eliminar publicación?</h3>
                     <p class="text-sm text-app-tertiary mb-6">Esta acción no se puede deshacer. La publicación y todos sus datos se eliminarán de forma permanente.</p>
@@ -54,7 +54,7 @@ Expects context: workspace, csrf_token.
                                 }).catch(() => { deleting = false; });
                             "
                             :class="deleting && 'opacity-50 cursor-not-allowed'"
-                            class="flex-1 px-4 py-2 text-sm font-semibold text-app-inverse bg-red-500 rounded-full hover:bg-red-600 transition-colors cursor-pointer">
+                            class="flex-1 ib-btn ib-btn-danger" style="min-height:40px">
                         <span x-text="deleting ? 'Eliminando...' : 'Eliminar'"></span>
                     </button>
                 </div>

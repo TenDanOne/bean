@@ -1,23 +1,22 @@
 {% extends "layouts/settings.html" %}
-{% block title %}General - Ajustes - BEAN{% endblock %}
+{% block title %}General · Ajustes · BEAN{% endblock %}
 {% block content %}
 <div class="max-w-2xl">
-    <h2 class="text-xl font-semibold mb-8" style="color: var(--text-primary);">General</h2>
+    <h1 class="text-xl font-semibold mb-8" style="color: var(--text-primary);">General</h1>
 
     <!-- Organization Name section -->
     <form method="POST" class="mb-10">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_name">
-        <div class="flex items-end gap-4">
-            <div class="flex-1">
+        <div class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[12rem]">
                 <label for="name" class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">Nombre de la organización</label>
                 <input type="text" id="name" name="name" value="{{ organization.name }}" required maxlength="100"
                        class="input-focus w-full px-3 py-2 text-sm outline-none transition-colors"
                        style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">
             </div>
             <button type="submit"
-                    class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap"
-                    style="background: var(--neutral-100); color: var(--text-primary);">
+                    class="ib-btn ib-btn-secondary cursor-pointer whitespace-nowrap">
                 Guardar cambios
             </button>
         </div>
@@ -27,8 +26,8 @@
     <form method="POST" class="mb-10">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_timezone">
-        <div class="flex items-end gap-4">
-            <div class="flex-1">
+        <div class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[12rem]">
                 <label for="timezone" class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Zona horaria predeterminada</label>
                 <p class="text-xs mb-2" style="color: var(--text-tertiary);">Se usa en los espacios de trabajo que no definen la suya.</p>
                 <select id="timezone" name="timezone"
@@ -47,8 +46,7 @@
                 </select>
             </div>
             <button type="submit"
-                    class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap"
-                    style="background: var(--neutral-100); color: var(--text-primary);">
+                    class="ib-btn ib-btn-secondary cursor-pointer whitespace-nowrap">
                 Guardar cambios
             </button>
         </div>
@@ -76,8 +74,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="action" value="cancel_deletion">
                     <button type="submit"
-                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap"
-                            style="background: var(--neutral-100); color: var(--text-primary);">
+                            class="ib-btn ib-btn-secondary cursor-pointer whitespace-nowrap">
                         Cancelar eliminación
                     </button>
                 </form>
@@ -93,7 +90,7 @@
         <template x-teleport="body">
             <div x-show="showImmediateDeleteModal" x-transition.opacity
                  @keydown.escape.window="showImmediateDeleteModal = false"
-                 class="fixed inset-0 z-50 flex items-center justify-center"
+                 data-modal class="fixed inset-0 z-50 flex items-center justify-center"
                  style="background: rgba(0,0,0,0.4);">
                 <div @click.outside="showImmediateDeleteModal = false"
                      x-show="showImmediateDeleteModal"
@@ -104,7 +101,7 @@
                     <!-- Header -->
                     <div class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid var(--border);">
                         <h3 class="text-base font-semibold" style="color: var(--text-primary);">¿Eliminar de inmediato?</h3>
-                        <button type="button" @click="showImmediateDeleteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
+                        <button aria-label="Cerrar" type="button" @click="showImmediateDeleteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                             {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                         </button>
                     </div>
@@ -129,8 +126,7 @@
                     <!-- Footer -->
                     <div class="flex justify-end gap-3 px-6 py-4" style="border-top: 1px solid var(--border);">
                         <button type="button" @click="showImmediateDeleteModal = false"
-                                class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
-                                style="background: var(--neutral-100); color: var(--text-primary);">
+                                class="ib-btn ib-btn-secondary cursor-pointer">
                             Cancelar
                         </button>
                         <form method="POST">
@@ -169,7 +165,7 @@
         <template x-teleport="body">
             <div x-show="showDeleteModal" x-transition.opacity
                  @keydown.escape.window="showDeleteModal = false"
-                 class="fixed inset-0 z-50 flex items-center justify-center"
+                 data-modal class="fixed inset-0 z-50 flex items-center justify-center"
                  style="background: rgba(0,0,0,0.4);">
                 <div @click.outside="showDeleteModal = false"
                      x-show="showDeleteModal"
@@ -180,7 +176,7 @@
                     <!-- Header -->
                     <div class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid var(--border);">
                         <h3 class="text-base font-semibold" style="color: var(--text-primary);">Eliminar esta organización</h3>
-                        <button type="button" @click="showDeleteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
+                        <button aria-label="Cerrar" type="button" @click="showDeleteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                             {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                         </button>
                     </div>
@@ -205,8 +201,7 @@
                     <!-- Footer -->
                     <div class="flex justify-end gap-3 px-6 py-4" style="border-top: 1px solid var(--border);">
                         <button type="button" @click="showDeleteModal = false"
-                                class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
-                                style="background: var(--neutral-100); color: var(--text-primary);">
+                                class="ib-btn ib-btn-secondary cursor-pointer">
                             Cancelar
                         </button>
                         <form method="POST">
@@ -231,8 +226,7 @@
         <h3 class="text-sm font-semibold mb-1" style="color: var(--text-primary);">Procesar pendientes</h3>
         <p class="text-xs mb-3" style="color: var(--text-tertiary);">Ejecuta ahora las tareas en cola (publicaciones vencidas, sincronizaciones, recordatorios).</p>
         <button type="button" data-tour="procesar" hx-post="{% url 'process_pending' %}" hx-swap="none" hx-disabled-elt="this"
-                class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap"
-                style="background: var(--neutral-100); color: var(--text-primary);">
+                class="ib-btn ib-btn-secondary cursor-pointer whitespace-nowrap">
             Procesar pendientes
         </button>
     </div>

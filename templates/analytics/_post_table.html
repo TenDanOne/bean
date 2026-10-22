@@ -84,7 +84,7 @@
                             {% else %}
                             <div style="width: 36px; height: 36px; border-radius: 6px; background: var(--surface-2); flex-shrink: 0;"></div>
                             {% endif %}
-                            <span style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;">{{ r.caption|default:"(sin texto)" }}</span>
+                            <a href="{% url 'analytics:post_detail' workspace_id=workspace.id post_id=r.post.id %}" data-post-url="{% url 'analytics:post_detail' workspace_id=workspace.id post_id=r.post.id %}" style="color: inherit; text-decoration: none; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;">{{ r.caption|default:"(sin texto)" }}</a>
                         </div>
                     </td>
                     <td style="font-size: 0.75rem; color: var(--text-tertiary);">{{ r.date }}</td>

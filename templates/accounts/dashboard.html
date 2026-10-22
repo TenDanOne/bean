@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}Panel{% endblock %}
+{% block page_title %}Panel · BEAN{% endblock %}
 
 {% block content %}
 <div style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 200px);">
@@ -17,14 +17,14 @@
         </div>
 
         <!-- Heading -->
-        <h2 style="
+        <h1 style="
             font-family: var(--font-display);
             font-size: 1.75rem;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.015em;
             margin-bottom: 8px;
-        ">Aún no tienes espacios de trabajo</h2>
+        ">Aún no tienes espacios de trabajo</h1>
 
         <p style="
             font-size: 0.9375rem;
@@ -58,7 +58,7 @@
                 class="form-input-styled"
                 style="margin-bottom: 16px;"
             >
-            <button type="submit" class="btn-brand">
+            <button type="submit" class="ib-btn ib-btn-primary">
                 Crear espacio de trabajo
             </button>
         </form>

@@ -29,7 +29,7 @@
     <!-- Settings link for owner/manager -->
     {% if item.can_manage %}
     <a href="{% url 'workspaces:settings' workspace_id=item.workspace.id %}"
-       class="btn-neutral inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full"
+       class="ib-btn ib-btn-secondary inline-flex items-center gap-1.5"
        style="background: var(--neutral-100); color: var(--text-secondary);">
         {% icon "gear" css_class="w-[14px] h-[14px]" %}
         Ajustes

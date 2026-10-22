@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block page_title %}Conectar DEV.to{% endblock %}
+{% block page_title %}Conectar DEV.to · BEAN{% endblock %}
 {% block content %}
 <div class="max-w-lg">
     <!-- Header -->
@@ -12,7 +12,7 @@
             <div class="w-10 h-10 rounded-xl bg-app-2 flex items-center justify-center">
                 {% include "social_accounts/partials/_platform_icon.html" with platform="devto" size="6" %}
             </div>
-            <h2 class="text-xl font-semibold text-app">Conectar DEV.to</h2>
+            <h1 class="text-xl font-semibold text-app">Conectar DEV.to</h1>
         </div>
         <p class="text-sm text-app-tertiary">DEV.to se autentica con una clave de API personal. Genérala en Settings &rarr; Extensions &rarr; DEV Community API Keys.</p>
     </div>
@@ -35,7 +35,7 @@
         </div>
 
         <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-app-inverse bg-orange-500 rounded-full shadow-[0_4px_14px_rgba(249,115,22,0.28)] hover:bg-orange-600 transition-all duration-200 cursor-pointer">
+            <button type="submit" class="ib-btn ib-btn-primary cursor-pointer">
                 Conectar DEV.to
                 {% icon "arrow-right" css_class="w-4 h-4" %}
             </button>

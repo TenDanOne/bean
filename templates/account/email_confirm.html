@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static i18n account allauth %}
 
-{% block title %}Confirmar correo - BEAN{% endblock %}
+{% block title %}Confirmar correo · BEAN{% endblock %}
 
 {% block auth_content %}
 <div class="w-full max-w-md px-4">
@@ -29,7 +29,7 @@
                 <form method="post" action="{{ action_url }}">
                     {% csrf_token %}
                     {{ redirect_field }}
-                    <button type="submit" class="btn-brand">
+                    <button type="submit" class="ib-btn ib-btn-primary w-full">
                         Confirmar correo
                     </button>
                 </form>
@@ -42,7 +42,7 @@
             <div class="alert-error mb-4">
                 Este enlace de confirmación expiró o no es válido.
             </div>
-            <a href="{% url 'account_login' %}" class="btn-brand">
+            <a href="{% url 'account_login' %}" class="ib-btn ib-btn-primary w-full">
                 Iniciar sesión
             </a>
         {% endif %}

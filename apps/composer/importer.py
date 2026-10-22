@@ -196,7 +196,7 @@ def _validate_piece(p, idx: int) -> dict:
         if red not in NETS or not isinstance(lst, list) or not lst or not all(isinstance(x, str) for x in lst):
             raise _bad(f"{path}.medios_por_red.{red}", "red desconocida o lista de rutas vacía")
     _typed(p, path, {"solo_organico": "bool", "motivo_organico": "str", "portada_texto": "str", "titulo_alt": "str",
-                     "portada_ruta": "str", "portada_seg": "num"})  # fmt: skip
+                     "portada_ruta": "str", "portada_seg": "num", "contiene_ia": "bool"})  # fmt: skip
     mus = p.get("musica")
     if mus is not None:
         if not isinstance(mus, dict):
@@ -391,6 +391,7 @@ def _extra(net: str, piece: dict, d: dict, assets: dict, source: dict) -> dict:
     if piece.get("solo_organico"):
         extra["solo_organico"] = True
     ms = lambda s: int(float(s) * 1000)  # noqa: E731
+    ia = bool(piece.get("contiene_ia") or d.get("contiene_ia"))
     if net == "youtube":
         short = piece["tipo"] in _YT_SHORT_TIPOS
         extra |= {"made_for_kids": d["hecho_para_ninos"], "self_declared_made_for_kids": d["hecho_para_ninos"]}
@@ -398,7 +399,7 @@ def _extra(net: str, piece: dict, d: dict, assets: dict, source: dict) -> dict:
             extra["tags"] = tags
         if str(d.get("categoria_id")) in YOUTUBE_CATEGORY_IDS:
             extra["category_id"] = str(d["categoria_id"])
-        if d.get("contiene_ia"):
+        if ia:
             extra["contains_synthetic_media"] = True
         if short:
             extra["post_type"] = "short"  # los Shorts no admiten miniatura ni capítulos por API
@@ -420,11 +421,15 @@ def _extra(net: str, piece: dict, d: dict, assets: dict, source: dict) -> dict:
         names = [n.lstrip("@") for n in d.get("colaboradores") or []]
         if collab := [n for n in dict.fromkeys(names) if _IG_USER_RE.match(n)][:3]:
             extra["collaborators"] = collab
+        if ia:
+            extra["marca_ia_en_app"] = True
         if d.get("compartir_en_feed") is not None:
             extra["share_to_feed"] = d["compartir_en_feed"]
     elif net == "facebook":
         if d.get("tipo") == "reel":
             extra["post_type"] = "reel"
+        if ia:
+            extra["marca_ia_en_app"] = True
         if re.match(r"^https?://\S{1,2040}$", d.get("enlace") or ""):
             extra["link"] = d["enlace"]
     else:  # tiktok: sin privacidad, la elige el usuario
@@ -433,6 +438,8 @@ def _extra(net: str, piece: dict, d: dict, assets: dict, source: dict) -> dict:
             "brand_content_toggle": bool(d.get("contenido_marca")),
             "brand_organic_toggle": False,
         }
+        if ia:
+            extra["is_aigc"] = True
         if d.get("tipo") == "fotos":
             extra |= {"post_type": "image", "photo_cover_index": 0}  # el modo fotos no admite duo ni stitch
         else:

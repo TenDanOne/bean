@@ -2,29 +2,9 @@
 Status badge for social account connection state.
 Usage: {% include "social_accounts/partials/_status_badge.html" with status=account.connection_status %}
 {% endcomment %}
-{% if status == "connected" %}
-<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/10">
-    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-    Conectada
-</span>
-{% elif status == "token_expiring" %}
-<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-600/10">
-    <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
-    Token por vencer
-</span>
-{% elif status == "disconnected" %}
-<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-app-2 text-app-secondary ring-1 ring-inset ring-stone-500/10">
-    <span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span>
-    Desconectada
-</span>
-{% elif status == "archived" %}
-<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-app-2 text-app-secondary ring-1 ring-inset ring-stone-500/10">
-    <span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span>
-    Archivada
-</span>
-{% elif status == "error" %}
-<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/10" {% if error %}title="{{ error }}"{% endif %}>
-    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-    Error
-</span>
+{% if status == "connected" %}<span class="st-pill st-published inline-flex items-center px-2 py-0.5 text-[0.6875rem] font-semibold rounded-full">Conectada</span>
+{% elif status == "token_expiring" %}<span class="st-pill st-review inline-flex items-center px-2 py-0.5 text-[0.6875rem] font-semibold rounded-full" title="El acceso de la cuenta está por vencer; vuelve a conectarla">Por vencer</span>
+{% elif status == "disconnected" %}<span class="st-pill st-paused inline-flex items-center px-2 py-0.5 text-[0.6875rem] font-semibold rounded-full">Desconectada</span>
+{% elif status == "archived" %}<span class="st-pill st-draft inline-flex items-center px-2 py-0.5 text-[0.6875rem] font-semibold rounded-full">Archivada</span>
+{% elif status == "error" %}<span class="st-pill st-failed inline-flex items-center px-2 py-0.5 text-[0.6875rem] font-semibold rounded-full"{% if error %} title="{{ error }}"{% endif %}>Error</span>
 {% endif %}

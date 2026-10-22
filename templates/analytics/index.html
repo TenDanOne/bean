@@ -48,7 +48,9 @@
 
     <!-- Post detail drawer (slides from right) -->
     <div class="a-drawer-backdrop" :class="drawerOpen ? 'open' : ''" @click="drawerOpen = false"></div>
-    <div class="a-drawer" :class="drawerOpen ? 'open' : ''" @keydown.escape.window="drawerOpen = false">
+    <div class="a-drawer" :class="drawerOpen ? 'open' : ''" @keydown.escape.window="drawerOpen = false"
+         role="dialog" aria-modal="true" aria-label="Detalle de la publicación" tabindex="-1" :aria-hidden="(!drawerOpen).toString()" :inert="!drawerOpen"
+         x-effect="if (drawerOpen) { $nextTick(() => ($el.querySelector('[data-action=close-drawer]') || $el).focus()) } else if (window.__drawerOpener) { window.__drawerOpener.focus(); window.__drawerOpener = null }">
         <div x-html="drawerContent" id="drawer-host" style="display: flex; flex-direction: column; height: 100%;"></div>
     </div>
 
@@ -57,6 +59,7 @@
             const root = document.querySelector('.analytics-shell');
             const drawer = window.Alpine ? window.Alpine.$data(root) : null;
             if (!drawer) return;
+            window.__drawerOpener = document.activeElement;
             fetch(url, { headers: { 'HX-Request': 'true' } })
                 .then(r => r.text())
                 .then(html => {
@@ -68,8 +71,8 @@
 
         const shell = document.querySelector('.analytics-shell');
         shell.addEventListener('click', (e) => {
-            const row = e.target.closest('tr[data-post-url]');
-            if (row) { openPost(row.dataset.postUrl); return; }
+            const row = e.target.closest('[data-post-url]');
+            if (row) { e.preventDefault(); openPost(row.dataset.postUrl); return; }
 
             if (e.target.closest('[data-action="close-drawer"]')) {
                 if (window.Alpine) window.Alpine.$data(shell).drawerOpen = false;

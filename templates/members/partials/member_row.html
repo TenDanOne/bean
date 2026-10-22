@@ -47,8 +47,8 @@
         <!-- Actions -->
         {% if member.can_manage %}
         <div class="flex-shrink-0 relative">
-            <button @click="showActions = !showActions; if (showActions) { const r = $el.getBoundingClientRect(); menuStyle = { position: 'fixed', top: (r.bottom + 4) + 'px', left: (r.right - 208) + 'px', zIndex: 9999 } }"
-                    class="btn-neutral-100 p-1.5 rounded-lg transition-colors cursor-pointer"
+            <button aria-label="Acciones del miembro" @click="showActions = !showActions; if (showActions) { const r = $el.getBoundingClientRect(); menuStyle = { position: 'fixed', top: (r.bottom + 4) + 'px', left: (r.right - 208) + 'px', zIndex: 9999 } }"
+                    class="ib-btn ib-btn-ghost cursor-pointer"
                     style="color: var(--text-tertiary);">
                 {% icon "ellipsis-vertical" css_class="w-[16px] h-[16px]" %}
             </button>
@@ -120,7 +120,7 @@
                     {% csrf_token %}
                     <button type="submit"
                             class="btn-danger-soft-bg w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors"
-                            style="color: #DC2626;">
+                            style="color: var(--st-failed-dot);">
                         Quitar de la organización
                     </button>
                 </form>
@@ -183,7 +183,7 @@
     {% endcomment %}
     <template x-teleport="body">
         <div x-show="showChannels" x-transition.opacity x-cloak
-             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             data-modal class="fixed inset-0 z-50 flex items-center justify-center p-4"
              style="background: rgba(23,20,18,0.45);">
             <div @click.outside="showChannels = false"
                  @keydown.escape.window="showChannels = false"
@@ -192,7 +192,7 @@
                 <div class="flex items-start justify-between mb-4">
                     <h3 class="text-base font-semibold text-app">Acceso a canales</h3>
                     <button type="button" @click="showChannels = false"
-                            class="bbs-btn bbs-btn-ghost p-1.5" aria-label="Cerrar">
+                            class="ib-btn ib-btn-ghost" aria-label="Cerrar">
                         {% icon "xmark" css_class="w-4 h-4" %}
                     </button>
                 </div>
@@ -207,7 +207,7 @@
     {% if member.can_manage %}
     <template x-teleport="body">
         <div x-show="showWorkspaces" x-transition.opacity
-             class="fixed inset-0 z-50 flex items-center justify-center"
+             data-modal class="fixed inset-0 z-50 flex items-center justify-center"
              style="background: rgba(0,0,0,0.4);">
             <div @click.outside="showWorkspaces = false"
                  class="w-full max-w-md rounded-xl shadow-xl p-6"
@@ -216,7 +216,7 @@
                     <h3 class="text-base font-semibold" style="color: var(--text-primary);">
                         Espacios de trabajo - {{ member.user.display_name }}
                     </h3>
-                    <button @click="showWorkspaces = false" class="cursor-pointer" style="color: var(--text-tertiary);">
+                    <button aria-label="Cerrar" @click="showWorkspaces = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                         {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                     </button>
                 </div>

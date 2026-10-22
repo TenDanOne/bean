@@ -1,7 +1,7 @@
 {% extends "layouts/workspace_settings.html" %}
 {% load static %}
 
-{% block title %}Biblioteca de medios - {{ workspace.name }}{% endblock %}
+{% block title %}Biblioteca de medios · {{ workspace.name }} · BEAN{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -96,10 +96,11 @@
 </style>
 {% endblock %}
 
-{% block page_title %}Biblioteca de medios{% endblock %}
+{% block page_title %}Biblioteca de medios · BEAN{% endblock %}
 
 {% block content %}
 <div x-data="{ ...mediaLibrary(), folderSidebarOpen: false }" class="flex flex-1 min-h-0 -m-3 sm:-m-4 lg:-m-6 -mb-3 sm:-mb-4 lg:-mb-6">
+  <h1 class="sr-only">Biblioteca de medios</h1>
 
   <!-- Mobile folder sidebar toggle -->
   <button @click="folderSidebarOpen = !folderSidebarOpen"
@@ -214,12 +215,12 @@
 
       <!-- View toggle -->
       <div class="flex border rounded-lg overflow-hidden" style="border-color: var(--border, #E7E5E4);">
-        <button @click="viewMode = 'grid'"
+        <button aria-label="Vista de cuadrícula" @click="viewMode = 'grid'"
                 :class="viewMode === 'grid' ? 'bg-app-2 text-app-strong' : 'text-app-ghost hover:text-app-secondary'"
                 class="p-2 transition-colors">
           {% icon "table-cells" css_class="w-4 h-4" %}
         </button>
-        <button @click="viewMode = 'list'"
+        <button aria-label="Vista de lista" @click="viewMode = 'list'"
                 :class="viewMode === 'list' ? 'bg-app-2 text-app-strong' : 'text-app-ghost hover:text-app-secondary'"
                 class="p-2 transition-colors">
           {% icon "list" css_class="w-4 h-4" %}
@@ -228,7 +229,7 @@
 
       <!-- Upload button -->
       <button @click="$refs.fileInput.click()"
-              class="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150 cursor-pointer">
+              class="ib-btn ib-btn-primary cursor-pointer">
         {% icon "plus" css_class="w-4 h-4" %}
        Subir
       </button>
@@ -296,7 +297,7 @@
 
   <!-- ═══════ DETAIL SLIDE-OVER ═══════ -->
   <div x-show="detailOpen" x-cloak
-       class="fixed inset-0 z-50 flex justify-end"
+       data-modal class="fixed inset-0 z-50 flex justify-end"
        @keydown.escape.window="detailOpen = false">
     <div class="ml-detail-overlay absolute inset-0" @click="detailOpen = false"
          x-show="detailOpen"

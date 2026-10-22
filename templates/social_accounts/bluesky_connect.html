@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block page_title %}Conectar Bluesky{% endblock %}
+{% block page_title %}Conectar Bluesky · BEAN{% endblock %}
 {% block content %}
 <div class="max-w-lg">
     <!-- Header -->
@@ -12,7 +12,7 @@
             <div class="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center text-sky-500">
                 {% include "social_accounts/partials/_platform_icon.html" with platform="bluesky" size="5" %}
             </div>
-            <h2 class="text-xl font-semibold text-app">Conectar Bluesky</h2>
+            <h1 class="text-xl font-semibold text-app">Conectar Bluesky</h1>
         </div>
         <p class="text-sm text-app-tertiary">Bluesky usa contraseñas de aplicación para autenticarse. Puedes crear una en los ajustes de tu cuenta de Bluesky.</p>
     </div>
@@ -42,7 +42,7 @@
         </div>
 
         <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-app-inverse bg-orange-500 rounded-full shadow-[0_4px_14px_rgba(249,115,22,0.28)] hover:bg-orange-600 transition-all duration-200 cursor-pointer">
+            <button type="submit" class="ib-btn ib-btn-primary cursor-pointer">
                 Conectar Bluesky
                 {% icon "arrow-right" css_class="w-4 h-4" %}
             </button>

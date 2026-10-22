@@ -59,7 +59,7 @@
     <div x-data="{ showEditModal: false }">
         <button type="button"
                 @click="showEditModal = true"
-                class="btn-neutral px-4 py-1.5 text-xs font-medium rounded-full cursor-pointer whitespace-nowrap"
+                class="ib-btn ib-btn-secondary cursor-pointer whitespace-nowrap"
                 style="background: var(--surface-1, #F3F4F6); color: var(--text-secondary); border: 1px solid var(--border);">
             Editar
         </button>
@@ -67,7 +67,7 @@
         <template x-teleport="body">
             <div x-show="showEditModal" x-transition.opacity
                  @keydown.escape.window="showEditModal = false"
-                 class="fixed inset-0 z-50 flex items-center justify-center"
+                 data-modal class="fixed inset-0 z-50 flex items-center justify-center"
                  style="background: rgba(0,0,0,0.4);">
                 <div @click.outside="showEditModal = false"
                      x-show="showEditModal" x-transition
@@ -83,7 +83,7 @@
                                     · {{ row.workspace_name }} · los cambios aplican en la siguiente solicitud a la API.
                                 </p>
                             </div>
-                            <button type="button" @click="showEditModal = false"
+                            <button aria-label="Cerrar" type="button" @click="showEditModal = false"
                                     class="text-xl leading-none px-2 cursor-pointer"
                                     style="color: var(--text-tertiary);">&times;</button>
                         </div>
@@ -171,8 +171,7 @@
 
                         <div class="flex items-center justify-end gap-3 px-6 pt-5 pb-6 flex-shrink-0">
                             <button type="button" @click="showEditModal = false"
-                                    class="btn-neutral px-4 py-2 text-sm font-medium rounded-full cursor-pointer"
-                                    style="background: var(--neutral-100); color: var(--text-primary);">
+                                    class="ib-btn ib-btn-secondary cursor-pointer">
                                 Cancelar
                             </button>
                             <button type="submit"
@@ -201,7 +200,7 @@
     <div x-data="{ showRevokeModal: false }">
         <button type="button"
                 @click="showRevokeModal = true"
-                class="btn-neutral px-4 py-1.5 text-xs font-medium rounded-full cursor-pointer whitespace-nowrap"
+                class="ib-btn ib-btn-secondary cursor-pointer whitespace-nowrap"
                 style="background: var(--error-soft, #FEE2E2); color: var(--error-700, #B91C1C);">
             Revocar
         </button>
@@ -209,7 +208,7 @@
         <template x-teleport="body">
             <div x-show="showRevokeModal" x-transition.opacity
                  @keydown.escape.window="showRevokeModal = false"
-                 class="fixed inset-0 z-50 flex items-center justify-center"
+                 data-modal class="fixed inset-0 z-50 flex items-center justify-center"
                  style="background: rgba(0,0,0,0.4);">
                 <div @click.outside="showRevokeModal = false"
                      x-show="showRevokeModal" x-transition
@@ -220,7 +219,7 @@
                             <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Revocar clave de API</h3>
                             <p class="text-xs mt-1" style="color: var(--text-tertiary);">No se puede deshacer.</p>
                         </div>
-                        <button type="button" @click="showRevokeModal = false"
+                        <button aria-label="Cerrar" type="button" @click="showRevokeModal = false"
                                 class="text-xl leading-none px-2 cursor-pointer"
                                 style="color: var(--text-tertiary);">&times;</button>
                     </div>
@@ -234,8 +233,7 @@
                           class="flex items-center justify-end gap-3 px-6 pt-5 pb-6">
                         {% csrf_token %}
                         <button type="button" @click="showRevokeModal = false"
-                                class="btn-neutral px-4 py-2 text-sm font-medium rounded-full cursor-pointer"
-                                style="background: var(--neutral-100); color: var(--text-primary);">
+                                class="ib-btn ib-btn-secondary cursor-pointer">
                             Cancelar
                         </button>
                         <button type="submit"

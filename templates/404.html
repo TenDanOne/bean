@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No encontrado - BEAN</title>
+    <title>No encontrado · BEAN</title>
     {% include "errors/_style.html" %}
 </head>
 <body>
@@ -16,8 +16,8 @@
         <div class="reason"><strong>Ruta solicitada</strong>{{ request_path }}</div>
         {% endif %}
         <div class="acts">
-            <a class="btn primary" href="/">Volver al inicio</a>
-            <a class="btn" href="{% if request.workspace %}{% url 'calendar:calendar' request.workspace.id %}{% else %}/{% endif %}">Ir a Publicar</a>
+            <a class="ib-btn ib-btn-primary" href="/">Volver al inicio</a>
+            <a class="ib-btn ib-btn-secondary" href="{% if request.workspace %}{% url 'calendar:calendar' request.workspace.id %}{% else %}/{% endif %}">Ir a Publicar</a>
         </div>
     </main>
 </body>

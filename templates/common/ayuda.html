@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Ayuda - BEAN{% endblock %}
+{% block title %}Ayuda · BEAN{% endblock %}
 {% block content %}
 <div class="cp" style="max-width: 980px">
     <div class="ib-h">
@@ -11,11 +11,10 @@
     </div>
 
     <h2 class="cp-legend" style="margin-top:6px">Mapa de botones</h2>
-    <div class="cp-mapbar" role="img" aria-label="Pestañas de Publicar: Calendario, Cola, Borradores, Aprobaciones, Enviadas, y el botón Procesar pendientes">
+    <div class="cp-mapbar" role="img" aria-label="Pestañas de Publicar: Cola, Borradores, Aprobaciones y Enviadas, con el calendario como vista principal">
         <span class="t on">Calendario</span><span class="t">Cola</span><span class="t">Borradores</span><span class="t">Aprobaciones</span><span class="t">Enviadas</span>
-        <span style="flex:1"></span>
-        <span class="ib-btn ib-btn-primary" style="pointer-events:none">{% icon "bolt" css_class="w-3.5 h-3.5" %} Procesar pendientes</span>
     </div>
+    <p class="ib-hint" style="margin-top:8px">«Procesar pendientes» no está en Publicar: se encuentra en Ajustes &gt; General, al final de la página.</p>
     <div class="ib-alert ib-al-info" style="margin:12px 0 4px">
         {% icon "circle-info" css_class="w-4 h-4" %}
         <div>Así se ve el «?» en una sección:
@@ -38,6 +37,7 @@
         </section>
         {% endfor %}
     </div>
+    <p id="gnone" class="ib-hint" role="status" hidden style="margin-top:14px">Sin resultados. Prueba con otra palabra (por ejemplo «cola» o «Reel»).</p>
     <p class="ib-hint" style="margin-top:14px"><b>Estados de una palabra.</b> {{ state_words }}</p>
 </div>
 {{ help_entries|json_script:"help-data" }}

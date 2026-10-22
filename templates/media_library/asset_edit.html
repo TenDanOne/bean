@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Editar - {{ asset.original_filename }}{% endblock %}
+{% block title %}Editar · {{ asset.original_filename }} · BEAN{% endblock %}
 
 {% block extra_head %}
 {% if asset.file_type == 'image' or asset.file_type == 'gif' %}
@@ -40,7 +40,7 @@
   }
   .ml-trim-selection {
     position: absolute; top: 0; bottom: 0;
-    background: rgba(249, 115, 22, 0.15);
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
     border-left: 3px solid var(--primary);
     border-right: 3px solid var(--primary);
   }
@@ -49,7 +49,7 @@
 
 {% block page_header %}
 <div class="flex items-center gap-3">
-  <a href="{% url 'media_library:index' workspace_id=workspace.id %}"
+  <a aria-label="Volver a la biblioteca" href="{% url 'media_library:index' workspace_id=workspace.id %}"
      class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors btn-surface-2"
      style="color: var(--text-tertiary, #78716C);">
     {% icon "chevron-left" css_class="w-4 h-4" %}

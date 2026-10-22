@@ -33,7 +33,6 @@ URL y no en JavaScript. Solo el detalle se carga aparte, en #inbox-detail-panel.
         {% for key, label in platform_chips %}
         <label class="ib-chip"><input type="radio" id="ib-pl-{{ key }}" name="platform" value="{{ key }}" {% if st.platform == key %}checked{% endif %}>{% platform_icon key size="" css_class="w-3.5 h-3.5" %}{{ label }}</label>
         {% endfor %}
-        <span class="ib-chip" aria-disabled="true">{% platform_icon "tiktok" size="" css_class="w-3.5 h-3.5" %}TikTok <span class="ib-soon">próximamente</span></span>
     </div>
     <label class="sr-only" for="ib-q">Buscar</label>
     <input type="search" id="ib-q" name="q" value="{{ st.q }}" class="ib-sel" placeholder="Buscar mensajes…" autocomplete="off">

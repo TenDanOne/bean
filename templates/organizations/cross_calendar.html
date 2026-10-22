@@ -1,7 +1,7 @@
 {% extends "layouts/settings.html" %}
 {% load static %}
 
-{% block title %}Organization Calendar - BEAN{% endblock %}
+{% block title %}Calendario de la organización · BEAN{% endblock %}
 
 {% block page_header %}
 <h1 class="text-xl font-semibold text-app mb-6" style="letter-spacing: -0.01em;">Organization Calendar</h1>
@@ -108,11 +108,11 @@
     <div class="bg-app border-b border-app px-6 py-3 flex items-center gap-3">
         <!-- Navigation arrows -->
         <div class="flex items-center gap-2">
-            <a href="?view={{ view_type }}&date={{ prev_date }}{% for sid in selected_workspace_ids %}&workspace={{ sid }}{% endfor %}{% if request.GET.channel %}&channel={{ request.GET.channel }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+            <a aria-label="Periodo anterior" href="?view={{ view_type }}&date={{ prev_date }}{% for sid in selected_workspace_ids %}&workspace={{ sid }}{% endfor %}{% if request.GET.channel %}&channel={{ request.GET.channel }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
                class="w-7 h-7 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors">
                 {% icon "chevron-left" css_class="w-4 h-4" %}
             </a>
-            <a href="?view={{ view_type }}&date={{ next_date }}{% for sid in selected_workspace_ids %}&workspace={{ sid }}{% endfor %}{% if request.GET.channel %}&channel={{ request.GET.channel }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+            <a aria-label="Periodo siguiente" href="?view={{ view_type }}&date={{ next_date }}{% for sid in selected_workspace_ids %}&workspace={{ sid }}{% endfor %}{% if request.GET.channel %}&channel={{ request.GET.channel }}{% endif %}{% if request.GET.tag %}&tag={{ request.GET.tag }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
                class="w-7 h-7 flex items-center justify-center rounded-md text-app-ghost hover:text-app-secondary hover:bg-app-2 transition-colors">
                 {% icon "chevron-right" css_class="w-4 h-4" %}
             </a>

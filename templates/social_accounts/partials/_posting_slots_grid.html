@@ -60,8 +60,8 @@ Context: account (with prefetched posting_slots), workspace_id.
                                         <input type="hidden" name="social_account_id" value="{{ account.id }}">
                                         <button type="submit"
                                                 x-show="hovered" x-transition.opacity
-                                                class="w-4 h-4 flex items-center justify-center text-app-faint hover:text-red-500 transition-all cursor-pointer"
-                                                title="Quitar horario">
+                                                class="w-6 h-6 flex items-center justify-center text-app-faint hover:text-[var(--st-failed-fg)] transition-all cursor-pointer"
+                                                title="Quitar horario" aria-label="Quitar horario">
                                             {% icon "xmark" css_class="w-3 h-3" %}
                                         </button>
                                     </form>

@@ -285,7 +285,7 @@ def cross_workspace_calendar(request):
     # Workspace colors for legend
     workspace_colors = {}
     for ws in workspaces:
-        workspace_colors[str(ws.id)] = ws.primary_color or "#F97316"
+        workspace_colors[str(ws.id)] = ws.primary_color or "var(--primary)"
 
     today = date.today()
 

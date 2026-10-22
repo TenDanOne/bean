@@ -11,7 +11,7 @@
     </div>
     <form method="post" action="{% url 'social_accounts:reconnect' workspace_id=workspace.id account_id=active_account.id %}">
         {% csrf_token %}
-        <button type="submit" class="btn-brand" style="width: auto; padding: 8px 18px;">Reconectar</button>
+        <button type="submit" class="ib-btn ib-btn-primary" style="width: auto; padding: 8px 18px;">Reconectar</button>
     </form>
 </div>
 {% endif %}

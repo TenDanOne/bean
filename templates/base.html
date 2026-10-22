@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}BEAN{% endblock %}</title>
+    <title>{% block title %}{% block page_title %}BEAN{% endblock %}{% endblock %}</title>
     <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon/favicon.svg' %}">
     <link rel="icon" type="image/png" sizes="96x96" href="{% static 'favicon/favicon-96x96.png' %}">
@@ -379,7 +379,7 @@
                  x-data="sidebarNewMenu()">
                 <div class="relative">
                     <button @click="newMenuOpen = !newMenuOpen" data-tour="nuevo"
-                            class="btn-brand w-full flex items-center justify-center gap-1.5 text-sm py-2 cursor-pointer"
+                            class="ib-btn ib-btn-primary w-full flex items-center justify-center gap-1.5 cursor-pointer"
                             :style="sidebarCollapsed ? 'padding-left:1.15rem;padding-right:1.15rem' : ''">
                         {% icon "plus" css_class="w-4 h-4 flex-shrink-0" %}
                         <span class="sidebar-new-label" x-show="!sidebarCollapsed">Nuevo</span>
@@ -396,8 +396,8 @@
                          class="absolute left-0 right-0 top-full mt-2 bg-app rounded-xl shadow-lg ring-1 ring-app z-50 overflow-hidden py-1.5 px-1.5">
                         <a href="{% url 'composer:compose' workspace_id=request.workspace.id %}"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-app-1 transition-colors">
-                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                                {% icon "file-lines" css_class="w-5 h-5 text-blue-500" %}
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                                {% icon "file-lines" css_class="w-5 h-5 text-orange-600" %}
                             </div>
                             <div>
                                 <div class="text-sm font-semibold text-app-strong">Publicación</div>
@@ -406,8 +406,8 @@
                         </a>
                         <button type="button" @click="openCreateModal()"
                                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-app-1 transition-colors cursor-pointer">
-                            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                                {% icon "lightbulb" css_class="w-5 h-5 text-green-500" %}
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                                {% icon "lightbulb" css_class="w-5 h-5 text-orange-600" %}
                             </div>
                             <div class="text-left">
                                 <div class="text-sm font-semibold text-app-strong">Idea</div>
@@ -417,8 +417,8 @@
                         {% if request|can:"create_posts" and request|can:"upload_media" %}
                         <button type="button" data-import-open @click="newMenuOpen = false"
                                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-app-1 transition-colors cursor-pointer">
-                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                                {% icon "upload" css_class="w-5 h-5 text-amber-600" %}
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                                {% icon "upload" css_class="w-5 h-5 text-orange-600" %}
                             </div>
                             <div class="text-left">
                                 <div class="text-sm font-semibold text-app-strong">Importar publicación (.zip)</div>
@@ -611,22 +611,20 @@
                                         <span style="width: 1px; height: 20px; background: var(--border);"></span>
                                     </span>
                                     <button type="button" @click="closeCreateModal()"
-                                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer"
-                                            style="background: var(--neutral-100); color: var(--text-primary);">
+                                            class="ib-btn ib-btn-secondary cursor-pointer">
                                         Cancelar
                                     </button>
                                     <button type="submit"
                                             :disabled="createMediaUploadCount > 0 || isCreateSaving"
                                             :class="(createMediaUploadCount > 0 || isCreateSaving) && 'opacity-50 cursor-not-allowed'"
-                                            class="btn-neutral px-5 py-2 text-sm font-medium rounded-full transition-colors cursor-pointer"
-                                            style="background: var(--neutral-100); color: var(--text-primary);">
+                                            class="ib-btn ib-btn-secondary cursor-pointer">
                                         Guardar idea
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
-                    <div x-show="showCreateTagModal" x-cloak class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeCreateTagModal()">
+                    <div x-show="showCreateTagModal" x-cloak data-modal class="fixed inset-0 z-[220] flex items-center justify-center" @keydown.escape.window="closeCreateTagModal()">
                         <div class="fixed inset-0 bg-black/30" @click="closeCreateTagModal()"></div>
                         <div class="relative bg-app rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" @click.stop>
                             <h3 class="text-base font-semibold text-app-strong mb-4">Crear etiqueta nueva</h3>
@@ -700,7 +698,7 @@
                     {% endcomment %}
                     {% if request|can:"manage_social_accounts" %}
                     <a href="{% url 'social_accounts:connect' workspace_id=request.workspace.id %}"
-                       class="sidebar-nav-label mr-2 text-xs font-semibold hover:underline" style="color: var(--brand-700);"
+                       class="sidebar-nav-label mr-2 py-1 text-xs font-semibold hover:underline" style="color: var(--brand-700);"
                        title="Conectar un canal" aria-label="Conectar un canal">
                         + Conectar
                     </a>
@@ -897,7 +895,7 @@
                 {% if messages %}
                 <div class="mb-4 space-y-2">
                     {% for message in messages %}
-                    <div class="rounded-md p-4 {% if message.tags == 'error' %}bg-red-50 text-red-800{% elif message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+                    <div class="ib-alert !mt-0 {% if message.level_tag == 'error' %}ib-al-err{% elif message.level_tag == 'success' %}ib-al-ok{% elif message.level_tag == 'warning' %}ib-al-warn{% else %}ib-al-info{% endif %}" role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}">
                         {{ message }}
                     </div>
                     {% endfor %}
@@ -971,6 +969,7 @@
             });
         })();
     </script>
+    <script src="{% static 'js/modal-a11y.js' %}" defer></script>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
     {% if user.is_authenticated and request.workspace %}<script src="{% static 'js/tour.js' %}" defer></script>{% endif %}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
@@ -1379,7 +1378,7 @@
     <!-- Create workspace modal -->
     <div x-data="{ createWsOpen: false }"
          @open-create-ws.window="createWsOpen = true; $nextTick(() => $refs.newWsName.focus())">
-        <div x-show="createWsOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center">
+        <div x-show="createWsOpen" x-cloak data-modal class="fixed inset-0 z-[100] flex items-center justify-center">
             <div class="absolute inset-0 bg-black/40" @click="createWsOpen = false"></div>
             <div class="relative bg-app rounded-xl shadow-xl ring-1 ring-app w-full max-w-md mx-4 p-6"
                  x-show="createWsOpen"
@@ -1401,7 +1400,7 @@
                             Cancelar
                         </button>
                         <button type="submit"
-                                class="btn-brand px-4 py-2 text-sm cursor-pointer">
+                                class="ib-btn ib-btn-primary cursor-pointer">
                             Crear
                         </button>
                     </div>

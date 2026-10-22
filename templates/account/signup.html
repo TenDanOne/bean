@@ -4,19 +4,6 @@
 {% block title %}Crear cuenta · BEAN{% endblock %}
 
 {% block auth_content %}
-<style>
-  .auth-card .btn-brand {
-    background-color: var(--primary);
-    box-shadow: 0 4px 14px rgba(101, 115, 41, 0.28);
-  }
-  .auth-card .btn-brand:hover {
-    background-color: var(--primary-hover);
-    box-shadow: 0 6px 20px rgba(101, 115, 41, 0.35);
-  }
-  .auth-card .btn-brand:focus {
-    box-shadow: 0 0 0 3px rgba(101, 115, 41, 0.35);
-  }
-</style>
 <div class="w-full max-w-md px-4">
     <!-- Logo & Header -->
     <div class="text-center mb-8">
@@ -104,7 +91,7 @@
             {% endfor %}
 
             <div class="mt-6">
-                <button type="submit" class="btn-brand">
+                <button type="submit" class="ib-btn ib-btn-primary w-full">
                     Crear cuenta
                 </button>
             </div>

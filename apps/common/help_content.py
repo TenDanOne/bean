@@ -12,7 +12,7 @@ GLOSSARY = [
             {
                 "key": "nuevo",
                 "title": "Nuevo",
-                "text": "Único punto de entrada para crear. Elige Publicación (abre el composer) o Idea (guarda algo para después).",
+                "text": "Único punto de entrada para crear, arriba en el menú lateral. Elige Publicación (abre el composer), Idea (guarda algo para después) o Importar publicación (.zip). «Ver mis ideas» y «Plantillas» están en el mismo menú.",
             },
             {
                 "key": "publicar",
@@ -52,7 +52,7 @@ GLOSSARY = [
             {
                 "key": "procesar",
                 "title": "Procesar pendientes",
-                "text": "BEAN publica solo cada 5 minutos; con «Procesar pendientes» lo fuerzas y sale ahora todo lo programado cuya hora ya pasó.",
+                "text": "BEAN publica solo cada 5 minutos (con el cron activo); con «Procesar pendientes» (Ajustes de la organización, abajo) lo fuerzas al momento. Sale todo lo cuya hora ya pasó.",
             },
         ],
     ),

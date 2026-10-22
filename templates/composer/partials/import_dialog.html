@@ -20,13 +20,13 @@
                 <p>¿No tienes paquete? Crea una publicación con «Nuevo».</p>
             </div>
         </details>
-        <button type="button" class="imp-x" data-import-close aria-label="Cerrar">&times;</button>
+        <button type="button" class="ib-btn ib-btn-ghost imp-x" data-import-close aria-label="Cerrar">{% icon "xmark" css_class="w-4 h-4" %}</button>
     </div>
     <div class="imp-body">
         <div class="imp-drop" id="imp-drop">
             <p><b>Arrastra aquí el paquete .zip</b></p>
             <p class="imp-sub">Un .zip con tu publicación ya escrita y sus videos o imágenes.</p>
-            <button type="button" class="btn-brand imp-pick" id="imp-pick">Elegir archivo .zip</button>
+            <button type="button" class="ib-btn ib-btn-primary imp-pick" id="imp-pick">Elegir archivo .zip</button>
             <input type="file" id="imp-file" accept=".zip,application/zip" hidden>
             <small class="imp-sub">Solo .zip · hasta 1 GB</small>
         </div>
@@ -41,14 +41,14 @@
         <div id="imp-exists" class="imp-alert imp-info" hidden>
             <p id="imp-exists-t"></p>
             <div class="imp-acts">
-                <button type="button" class="btn-brand" data-modo="actualizar">Actualizar el borrador existente</button>
-                <button type="button" class="btn-outline" data-modo="nuevo">Crear otro</button>
+                <button type="button" class="ib-btn ib-btn-primary" data-modo="actualizar">Actualizar el borrador existente</button>
+                <button type="button" class="ib-btn ib-btn-secondary" data-modo="nuevo">Crear otro</button>
             </div>
         </div>
         <div id="imp-error" class="imp-alert imp-err" role="alert" hidden>
             <p><b id="imp-err-t"></b></p>
             <p id="imp-err-m"></p>
-            <button type="button" class="btn-outline" id="imp-again">Elegir otro archivo</button>
+            <button type="button" class="ib-btn ib-btn-secondary" id="imp-again">Elegir otro archivo</button>
         </div>
         <p class="imp-sub" id="imp-status" role="status" aria-live="polite"></p>
     </div>

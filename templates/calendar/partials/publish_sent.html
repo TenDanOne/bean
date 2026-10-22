@@ -13,7 +13,7 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
         </button>
     </div>
     <template x-teleport="body">
-        <div x-show="showFailedModal" class="fixed inset-0 z-[60] flex items-center justify-center"
+        <div x-show="showFailedModal" x-effect="if (showFailedModal) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[60] flex items-center justify-center"
              @keydown.escape.window="showFailedModal = false" role="dialog" aria-modal="true" aria-labelledby="failed-modal-title"
              style="display: none;">
             <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" @click="showFailedModal = false"></div>
@@ -36,7 +36,7 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                                 }).catch(() => { deleting = false; });
                             "
                             :class="deleting && 'opacity-50 cursor-not-allowed'"
-                            class="flex-1 px-4 py-2 text-sm font-semibold text-app-inverse bg-red-500 rounded-full hover:bg-red-600 transition-colors cursor-pointer">
+                            class="flex-1 ib-btn ib-btn-danger" style="min-height:40px">
                         <span x-text="deleting ? 'Eliminando...' : 'Eliminar'"></span>
                     </button>
                 </div>
@@ -45,7 +45,8 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
     </template>
     {% endif %}
     {% if platform_posts %}
-    <table class="w-full">
+    <div class="overflow-x-auto">
+    <table class="w-full min-w-[640px]">
         <thead>
             <tr class="border-b border-app text-left">
                 <th class="px-4 py-3 text-xs font-semibold text-app-ghost uppercase tracking-wider">Medios</th>
@@ -59,7 +60,7 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
         <tbody>
             {% for pp in platform_posts %}
             <tr class="border-b border-app-subtle hover:bg-app-1 transition-colors duration-100 cursor-pointer"
-                @click="window.location='{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}'">
+                @click="if (!$event.target.closest('a,button')) window.location='{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}'">
                 <td class="px-4 py-3">
                     {% with first_att=pp.post.media_attachments.all.0 %}
                     {% if first_att %}
@@ -94,12 +95,12 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                     {% endwith %}
                 </td>
                 <td class="px-4 py-3">
-                    <span class="post-chip status-{{ pp.status }} inline-flex">
+                    <span class="post-chip status-{{ pp.status }} inline-flex" {% if pp.outcome_label %}title="{{ pp.outcome_note }}"{% endif %}>
                         {{ pp.outcome_label|default:pp.get_status_display }}
                     </span>
                     {% if pp.outcome_label %}<p class="text-[11px] text-app-ghost mt-1 max-w-[220px]">{{ pp.outcome_note }}</p>{% endif %}
                     {% if pp.status == "failed" and pp.publish_error %}
-                    <p class="text-[11px] text-red-500 mt-1 max-w-[220px] truncate" title="{{ pp.publish_error }}">{{ pp.publish_error }}</p>
+                    <p style="color: var(--st-failed-fg)" class="text-[11px] mt-1 max-w-[220px] truncate" title="{{ pp.publish_error }}">{{ pp.publish_error }}</p>
                     {% endif %}
                 </td>
                 <td class="px-4 py-3 text-xs text-app-tertiary tabular-nums whitespace-nowrap">
@@ -107,11 +108,11 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
                     {{ pp.post.scheduled_at|date:"d M Y" }}<br>
                     <span class="text-app-ghost">{{ pp.post.scheduled_at|date:"H:i" }}</span>
                     {% else %}
-                    <span class="text-app-faint">-</span>
+                    <span style="color: var(--text-tertiary)">-</span>
                     {% endif %}
                 </td>
                 <td class="px-4 py-3 text-sm text-app-secondary max-w-xs truncate">
-                    {{ pp.post.title|default:pp.post.caption_snippet|default:"(sin texto)" }}
+                    <a href="{% url 'composer:compose_edit' workspace_id=workspace.id post_id=pp.post_id %}?account={{ pp.social_account_id }}" class="no-underline" style="color: inherit;">{{ pp.post.title|default:pp.post.caption_snippet|default:"(sin texto)" }}</a>
                 </td>
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-1.5">
@@ -128,6 +129,7 @@ Shows all published/partially_published platform posts. Loaded via HTMX into #ta
             {% endfor %}
         </tbody>
     </table>
+    </div>
     {% else %}
     {% if not has_connected_accounts %}
     {% include "calendar/partials/_no_channels_empty_state.html" %}

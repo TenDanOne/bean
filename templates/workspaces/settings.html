@@ -1,16 +1,16 @@
 {% extends "layouts/workspace_settings.html" %}
 {% load common_extras %}
-{% block title %}Ajustes - {{ workspace.name }} - BEAN{% endblock %}
+{% block title %}Ajustes · {{ workspace.name }} · BEAN{% endblock %}
 {% block content %}
 {% with can_manage=request|can:"manage_workspace_settings" %}
 <div class="max-w-2xl">
-    <h2 class="text-xl font-semibold mb-8" style="color: var(--text-primary);">General</h2>
+    <h1 class="text-xl font-semibold mb-8" style="color: var(--text-primary);">General</h1>
 
     <!-- Workspace Name section -->
     <form method="POST" class="mb-10">
         {% csrf_token %}
-        <div class="flex items-end gap-4">
-            <div class="flex-1">
+        <div class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[12rem]">
                 <label for="name" class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">Nombre del espacio de trabajo</label>
                 {% comment %} Visible either way — the name is context a reader needs — but
                    only editable with the permission. {% endcomment %}
@@ -21,8 +21,7 @@
             </div>
             <button type="submit"
                     {% if not can_manage %}disabled title="Solo un propietario del espacio de trabajo puede renombrarlo."{% endif %}
-                    class="btn-neutral px-5 py-2 text-sm font-medium rounded-full whitespace-nowrap {% if can_manage %}cursor-pointer{% else %}opacity-60 cursor-not-allowed{% endif %}"
-                    style="background: var(--neutral-100); color: var(--text-primary);">
+                    class="ib-btn ib-btn-secondary whitespace-nowrap {% if can_manage %}cursor-pointer{% else %}opacity-60 cursor-not-allowed{% endif %}">
                 Guardar cambios
             </button>
         </div>
@@ -38,7 +37,7 @@
                   class="input-focus w-full px-3 py-2 text-sm outline-none"
                   style="border: 1px solid var(--border); color: var(--text-primary); background: var(--surface-0);">{{ banned_phrases_text }}</textarea>
         {% if can_manage %}
-        <button type="submit" class="btn-neutral mt-2 px-5 py-2 text-sm font-medium rounded-full cursor-pointer" style="background: var(--neutral-100); color: var(--text-primary);">Guardar frases</button>
+        <button type="submit" class="ib-btn ib-btn-secondary mt-2 cursor-pointer">Guardar frases</button>
         {% endif %}
     </form>
 
@@ -130,8 +129,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="unarchive_workspace">
                 <button type="submit"
-                        class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer whitespace-nowrap shrink-0"
-                        style="background: var(--neutral-100); color: var(--text-primary);">
+                        class="ib-btn ib-btn-secondary cursor-pointer whitespace-nowrap shrink-0">
                     Restaurar espacio de trabajo
                 </button>
             </form>
@@ -146,7 +144,7 @@
             <template x-teleport="body">
                 <div x-show="showArchiveModal" x-transition.opacity
                      @keydown.escape.window="showArchiveModal = false"
-                     class="fixed inset-0 z-50 flex items-center justify-center"
+                     data-modal class="fixed inset-0 z-50 flex items-center justify-center"
                      style="background: rgba(0,0,0,0.4);">
                     <div @click.outside="showArchiveModal = false"
                          x-show="showArchiveModal"
@@ -155,7 +153,7 @@
                          style="background: var(--surface-0);">
                         <div class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid var(--border);">
                             <h3 class="text-base font-semibold" style="color: var(--text-primary);">Archivar este espacio de trabajo</h3>
-                            <button type="button" @click="showArchiveModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
+                            <button aria-label="Cerrar" type="button" @click="showArchiveModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                                 {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                             </button>
                         </div>
@@ -166,8 +164,7 @@
                         </div>
                         <div class="flex justify-end gap-3 px-6 py-4" style="border-top: 1px solid var(--border);">
                             <button type="button" @click="showArchiveModal = false"
-                                    class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
-                                    style="background: var(--neutral-100); color: var(--text-primary);">
+                                    class="ib-btn ib-btn-secondary cursor-pointer">
                                 Cancelar
                             </button>
                             <form method="POST">
@@ -215,7 +212,7 @@
         <template x-teleport="body">
             <div x-show="showDeleteModal" x-transition.opacity
                  @keydown.escape.window="showDeleteModal = false"
-                 class="fixed inset-0 z-50 flex items-center justify-center"
+                 data-modal class="fixed inset-0 z-50 flex items-center justify-center"
                  style="background: rgba(0,0,0,0.4);">
                 <div @click.outside="showDeleteModal = false"
                      x-show="showDeleteModal"
@@ -224,7 +221,7 @@
                      style="background: var(--surface-0);">
                     <div class="flex items-center justify-between px-6 py-4" style="border-bottom: 1px solid var(--border);">
                         <h3 class="text-base font-semibold" style="color: var(--text-primary);">Eliminar este espacio de trabajo</h3>
-                        <button type="button" @click="showDeleteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
+                        <button aria-label="Cerrar" type="button" @click="showDeleteModal = false" class="cursor-pointer" style="color: var(--text-tertiary);">
                             {% icon "xmark" css_class="w-[20px] h-[20px]" %}
                         </button>
                     </div>
@@ -244,8 +241,7 @@
                     </div>
                     <div class="flex justify-end gap-3 px-6 py-4" style="border-top: 1px solid var(--border);">
                         <button type="button" @click="showDeleteModal = false"
-                                class="btn-neutral px-5 py-2 text-sm font-medium rounded-full cursor-pointer"
-                                style="background: var(--neutral-100); color: var(--text-primary);">
+                                class="ib-btn ib-btn-secondary cursor-pointer">
                             Cancelar
                         </button>
                         <form method="POST">

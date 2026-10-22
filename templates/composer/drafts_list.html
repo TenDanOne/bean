@@ -12,7 +12,7 @@
             <p class="text-sm text-app-tertiary mt-0.5">{{ drafts|length }} borrador{{ drafts|length|pluralize:",es" }}</p>
         </div>
         <a href="{% url 'composer:compose' workspace_id=workspace.id %}"
-           class="inline-flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-app-inverse bg-orange-500 rounded-full shadow-[0_4px_14px_rgba(249,115,22,0.28)] hover:bg-orange-600 hover:shadow-[0_6px_20px_rgba(249,115,22,0.35)] hover:-translate-y-px transition-all duration-150">
+           class="ib-btn ib-btn-primary">
             {% icon "plus" css_class="w-4 h-4" %}
            Nueva publicación
         </a>
@@ -37,7 +37,7 @@
                         <span class="text-xs text-app-ghost">por {{ draft.author.display_name }}</span>
                         {% endif %}
                         {% if draft.proposed_publish_at %}
-                        <span class="inline-flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full" title="Fecha de publicación propuesta">
+                        <span class="st-pill st-review" title="Fecha de publicación propuesta">
                             {% icon "clock" css_class="w-3 h-3" %}
                             Publicación propuesta {% timezone workspace.effective_timezone|default:"UTC" %}{{ draft.proposed_publish_at|date:"M j, g:i A" }}{% endtimezone %}
                         </span>
@@ -63,7 +63,7 @@
         <p class="text-sm font-medium text-app-tertiary mb-1">No hay borradores</p>
         <p class="text-xs text-app-ghost mb-4">Empieza a redactar para crear tu primer borrador</p>
         <a href="{% url 'composer:compose' workspace_id=workspace.id %}"
-           class="inline-flex items-center gap-1.5 px-5 py-1.5 text-sm font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full hover:bg-orange-100 hover:border-orange-300 active:bg-orange-100 transition-all duration-150">
+           class="ib-btn ib-btn-secondary">
            Crear publicación
         </a>
     </div>

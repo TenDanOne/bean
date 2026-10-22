@@ -16,11 +16,11 @@ tear down the toast.
     {# filter pills #}
     <div class="flex flex-wrap items-center gap-x-1 gap-y-2 mb-5">
         {% include "calendar/partials/_approval_pill.html" with pid="all" label="Todas" count=all_count %}
-        {% include "calendar/partials/_approval_pill.html" with pid="pending_review" label="En revisión" count=pending_review_count %}
-        {% include "calendar/partials/_approval_pill.html" with pid="pending_client" label="Pendiente del cliente" count=pending_client_count %}
+        {% include "calendar/partials/_approval_pill.html" with pid="pending_review" label="Revisión" full="En revisión" count=pending_review_count %}
+        {% include "calendar/partials/_approval_pill.html" with pid="pending_client" label="Cliente" full="Pendiente del cliente" count=pending_client_count %}
         {% include "calendar/partials/_approval_pill.html" with pid="approved" label="Aprobadas" count=approved_count %}
         {% include "calendar/partials/_approval_pill.html" with pid="rejected" label="Rechazadas" count=rejected_count %}
-        {% include "calendar/partials/_approval_pill.html" with pid="changes_requested" label="Cambios solicitados" count=changes_requested_count %}
+        {% include "calendar/partials/_approval_pill.html" with pid="changes_requested" label="Cambios" full="Cambios solicitados" count=changes_requested_count %}
         {% include "calendar/partials/_approval_pill.html" with pid="on_hold" label="En pausa" count=on_hold_count %}
     </div>
 
@@ -63,7 +63,7 @@ tear down the toast.
     </div>
 
     {# bulk reject modal #}
-    <div x-show="rejectOpen" x-cloak class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="rejectOpen = false">
+    <div x-show="rejectOpen" x-cloak role="dialog" aria-modal="true" aria-label="Rechazar publicaciones" x-effect="if (rejectOpen) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="rejectOpen = false">
         <div class="absolute inset-0" style="background: rgba(28,25,23,.42); backdrop-filter: blur(3px);"></div>
         <div class="relative bg-app rounded-2xl shadow-2xl w-full modal-pop" style="max-width: 440px;" @click.stop>
             <div class="p-6">
@@ -85,7 +85,7 @@ tear down the toast.
     {% endif %}
 
     {# version-diff modal (loaded via hx-get on the row's «Ver cambios» button) #}
-    <div x-show="diffOpen" x-cloak class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="diffOpen = false">
+    <div x-show="diffOpen" x-cloak role="dialog" aria-modal="true" aria-label="Cambios de la versión" x-effect="if (diffOpen) { $el._prev = document.activeElement; $nextTick(() => $el.querySelector('input,textarea,select,button')?.focus()) } else if ($el._prev) { $el._prev.focus(); $el._prev = null }" class="fixed inset-0 z-[150] flex items-center justify-center p-4" @click="diffOpen = false">
         <div class="absolute inset-0" style="background: rgba(28,25,23,.42); backdrop-filter: blur(3px);"></div>
         <div class="relative bg-app rounded-2xl shadow-2xl w-full modal-pop max-h-[80vh] overflow-y-auto" style="max-width: 620px;" @click.stop>
             <div class="p-6">

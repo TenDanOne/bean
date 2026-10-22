@@ -1,1 +1,1 @@
-<span class="badge-pill badge-status-{{ message.status }}">{{ message.get_status_display }}</span>
+<span class="st-pill ib-k {% if message.status == 'unread' %}st-scheduled{% elif message.status == 'open' %}st-review{% elif message.status == 'resolved' %}st-published{% else %}st-draft{% endif %}">{{ message.get_status_display }}</span>
