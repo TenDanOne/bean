@@ -270,5 +270,6 @@ Plan: `~/.claude/plans/bien-ya-qued-desplegada-twinkly-possum.md`. Juez: PASA, s
 - Modo de entrega por destino (backend): `apps/composer/delivery.py`; YouTube privado, Facebook video/Reel DRAFT, texto/foto FB e IG → A mano; primer comentario solo en DIRECTO.
 - Bandeja: `pending_count` (mismo criterio que «No contestados»), insignia + «(N)» en pestaña cada 60 s (solo con use_inbox); Avisos agrupados por cuenta (solo pendientes, decisión del usuario).
 - Agenda móvil con conmutador Agenda/Mes.
-- **Siguiente:** el usuario aprueba `mockups/mockup-borrador.html` → poner el selector «¿Cómo lo mandas?» en el paso 3 y por red (sustituye la casilla «A mano» y el radio TikTok; enviar `entrega_<cuenta>`).
+- Selector «¿Cómo lo mandas?» en el paso 3 y por red HECHO (aprobado por el usuario; sustituye la casilla «A mano» y el radio TikTok; envía `entrega_<cuenta>`). Sin marcador guardado ni elección explícita, cada red queda en directo.
+- **Siguiente:** probar en navegador real (hoja de importar, agenda/Mes en móvil, selector al reabrir un post); pendiente menor: `_is_manual` podría usar `delivery.effective_mode`.
 - Pendientes menores: probar en navegador real la hoja y la agenda; FB DRAFT sin probar contra API real; insignias ocultas con barra plegada.

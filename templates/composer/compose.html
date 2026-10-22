@@ -48,9 +48,7 @@
     .ib-help > .ib-helpb { width: 28px; height: 28px; }
     .cp-chks .ib-chk, .cp-pvctl .ib-chk { flex-wrap: wrap; row-gap: 2px; }
     .cp-chks .ib-chk { align-items: center; }
-    /* TikTok: opciones de envío del mismo ancho; la etiqueta «zona segura» a la derecha para no pisar «sonido original». */
-    .cp-opts.cp-tt-opts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
-    .cp-tt-opts .cp-opt { flex-wrap: wrap; row-gap: 0; align-items: baseline; text-align: left; white-space: normal; }
+    /* TikTok: la etiqueta «zona segura» a la derecha para no pisar «sonido original». */
     .cp-sz i { left: auto; right: 6px; }
     @media (max-width: 640px) {
         #tiktok-consent { padding: 4px 12px 0; font-size: 10.5px; line-height: 1.3; }
@@ -546,13 +544,15 @@
                                                 <span x-show="platformExtras[accId].musica.nota" x-text="' ' + (platformExtras[accId].musica.nota || '')"></span>
                                             </div></div>
                                         </template>
-                                        <template x-if="['youtube', 'instagram', 'instagram_login', 'facebook'].includes(plat(accId))">
-                                            <div class="cp-chks">
-                                                <input type="hidden" :name="'manual_publish_' + accId" value="false">
-                                                <label class="ib-chk"><input type="checkbox" :name="'manual_publish_' + accId" value="true" :checked="platformExtras[accId]?.manual_publish === true"> Música desde la app: publicar a mano</label>
-                                                <span class="ib-hint">Con esta casilla BEAN no publica esta red: queda como «A mano» y la subes tú desde la app con la música.</span>
+                                        <fieldset class="cp-f cp-set">
+                                            <legend class="cp-lb" x-text="'¿Cómo lo mandas a ' + tabLabel(accId) + '?'"></legend>
+                                            <div class="cp-opts" style="margin-top:5px">
+                                                <template x-for="o in entregaOpts(accId)" :key="o[0]">
+                                                    <label class="ib-chip cp-opt"><input type="radio" :name="'entrega_' + accId" :value="o[0]" :checked="entregaDe(accId) === o[0]" @change="entrega[accId] = o[0]"> <span x-text="o[1]"></span></label>
+                                                </template>
                                             </div>
-                                        </template>
+                                            <p class="ib-hint" x-text="entregaNota(accId)"></p>
+                                        </fieldset>
 
                                         <template x-if="plat(accId) === 'youtube'">
                                             <div x-data="{ pl: { loaded: false, items: [], error: '' } }"
@@ -745,8 +745,6 @@
                              ttBrandOrganic: !!platformExtras[accId]?.brand_organic_toggle,
                              ttBrandContent: !!platformExtras[accId]?.brand_content_toggle,
                              ttAigc: !!platformExtras[accId]?.is_aigc,
-                             ttMode: platformExtras[accId]?.tiktok_mode === 'draft' ? 'draft' : 'direct',
-                             get ttDraft() { return this.ttMode === 'draft'; },
                              get ttOptions() {
                                  const fromApi = this.tt?.privacy_level_options || [];
                                  return fromApi.length ? fromApi : ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'SELF_ONLY'];
@@ -802,15 +800,8 @@
                          class="relief p-4 space-y-3 cp-tt-card">
                                                 <p class="ib-hint" x-show="tt?.creator_nickname" x-text="'Publicando en @' + (tt?.creator_nickname || '').replace(/^@/, '')"></p>
 
-                        <fieldset class="cp-f cp-set" role="radiogroup">
-                            <legend class="cp-lb">¿Cómo lo mandas a TikTok?</legend>
-                            <div class="cp-opts cp-tt-opts" style="margin-top:5px">
-                                <label class="ib-chip cp-opt"><input type="radio" :name="'tiktok_mode_' + accId" value="direct" x-model="ttMode" @change="platformExtras[accId] = { ...(platformExtras[accId] || {}), tiktok_mode: ttMode }"> Publicar directo <small>(sale en tu perfil)</small></label>
-                                <label class="ib-chip cp-opt"><input type="radio" :name="'tiktok_mode_' + accId" value="draft" x-model="ttMode" @change="platformExtras[accId] = { ...(platformExtras[accId] || {}), tiktok_mode: ttMode }"> Enviar como borrador a TikTok <small>(llega a tu bandeja de la app para ponerle música y publicar desde ahí)</small></label>
-                            </div>
-                            <p class="ib-hint" x-show="ttDraft">TikTok te pedirá la privacidad, las interacciones y la música en su app. BEAN solo envía el borrador; termínalo en la app de TikTok.</p>
-                        </fieldset>
-                        <div x-show="!ttDraft" class="space-y-3" style="margin-top: 16px;">
+                        <p class="ib-hint" x-show="entregaDe(accId) === 'borrador'">TikTok te pedirá la privacidad, las interacciones y la música en su app. BEAN solo envía el borrador; termínalo en la app de TikTok.</p>
+                        <div x-show="entregaDe(accId) !== 'borrador'" class="space-y-3" style="margin-top: 16px;">
                         <!-- Privacy: TikTok requires an explicit choice from the creator's allowed options -->
                         <div>
                             <label class="block text-[11px] font-semibold text-app-ghost uppercase tracking-wider mb-1">
@@ -888,7 +879,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                      required gate now that the native <select> is gone (same
                                      sr-only pattern as the disclosure gate further below). -->
                                 <input type="text" :name="'tiktok_privacy_level_' + accId" :value="ttPrivacy"
-                                       :required="charLimits[accId]?.platform === 'tiktok' && selectedAccounts.includes(accId) && !ttDraft"
+                                       :required="charLimits[accId]?.platform === 'tiktok' && selectedAccounts.includes(accId) && entregaDe(accId) !== 'borrador'"
                                        tabindex="-1" aria-hidden="true" class="sr-only">
                             </div>
                             <p x-show="ttLoading" class="text-[11px] text-app-ghost mt-1">Cargando configuración de la cuenta…</p>
@@ -1008,7 +999,7 @@ Quién puede ver este video <span class="text-red-400">*</span>
                                     <p class="text-[11px]" style="color: var(--st-failed-fg)">Debes indicar si tu contenido promociona a ti, a un tercero o ambos.</p>
                                 </template>
                                 <input type="text" tabindex="-1" aria-hidden="true" class="sr-only"
-                                       :required="ttDisclose && !ttDraft"
+                                       :required="ttDisclose && entregaDe(accId) !== 'borrador'"
                                        :value="(ttBrandOrganic || ttBrandContent) ? '1' : ''">
                             </div>
                         </div>
@@ -1224,7 +1215,15 @@ Seleccionar tablero <span class="text-red-400">*</span>
 
                 <!-- ══ Paso 3 ══ -->
                 <section class="ib-card" aria-labelledby="cp-h3">
-                    <div class="cp-h"><span class="cp-stepn" aria-hidden="true">3</span><h2 id="cp-h3">Paso 3 de 3: ¿Cuándo?</h2>{% include "partials/_help_btn.html" with key="tz" title="Zona horaria" %}</div>
+                    <div class="cp-h"><span class="cp-stepn" aria-hidden="true">3</span><h2 id="cp-h3">Paso 3 de 3: ¿Cuándo y cómo?</h2>{% include "partials/_help_btn.html" with key="tz" title="Zona horaria" %}</div>
+                    <fieldset class="cp-set" style="margin-bottom:12px">
+                        <legend class="cp-lb">¿Cómo lo mandas?</legend>
+                        <div class="cp-opts" style="margin-top:5px">
+                            <label class="ib-chip cp-opt"><input type="radio" name="entrega_global" value="directo" :checked="globalVal() === 'directo'" @change="setGlobal('directo')"> Publicar directo</label>
+                            <label class="ib-chip cp-opt"><input type="radio" name="entrega_global" value="borrador" :checked="globalVal() === 'borrador'" @change="setGlobal('borrador')"> Subir como borrador para poner música</label>
+                        </div>
+                        <p class="ib-hint" x-show="globalVal() === 'borrador'" x-cloak>TikTok: bandeja. YouTube: Privado. Facebook: borrador (texto y fotos van «A mano»). Instagram: «A mano». Cámbialo en la pestaña de cada red.</p>
+                    </fieldset>
                     <fieldset class="cp-set">
                         <legend class="sr-only">Cuándo se publica</legend>
                         <div class="cp-opts">
@@ -1916,6 +1915,43 @@ function composerApp() {
 
         // ── Formato, cuentas y pestañas ─────────────────────────────
         plat(id) { return this.charLimits[id]?.platform || ''; },
+        // ── «¿Cómo lo mandas?» (espejo de apps/composer/delivery.py) ──
+        entrega: {},
+        entregaGlobal: null,
+        entregaFrom(id) {
+            const e = this.platformExtras[id] || {};
+            if (this.plat(id) === 'tiktok' && e.tiktok_mode) return e.tiktok_mode === 'draft' ? 'borrador' : 'directo';
+            if (e.manual_publish) return 'a_mano';
+            return e.entrega === 'borrador' ? 'borrador' : null;
+        },
+        globalVal() {
+            return this.entregaGlobal || (this.selectedAccounts.some(id => { const m = this.entregaFrom(id); return m && m !== 'directo'; }) ? 'borrador' : 'directo');
+        },
+        setGlobal(v) {
+            this.entregaGlobal = v;
+            this.selectedAccounts.forEach(id => { this.entrega[id] = v; });
+        },
+        entregaDe(id) {
+            const p = this.plat(id);
+            // sin marcador guardado ni elección explícita, la red publica directo (no hereda el global derivado)
+            const m = this.entrega[id] || this.entregaFrom(id) || this.entregaGlobal || 'directo';
+            if (p === 'tiktok') return m === 'directo' ? 'directo' : 'borrador';
+            const video = this.hasVideoAttached || this.postTypes[id] === 'reel';
+            if (m === 'borrador' && (p.startsWith('instagram') || (p === 'facebook' && !video))) return 'a_mano';
+            return m;
+        },
+        entregaOpts(id) {
+            const p = this.plat(id), d = ['directo', 'Publicar directo'];
+            if (p === 'tiktok') return [d, ['borrador', 'Borrador en la bandeja de TikTok']];
+            if (p.startsWith('instagram')) return [d, ['a_mano', 'A mano']];
+            return [d, ['borrador', p === 'youtube' ? 'Subir como privado' : 'Subir como borrador'], ['a_mano', 'A mano']];
+        },
+        entregaNota(id) {
+            const p = this.plat(id), m = this.entregaDe(id);
+            if (m === 'a_mano') return p.startsWith('instagram') ? 'Instagram no tiene borrador por API: BEAN no lo publica, lo subes tú desde la app con la música.' : 'BEAN no publica esta red: queda «A mano» y la subes tú desde la app.';
+            if (m !== 'borrador') return '';
+            return ({ tiktok: 'Llega a la bandeja de TikTok. Ponle la música y publícalo desde ahí.', youtube: 'Se sube con privacidad «Privado». Abre YouTube Studio, ponle música y cámbialo a Público.' })[p] || 'Video o Reel: queda como borrador en Facebook. Texto y fotos no admiten borrador por API: caen en «A mano».';
+        },
         basePlat(id) { const p = this.plat(id); return p === 'instagram_login' ? 'instagram' : p; },
         accName(id) { return this.charLimits[id]?.name || ''; },
         defaultType(p) { return ({ youtube: 'video', instagram: 'feed', instagram_login: 'feed', facebook: '' })[p] ?? ''; },
@@ -2071,7 +2107,7 @@ function composerApp() {
         },
         get primaryLabel() {
             const a = this.primaryAction;
-            if (a === 'publish_now') return this.selectedAccounts.length && this.selectedAccounts.every(id => this.plat(id) === 'tiktok' && this.platformExtras[id]?.tiktok_mode === 'draft') ? 'Enviar borrador a TikTok' : 'Publicar ahora';
+            if (a === 'publish_now') return this.selectedAccounts.length && this.selectedAccounts.every(id => this.plat(id) === 'tiktok' && this.entregaDe(id) === 'borrador') ? 'Enviar borrador a TikTok' : 'Publicar ahora';
             if (a === 'add_to_queue') return 'Agregar a la cola';
             if (a === 'add_to_queue_priority') return 'Poner al inicio de la cola';
             if (a === 'schedule') return this.scheduledDate && this.scheduledTime ? 'Programar para ' + this.fmtDate(this.scheduledDate) + ', ' + this.scheduledTime : 'Programar';

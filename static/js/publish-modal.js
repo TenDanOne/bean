@@ -5,8 +5,8 @@
   const ZERO = '00000000-0000-0000-0000-000000000000'; // marcador de la URL; se cambia por el id del post
   const POLL_MS = 2000;
   const MAX_POLLS = 90; // ~3 min; después se invita a revisar en Enviadas
-  const WORD = { wait: 'Esperando', run: 'Publicando', ok: 'Listo', proc: 'Procesando', draft: 'Enviado como borrador', private: 'Subido como privado', manual: 'A mano', fail: 'Falló' };
-  const CLS = { wait: 'st-draft', run: 'st-publishing', ok: 'st-published', proc: 'st-review', draft: 'st-published', private: 'st-draft', manual: 'st-published', fail: 'st-failed' };
+  const WORD = { wait: 'Esperando', run: 'Publicando', ok: 'Listo', proc: 'Procesando', draft: 'Borrador', private: 'Privado', manual: 'A mano', fail: 'Falló' };
+  const CLS = { wait: 'st-draft', run: 'st-publishing', ok: 'st-published', proc: 'st-review', draft: 'st-draft', private: 'st-draft', manual: 'st-paused', fail: 'st-failed' };
   const PLAT = { youtube: 'YouTube', instagram: 'Instagram', instagram_login: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok' };
   const BUSY = { publish_now: 'Publicando…', schedule: 'Programando…', save_draft: 'Guardando…' };
   const isFinal = (s) => s === 'ok' || s === 'fail' || s === 'proc' || s === 'draft' || s === 'private' || s === 'manual';

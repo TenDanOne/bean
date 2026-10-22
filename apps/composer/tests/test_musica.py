@@ -5,10 +5,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 
 from apps.composer.models import PlatformPost, Post
 from apps.composer.tests.test_import import MP4, ImportBase, make_zip, piece, png
-from apps.composer.views import _apply_c2_extras, _publish_state
+from apps.composer.views import _apply_c2_extras, _is_manual, _publish_state
 from apps.publisher.engine import PublishEngine
 from providers.types import PublishStatus
 
@@ -136,6 +137,42 @@ class EngineManualTests(ImportBase):
         pp.save()
         copia = clone_post(self.post).platform_posts.get()
         self.assertEqual(copia.platform_extra, {"tiktok_mode": "draft", "musica": {"nota": "n"}})
+
+    def test_entrega_global_borrador_da_el_modo_por_defecto_de_cada_red(self):
+        req = MagicMock()
+        req.POST = {f"entrega_{a.id}": "borrador" for a in (self.tt, self.yt, self.ig, self.fb)}
+        req.POST[f"fb_post_type_{self.fb.id}"] = "reel"
+        got = {
+            a.platform: _apply_c2_extras(req, self.workspace, str(a.id), a.platform, {}, {})
+            for a in (self.tt, self.yt, self.ig, self.fb)
+        }
+        self.assertEqual(got["tiktok"]["tiktok_mode"], "draft")
+        self.assertEqual(got["youtube"]["entrega"], "borrador")
+        self.assertIs(got["instagram"]["manual_publish"], True)
+        self.assertEqual(got["facebook"]["entrega"], "borrador")
+
+    def test_entrega_por_red_gana_sobre_el_global(self):
+        req = MagicMock()
+        req.POST = {f"entrega_{self.tt.id}": "directo", f"entrega_{self.yt.id}": "a_mano"}
+        tt = _apply_c2_extras(req, self.workspace, str(self.tt.id), "tiktok", {}, {"tiktok_mode": "draft"})
+        yt = _apply_c2_extras(req, self.workspace, str(self.yt.id), "youtube", {}, {"entrega": "borrador"})
+        self.assertEqual(tt["tiktok_mode"], "direct")
+        self.assertEqual((yt["manual_publish"], "entrega" in yt), (True, False))
+        self.assertTrue(_is_manual(req, None, str(self.yt.id)))
+        self.assertFalse(_is_manual(req, None, str(self.tt.id)))
+
+    def test_post_existente_marca_su_modo_en_el_editor(self):
+        self.client.force_login(self.user)
+        for acc, extra in ((self.tt, {"tiktok_mode": "draft"}), (self.ig, {"manual_publish": True})):
+            self._pp(acc, **extra)
+        body = self.client.get(
+            reverse("composer:compose_edit", args=[self.workspace.id, self.post.id])
+        ).content.decode()
+        self.assertIn("entrega_global", body)
+        self.assertIn("¿Cómo lo mandas?", body)
+        self.assertNotIn("Música desde la app: publicar a mano", body)
+        self.assertIn('"tiktok_mode": "draft"', body)
+        self.assertIn('"manual_publish": true', body)
 
     def test_guardia_no_exige_nada_a_cuentas_a_mano(self):
         from apps.composer.views import _is_manual

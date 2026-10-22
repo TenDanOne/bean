@@ -361,6 +361,8 @@ def _apply_c2_extras(request, workspace, acc_id, platform, extra, prev=None, pos
 
 def _is_manual(request, post_id, acc_id) -> bool:
     """«Música desde la app» marcada en este envío (o ya guardada): BEAN no publica esa red, no se le exige nada."""
+    if (entrega := request.POST.get(f"entrega_{acc_id}")) in delivery.MODES:
+        return entrega == delivery.A_MANO
     sent = request.POST.get(f"manual_publish_{acc_id}", "").strip()
     if sent in ("true", "false"):
         return sent == "true"
